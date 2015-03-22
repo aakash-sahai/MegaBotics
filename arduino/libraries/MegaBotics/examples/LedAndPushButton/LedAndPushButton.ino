@@ -35,6 +35,7 @@
  * This is an example sketch to demonstrate the functionality of
  * the LED abd PushButton objects.
  */
+#include <Servo.h>
 #include <MegaBotics.h>
 
 const int BUTTON_PIN = 2;     // the pushbutton pin

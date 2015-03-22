@@ -35,6 +35,7 @@
  * The calibration routine for calibrating the Rover. The details of the setup
  * and instructions can be found on the project Wiki.
  */
+#include <Servo.h>
 #include <MegaBotics.h>
 
 const int BUTTON_UP_PIN = 2;
