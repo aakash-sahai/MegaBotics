@@ -44,8 +44,8 @@ PushButton up;
 PushButton down;
 Rover rover;
 
-int steerVal = 0;
-int throttleVal = 0;
+int steerVal = 90;
+int throttleVal = 1400;
 bool calibrateSteer = true;
 
 void setup() {
@@ -57,7 +57,7 @@ void setup() {
 	Serial.println("Click UP button to calibrate steering or DOWN to throttle.");
 	rover.setup();
 	selectMode();
-	Serial.println("Press UP/DOWN Button and note down the various values!");
+	Serial.println("Press UP/DOWN Button and note down the various values.");
 }
 
 void selectMode() {
@@ -101,7 +101,7 @@ void loop() {
 	if (calibrateSteer)
 		rover.steerRaw(steerVal);
 	else
-		rover.throttle(throttleVal);
+		rover.throttleRaw(throttleVal);
 
 	delay(100);
 }

@@ -84,7 +84,7 @@ public:
 	void reverse(uint8_t pct ) { throttle(-1 * pct); };
 	void idle(void) { throttle(0); };
 	void throttle(int8_t pct);
-	void throttleRaw(int val) { _throttle.write(val); } // Takes values from 0 - 180
+	void throttleRaw(int val) { _throttle.writeMicroseconds(val); } // Takes values from 0 - 180
 	void brake(void);
 
 private:
