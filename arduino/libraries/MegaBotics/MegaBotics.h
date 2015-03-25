@@ -40,6 +40,10 @@
 #define	DEG2RAD(_d)	(_d * DEG_TO_RAD)
 
 #include "PushButton.h"
+#include "Port.h"
+#include "UPort.h"
+#include "SPort.h"
+#include "IPort.h"
 #include "LED.h"
 #include "Coord.h"
 #include "Sonar.h"
