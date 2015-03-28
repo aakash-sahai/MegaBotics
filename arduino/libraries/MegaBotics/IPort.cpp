@@ -34,14 +34,14 @@
 
 #include <IPort.h>
 
-const int IPort::digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS] = {
+const byte IPort::digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS] = {
 		{ 30, 31 },
 		{ 32, 33 },
 		{ 34, 35 },
 		{ 36, 37 }
 };
-const int IPort::analogPins[MAX_PORTS] = { A8, A9, A10, A11 };
-const int IPort::pwmOutPins[MAX_PORTS] = { 10, 44, 45, 46 };
+const byte IPort::analogPins[MAX_PORTS] = { A8, A9, A10, A11 };
+const byte IPort::pwmOutPins[MAX_PORTS] = { 10, 44, 45, 46 };
 
 IPort::IPort() : Port(1) {
 	init();
@@ -63,7 +63,7 @@ IPort::~IPort() {
 	// Nothing to do
 }
 
-int IPort::getDigitalPin(int number) {
+byte IPort::getDigitalPin(int number) {
 	if (number > portInfo.digitalQty || number < 1) {
 		return -1;
 	} else {

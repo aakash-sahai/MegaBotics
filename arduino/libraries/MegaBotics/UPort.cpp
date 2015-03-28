@@ -33,15 +33,15 @@
 
 #include <UPort.h>
 
-const int UPort::digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS] = {
+const byte UPort::digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS] = {
 		{ 22, 23 },
 		{ 24, 25 },
 		{ 26, 27 },
 		{ 28, 29 }
 };
 
-const int UPort::analogPins[MAX_PORTS] = { A0, A1, A2, A3 };
-const int UPort::pwmInPins[MAX_PORTS]  = { A12, A13, A14, A15 };
+const byte UPort::analogPins[MAX_PORTS] = { A0, A1, A2, A3 };
+const byte UPort::pwmInPins[MAX_PORTS]  = { A12, A13, A14, A15 };
 HardwareSerial * const UPort::serialDrivers[MAX_PORTS] = { &Serial, &Serial1, &Serial2, &Serial3 };
 
 UPort::UPort() : Port(1) {
@@ -68,7 +68,7 @@ HardwareSerial * UPort::serial() {
 	return serialDrivers[portInfo.portNumber - 1];
 }
 
-int UPort::getDigitalPin(int number) {
+byte UPort::getDigitalPin(int number) {
 	if (number > portInfo.digitalQty || number < 1) {
 		return -1;
 	} else {

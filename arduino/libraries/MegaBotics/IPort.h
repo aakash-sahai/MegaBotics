@@ -35,7 +35,6 @@
 #define MEGABOTICS_IPORT_H_
 
 #include <Port.h>
-#include <pins_arduino.h>
 
 class IPort: public Port {
 public:
@@ -45,15 +44,15 @@ public:
 
 	void init(void);
 	const PortInfo& getPortInfo();
-	int getAnalogPin() { return analogPins[portInfo.portNumber - 1]; }
-	int getDigitalPin(int number);
-	int getPwmOutputPin() { return pwmOutPins[portInfo.portNumber - 1]; }
+	byte getAnalogPin() { return analogPins[portInfo.portNumber - 1]; }
+	byte getDigitalPin(int number);
+	byte getPwmOutputPin() { return pwmOutPins[portInfo.portNumber - 1]; }
 	int getPortType() { return I2C; }
 
 private:
-	static const int digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS];
-	static const int analogPins[MAX_PORTS];
-	static const int pwmOutPins[MAX_PORTS];
+	static const byte digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS];
+	static const byte analogPins[MAX_PORTS];
+	static const byte pwmOutPins[MAX_PORTS];
 
 };
 

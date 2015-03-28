@@ -45,14 +45,15 @@ public:
 
 	void init(void);
 	const PortInfo& getPortInfo();
-	int getAnalogPin() { return analogPins[portInfo.portNumber - 1]; }
-	int getDigitalPin(int number);
+	byte getAnalogPin() { return analogPins[portInfo.portNumber - 1]; }
+	byte getDigitalPin(int number);
+	byte getSlaveSelectPin(int number) { return ssPins[portInfo.portNumber - 1]; }
 	int getPortType() { return SPI; }
 
 private:
-	static const int digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS];
-	static const int analogPins[MAX_PORTS];
-	static const int ssPins[MAX_PORTS];
+	static const byte digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS];
+	static const byte analogPins[MAX_PORTS];
+	static const byte ssPins[MAX_PORTS];
 };
 
 #endif /* MEGABOTICS_SPORT_H_ */

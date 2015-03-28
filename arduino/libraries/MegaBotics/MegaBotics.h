@@ -39,6 +39,9 @@
 #define	RAD2DEG(_r)	(_r * RAD_TO_DEG)
 #define	DEG2RAD(_d)	(_d * DEG_TO_RAD)
 
+#define DBG_PRINT	Serial.print
+#define DBG_PRINTLN	Serial.println
+
 #include "PushButton.h"
 #include "Port.h"
 #include "UPort.h"
@@ -48,3 +51,4 @@
 #include "Coord.h"
 #include "Sonar.h"
 #include "Rover.h"
+#include "wifi.h"

@@ -49,18 +49,18 @@ const PortInfo& Port::getPortInfo() {
 	return portInfo;
 }
 
-int Port::getDigitalPin(int number) {
-	return -1;
+byte Port::getDigitalPin(int number) {
+	return 255;
 }
 
-int Port::getAnalogPin() {
-	return -1;
+byte Port::getAnalogPin() {
+	return 255;
 }
 
-int Port::getPwmInputPin() {
-	return -1;
+byte Port::getPwmInputPin() {
+	return 255;
 }
 
-int Port::getPwmOutputPin() {
-	return -1;
+byte Port::getPwmOutputPin() {
+	return 255;
 }

@@ -34,6 +34,8 @@
 #ifndef MEGABOTICS_PORT_H_
 #define MEGABOTICS_PORT_H_
 
+#include <Arduino.h>
+
 enum PortType {
 	UART = 1,
 	SPI = 2,
@@ -63,11 +65,12 @@ public:
 
 	virtual void init(void) = 0;
 	const PortInfo& getPortInfo();
-	virtual int getDigitalPin(int number);
-	virtual int getAnalogPin();
-	virtual int getPwmInputPin();
-	virtual int getPwmOutputPin();
+	virtual byte getDigitalPin(int number);
+	virtual byte getAnalogPin();
+	virtual byte getPwmInputPin();
+	virtual byte getPwmOutputPin();
 	virtual int getPortType() = 0;
+	int getPortNumber() { return portInfo.portNumber; }
 
 protected:
 	PortInfo portInfo;

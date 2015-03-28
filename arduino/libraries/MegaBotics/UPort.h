@@ -48,15 +48,15 @@ public:
 
 	void init(void);
 	const PortInfo& getPortInfo();
-	int getAnalogPin() { return analogPins[portInfo.portNumber - 1]; }
-	int getDigitalPin(int number);
-	int getPwmInputPin() { return pwmInPins[portInfo.portNumber - 1]; }
+	byte getAnalogPin() { return analogPins[portInfo.portNumber - 1]; }
+	byte getDigitalPin(int number);
+	byte getPwmInputPin() { return pwmInPins[portInfo.portNumber - 1]; }
 	int getPortType() { return UART; }
 
 private:
-	static const int digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS];
-	static const int analogPins[MAX_PORTS];
-	static const int pwmInPins[MAX_PORTS];
+	static const byte digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS];
+	static const byte analogPins[MAX_PORTS];
+	static const byte pwmInPins[MAX_PORTS];
 	static HardwareSerial * const serialDrivers[MAX_PORTS];
 };
 

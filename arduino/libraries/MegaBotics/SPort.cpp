@@ -33,15 +33,15 @@
 
 #include <SPort.h>
 
-const int SPort::digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS] = {
+const byte SPort::digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS] = {
 		{ 40, -1 },
 		{ 41, -1 },
 		{ 42, -1 },
 		{ 43, -1 }
 };
 
-const int SPort::analogPins[MAX_PORTS] = { A4, A5, A6, A7 };
-const int SPort::ssPins[MAX_PORTS] = { 39, 47, 48, 49 };
+const byte SPort::analogPins[MAX_PORTS] = { A4, A5, A6, A7 };
+const byte SPort::ssPins[MAX_PORTS] = { 39, 47, 48, 49 };
 
 SPort::SPort() : Port(1) {
 	init();
@@ -63,7 +63,7 @@ SPort::~SPort() {
 	// Nothing to do
 }
 
-int SPort::getDigitalPin(int number) {
+byte SPort::getDigitalPin(int number) {
 	if (number > portInfo.digitalQty || number < 1) {
 		return -1;
 	} else {
