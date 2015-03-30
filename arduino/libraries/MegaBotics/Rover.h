@@ -35,15 +35,17 @@
  * Rover.h
  *
  *  Created on: 14-Mar-2015
- *      Author: eashan
+ *      Author: Aakash Sahai
  */
 
 #ifndef ROVER_H_
 #define ROVER_H_
 
+#include <PwmOut.h>
+
 struct RoverConfig {
-	uint8_t		throttlePin;
-	uint8_t		steerPin;
+	uint8_t		throttleChannel;
+	uint8_t		steerChannel;
 
 	int			idlePwm;
 	int		 	fwdPwmMin;
@@ -58,8 +60,8 @@ struct RoverConfig {
 
 class Rover {
 public:
-	static const uint8_t  DEF_THROTTLE_PIN = 9;		// default pin connected to ESC throttle
-	static const uint8_t  DEF_STEER_PIN = 10;		// default pin connected to steering servo
+	static const uint8_t  DEF_THROTTLE_CHANNEL = 1;	// default pin connected to ESC throttle
+	static const uint8_t  DEF_STEER_CHANNEL = 2;	// default pin connected to steering servo
 	static const uint16_t DEF_IDLE_PWM =	1340;	// default PWM value to idle the throttle
 	static const uint16_t DEF_FWD_PWM_MAX = 1800;	// default PWM value to move forward at full speed
 	static const uint16_t DEF_FWD_PWM_MIN = 1410;	// default PWM value to start moving forward
@@ -79,18 +81,18 @@ public:
 	void steerRight(uint8_t pct) { steer(pct); }
 	void straight(void) { steer(0); }
 	void steer(int8_t pct);
-	void steerRaw(int val) { _steering.write(val); }	// Takes values from 0 - 180
+	void steerRaw(int val) { _steering.writeServo(val); }	// Takes values from 0 - 180
 	void forward(uint8_t pct) { throttle(pct); };
 	void reverse(uint8_t pct ) { throttle(-1 * pct); };
 	void idle(void) { throttle(0); };
 	void throttle(int8_t pct);
-	void throttleRaw(int val) { _throttle.writeMicroseconds(val); } // Takes values from 0 - 180
+	void throttleRaw(int val) { _throttle.writeMicrosecondsServo(val); } // Takes values from 0 - 180
 	void brake(void);
 
 private:
 	RoverConfig _config;
-	Servo	_throttle;
-	Servo	_steering;
+	PwmOut	_throttle;
+	PwmOut	_steering;
 
 	int8_t clipPercent(int8_t pct);
 	int8_t percentToDegrees(int8_t percent);

@@ -35,14 +35,14 @@
  * Rover.cpp
  *
  *  Created on: 14-Mar-2015
- *      Author: eashan
+ *      Author: Aakash Sahai
  */
 
 #include <MegaBotics.h>
 
 Rover::Rover() {
-	_config.throttlePin = DEF_THROTTLE_PIN;
-	_config.steerPin = DEF_STEER_PIN;
+	_config.throttleChannel = DEF_THROTTLE_CHANNEL;
+	_config.steerChannel = DEF_STEER_CHANNEL;
 	_config.idlePwm = DEF_IDLE_PWM;
 	_config.fwdPwmMin = DEF_FWD_PWM_MIN;
 	_config.fwdPwmMax = DEF_FWD_PWM_MAX;
@@ -65,8 +65,10 @@ void Rover::setup(RoverConfig &aConfig)
 }
 
 void Rover::setup(void) {
-	_steering.attach(_config.steerPin);
-	_throttle.attach(_config.throttlePin);
+	_steering.setup(_config.steerChannel);
+	_throttle.setup(_config.throttleChannel);
+	_steering.attachServo();
+	_throttle.attachServo();
 	delay(2000);
 	straight();
 	idle();
@@ -85,7 +87,7 @@ void Rover::steer(int8_t percent) {
 		// steer to right
 		degrees = map(percent, 0, 100, _config.steerMid, _config.steerMin);
 	}
-	_steering.write(degrees);
+	_steering.writeServo(degrees);
 }
 
 void Rover::throttle(int8_t percent) {
@@ -101,7 +103,7 @@ void Rover::throttle(int8_t percent) {
 		// reverse
 		usec = map(percent, 0, -100, _config.revPwmMin, _config.revPwmMax);
 	}
-	_throttle.writeMicroseconds(usec);
+	_throttle.writeMicrosecondsServo(usec);
 }
 
 int8_t Rover::clipPercent(int8_t percent) {

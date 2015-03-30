@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2015, Aakash Sahai and other contributors, a list of which is
  * maintained in the associated repository. All rights reserved.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,7 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *    + Redistributions of source code must retain the above copyright
  *      notice, this list of conditions and the following disclaimer.
  *    + Redistributions in binary form must reproduce the above copyright
@@ -31,26 +31,44 @@
  *	without specific prior written permission.
  */
 
-#include <stddef.h>
-#include <inttypes.h>
+/*
+ * Module:		PwmIn.h - The decoder for 6 channels of PWM Input (e.g. from RC receiver)
+ * Created on:	Mar 30, 2015
+ * Author:		Aakash Sahai
+ */
+
+#ifndef MEGABOTICS_PWMIN_H_
+#define MEGABOTICS_PWMIN_H_
+
 #include <Arduino.h>
-#include <Servo.h>
 
-#define	RAD2DEG(_r)	(_r * RAD_TO_DEG)
-#define	DEG2RAD(_d)	(_d * DEG_TO_RAD)
+#define MAX_PWMIN_CHANNELS	6
 
-#define DBG_PRINT	Serial.print
-#define DBG_PRINTLN	Serial.println
+class PwmIn {
+public:
+	virtual ~PwmIn();
 
-#include "PushButton.h"
-#include "Port.h"
-#include "UPort.h"
-#include "SPort.h"
-#include "IPort.h"
-#include "LED.h"
-#include "Coord.h"
-#include "Sonar.h"
-#include "Rover.h"
-#include "WiFi.h"
-#include "PwmIn.h"
-#include "PwmOut.h"
+	static void setup();
+	static void reset();
+	static byte getPin(byte channel) { return _pinMappings[channel-1]; }
+	static byte getPcint(byte channel) { return _pcintMappings[channel-1]; }
+	static int current(byte channel) { return _pwmCurrent[channel-1]; }
+	static int minimum(byte channel) { return _pwmMin[channel-1]; }
+	static int maximum(byte channel) { return _pwmMax[channel-1]; }
+
+	static unsigned long _prevTime[MAX_PWMIN_CHANNELS];
+	static unsigned int _pwmCurrent[MAX_PWMIN_CHANNELS];
+	static unsigned int _pwmMin[MAX_PWMIN_CHANNELS];
+	static unsigned int _pwmMax[MAX_PWMIN_CHANNELS];
+	static const byte _pinMappings[MAX_PWMIN_CHANNELS];
+	static const byte _pcintMappings[MAX_PWMIN_CHANNELS];
+
+	static int _intCount;
+
+private:
+	PwmIn();
+	static void init(void);
+	static bool _initialized;
+};
+
+#endif /* MEGABOTICS_PWMIN_H_ */
