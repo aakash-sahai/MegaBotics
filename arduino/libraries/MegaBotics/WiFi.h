@@ -63,15 +63,25 @@
 #include <String.h>
 #include <Uport.h>
 
+#define WIFI_DEFAULT_UPORT		4
 #define WIFI_DEFAULT_BAUD		115200L
 #define WIFI_RST_PIN			1
 #define WIFI_ENABLE_PIN			2
 #define WIFI_MAX_CONNECTIONS	5
+#define WIFI_RESET_DELAY		2000
 
 enum WiFiMode {
 	MODE_STA = 1,
 	MODE_AP = 2,
 	MODE_BOTH = 3
+};
+
+enum WiFiEncryption {
+	ENC_NONE = 0,
+	ENC_EWP = 1,
+	ENC_WPA_PSK = 2,
+	ENC_WAP2_PSK = 3,
+	ENC_WPA_WPA2_PSK = 4
 };
 
 enum WiFiConnectionStatus {
@@ -84,12 +94,13 @@ enum WiFiConnectionStatus {
 	CLOSED = 6
 };
 
-
 enum WiFiStatus {
 	SUCCESS = 0,
 	FAILURE = 1,
-	NOT_AVAILABLE = 2,
-	COMM_ERROR = 3
+	DATA = 2,
+	NOT_AVAILABLE = 3,
+	TIMEDOUT = 4,
+	COMM_ERROR = 5
 };
 
 enum Protocol {
@@ -104,13 +115,15 @@ struct ListenHandlers {
 };
 
 struct ApConfig {
-	char *ssid;
-	char *password;
+	String ssid;
+	String password;
+	byte channel;
+	WiFiEncryption encryption;
 };
 
 struct StaConfig {
-	char *ssid;
-	char *password;
+	String ssid;
+	String password;
 };
 
 struct Connection {
@@ -125,8 +138,6 @@ public:
 	virtual ~WiFi();
 
 	WiFiStatus setup(void);
-	WiFiStatus setupAP(ApConfig config);
-	WiFiStatus setupSTA(StaConfig config);
 
 	WiFiStatus enable(void);
 	WiFiStatus disable(void);
@@ -141,29 +152,40 @@ public:
 	WiFiStatus send(byte connectionId, char *data, int length);
 	WiFiStatus send(byte connectionId, String str);
 
+	String	 getApConfig(void);
+	String	 getStaConfig(void);
+	String	 getMode(void);
+	String	 getStaIp(void);
+	String	 getApIp(void);
+	String	 getBaud(void);
+	String	 getMux(void);
+	String	 getStaMac(void);
+	String	 getApMac(void);
+
+	String listAp(void);
+
+	WiFiStatus setApConfig(ApConfig &config);
+	WiFiStatus setStaConfig(StaConfig &config);
 	WiFiStatus setMode(WiFiMode mode);
-
-	const char *getStaIp(void);
-	const char *getApIp(void);
-	WiFiStatus setStaIp(char *ip);
-	WiFiStatus setApIp(char *ip);
-
-	const char *getStaMac(void);
-	const char *getApMac(void);
-
-	const char *listAp(void);
-
+	WiFiStatus setStaIp(String ip);
+	WiFiStatus setApIp(String ip);
 	WiFiStatus setBaud(long baud);
-	long getBaud(void);
+	WiFiStatus setMux();
+	WiFiStatus clearMux();
+
+	String output;
 
 private:
 	UPort uport;
-	WiFiMode currentMode;
 	long baud;
 	Connection connections[WIFI_MAX_CONNECTIONS];
 	WiFiStatus execCommand(const char *cmd);
 	WiFiStatus execCommand(String cmd);
 	WiFiStatus newConnection(byte &id);
+	WiFiStatus response();
+	String parseResult(String pattern);
+	String parseResult(String pattern, String terminator);
+	void flushInput();
 };
 
 #endif /* MEGABOTICS_WIFI_H_ */
