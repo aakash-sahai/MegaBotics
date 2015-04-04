@@ -69,6 +69,7 @@
 #define WIFI_ENABLE_PIN			2
 #define WIFI_MAX_CONNECTIONS	5
 #define WIFI_RESET_DELAY		2000
+#define WIFI_MAX_HOSTLEN		16
 
 enum WiFiMode {
 	MODE_STA = 1,
@@ -85,13 +86,12 @@ enum WiFiEncryption {
 };
 
 enum WiFiConnectionStatus {
-	AVAILABLE = 0,
+	CLOSED = 0,
 	OPENING = 1,
 	OPEN = 2,
 	IDLE = 3,
 	DATA_RECEIVED = 4,
-	CLOSING = 5,
-	CLOSED = 6
+	CLOSING = 5
 };
 
 enum WiFiStatus {
@@ -100,7 +100,7 @@ enum WiFiStatus {
 	DATA = 2,
 	NOT_AVAILABLE = 3,
 	TIMEDOUT = 4,
-	COMM_ERROR = 5
+	NOT_CONNECTED = 5
 };
 
 enum Protocol {
@@ -108,10 +108,21 @@ enum Protocol {
 	UDP = 2
 };
 
+struct Connection {
+	byte	id;
+	byte	status;
+	int		port;
+	char	host[WIFI_MAX_HOSTLEN+1];
+
+	String toStr(void) {
+		return String(id) + ",\"TCP\",\"" + String(host) + "\","  + String(port);
+	}
+};
+
 struct ListenHandlers {
-	void *(connect)(int connectionId);
-	void *(disconnect)(int connectionId);
-	void *(receive)(char *data, int length);
+	void (* connect)(Connection &connection);
+	void (* disconnect)(byte connectionId);
+	void (* receive)(char *data, int length);
 };
 
 struct ApConfig {
@@ -124,11 +135,6 @@ struct ApConfig {
 struct StaConfig {
 	String ssid;
 	String password;
-};
-
-struct Connection {
-	byte	id;
-	byte	status;
 };
 
 class WiFi {
@@ -146,11 +152,12 @@ public:
 	WiFiStatus softReset(void);
 	WiFiStatus hardReset(void);
 
-	WiFiStatus listen(Protocol proto, int port, ListenHandlers &handlers, byte &conectionId);
-	WiFiStatus connect(Protocol proto, int port, byte &conectionId);
-	WiFiStatus disconnect(int connectionId);
+	WiFiStatus listen(int port, ListenHandlers *handlers);
+	WiFiStatus connect(int port, String host, byte &conectionId);
+	WiFiStatus disconnect(byte connectionId);
 	WiFiStatus send(byte connectionId, char *data, int length);
 	WiFiStatus send(byte connectionId, String str);
+	String	   connection(byte id) { return connections[id].toStr(); }
 
 	String	 getApConfig(void);
 	String	 getStaConfig(void);
@@ -161,8 +168,7 @@ public:
 	String	 getMux(void);
 	String	 getStaMac(void);
 	String	 getApMac(void);
-
-	String listAp(void);
+	String	 getFirmwareVersion(void);
 
 	WiFiStatus setApConfig(ApConfig &config);
 	WiFiStatus setStaConfig(StaConfig &config);
@@ -173,19 +179,31 @@ public:
 	WiFiStatus setMux();
 	WiFiStatus clearMux();
 
+	String		listAp(void);
+
+	byte		readAnalog(void);
+	String		readGpio0(void);
+	String		readGpio2(void);
+	WiFiStatus	writeGpio(byte pin, bool value);
+
 	String output;
 
 private:
 	UPort uport;
 	long baud;
+	int listenPort;
+	ListenHandlers listenHandlers;
 	Connection connections[WIFI_MAX_CONNECTIONS];
 	WiFiStatus execCommand(const char *cmd);
 	WiFiStatus execCommand(String cmd);
 	WiFiStatus newConnection(byte &id);
-	WiFiStatus response();
+	WiFiStatus response(void);
 	String parseResult(String pattern);
 	String parseResult(String pattern, String terminator);
-	void flushInput();
+	String parseResultDbg(String pattern, String terminator);
+	void initConnections(void);
+	void flushInput(void);
+	String readGpio(byte pin);
 };
 
 #endif /* MEGABOTICS_WIFI_H_ */

@@ -42,9 +42,28 @@ HardwareSerial * terminal;
 
 WiFi wifi;
 
-#define INTERACT 0
+#define INTERACT 1
 
 #define TERMINAL_UPORT	1
+
+void doConnect(Connection &connection)
+{
+	terminal->print("Inbound Connection: ");
+	terminal->println(connection.toStr());
+}
+
+void doDisconnect(byte connectionId) {
+	terminal->print("Disconnecting from: ");
+	terminal->println(wifi.connection(connectionId));
+}
+
+void doReceive(char *data, int length) {
+	terminal->print("Received data: <<<");
+	for (int i = 0; i < length; i++) {
+		terminal->print(data[i]);
+	}
+	terminal->println(">>>");
+}
 
 void setup() {
 	UPort uPort = UPort(TERMINAL_UPORT);
@@ -67,10 +86,13 @@ void setup() {
 	 */
 
 	info();
+	io();
 }
 
 void info() {
 	terminal->println("-----------------------------");
+	terminal->print("FIRMWARE VERSION: ");
+	terminal->println(wifi.getFirmwareVersion());
 	terminal->print("STA IP: ");
 	terminal->println(wifi.getStaIp());
 	terminal->print("AP IP: ");
@@ -89,6 +111,57 @@ void info() {
 	terminal->println(wifi.getApConfig());
 	terminal->print("STA CONFIG: ");
 	terminal->println(wifi.getStaConfig());
+	terminal->print("ANALOG: ");
+	terminal->println(wifi.readAnalog());
+	terminal->print("READ DIGITAL 0: ");
+	terminal->println(wifi.readGpio0());
+	terminal->print("READ DIGITAL 2: ");
+	terminal->println(wifi.readGpio2());
+	terminal->println("WRITE DIGITAL 0: [LOW]");
+	wifi.writeGpio(0, 0);
+	terminal->print("READ DIGITAL 0: ");
+	terminal->println(wifi.readGpio0());
+}
+
+void io(void) {
+	byte id;
+	WiFiStatus status;
+	ListenHandlers handlers;
+
+	handlers.connect = doConnect;
+	handlers.disconnect = doDisconnect;
+	handlers.receive = doReceive;
+
+	status = wifi.listen(80, &handlers);	// Listen on port 80 for inbound connections
+	if (status == SUCCESS) {
+		terminal->println("Listening on port 80");
+	} else {
+		terminal->println("Listen Failed");
+	}
+	showConnections();
+
+	status = wifi.connect(80, "216.58.217.46", id);		// Connect to Google
+	if (status == SUCCESS) {
+		terminal->print("Connected, ID = ");
+		terminal->println(id);
+	} else {
+		terminal->println("Connect Failed");
+	}
+	showConnections();
+
+	status = wifi.disconnect(id);
+	if (status == SUCCESS) {
+		terminal->println("Disconnected");
+	} else {
+		terminal->println("Disconnect Failed");
+	}
+	showConnections();
+}
+
+void showConnections(void) {
+	for (byte i = 0; i < WIFI_MAX_CONNECTIONS; i++) {
+		terminal->println(wifi.connection(i));
+	}
 }
 
 void configAp() {
@@ -112,7 +185,7 @@ void configSta() {
 String save = "";
 
 void loop() {
-#if	INERACT
+#if	INTERACT
 	interact();
 #else
 	info();
@@ -137,11 +210,9 @@ void interact(void) {
 			String resp = wifiSerial->readStringUntil('\n');
 			if ((ret = resp.indexOf("OK")) >= 0) {
 				terminal->println("GOT OK");
-				terminal->print(resp);
 				save = "";
 			} else if ((ret = resp.indexOf("ERROR")) >= 0) {
 				terminal->println("GOT ERROR");
-				terminal->print(save);
 				save = "";
 			} else if ((ret = resp.indexOf("+IPD,")) >= 0) {
 				terminal->println("GOT DATA");
@@ -149,8 +220,6 @@ void interact(void) {
 				save = "";
 			} else {
 				save = save + resp;
-				terminal->print(".");
-				terminal->print(ret);
 				terminal->print(">");
 				terminal->print(save);
 			}
