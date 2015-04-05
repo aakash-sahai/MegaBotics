@@ -47,6 +47,9 @@ void WiFi::initConnections(void) {
 			connections[i].host[0] = 0;					// To ensure that host string is empty
 			connections[i].host[WIFI_MAX_HOSTLEN] = 0;	// To ensure that all host names remain null terminated
 	}
+	listenHandlers.connect = 0;
+	listenHandlers.disconnect = 0;
+	listenHandlers.receive = 0;
 }
 
 WiFiStatus WiFi::newConnection(byte &id)
@@ -71,6 +74,55 @@ WiFiStatus WiFi::execCommand(String cmd) {
 	return response();
 }
 
+void WiFi::process_data(String resp) {
+	const char *ptr;
+	int len;
+	byte id;
+	int msgLen = 0;
+
+	ptr = resp.c_str();
+	len = resp.length();
+
+	ptr += 5; len -= 5;		// Point past "+IPD,"
+	id = *ptr - '0';		// Decode ID
+
+	ptr += 2; len -= 2;  	// Point past "+IPD,x"
+
+	for (;*ptr != ':'; ptr++, len--) {		// Decode message length
+		msgLen = msgLen * 10 + (*ptr - '0');
+	}
+	ptr++; len--;
+
+	if (listenHandlers.receive != 0)
+		listenHandlers.receive(id, ptr, len);
+
+	msgLen -= len;			// msgLen is now the number of unread bytes
+
+	if (msgLen > 0) {		// Read the rest of the data
+		char *ptr = (char *)malloc(msgLen);
+		while (msgLen > 0) {
+			len = uport.serial()->readBytes(ptr, msgLen);
+			msgLen -= len;
+			if (listenHandlers.receive != 0)
+				listenHandlers.receive(id, ptr, len);
+		}
+		free((void *)ptr);
+	}
+}
+
+void WiFi::poll() {
+	int ret;
+
+	while (uport.serial()->available()) {
+		String resp = uport.serial()->readStringUntil('\n');
+		if ((ret=resp.indexOf("+IPD,")) == 0) {
+			process_data(resp);
+		} else {
+			output = output + resp;
+		}
+	}
+}
+
 WiFiStatus WiFi::response() {
 	int ret;
 	int times = 0;
@@ -78,12 +130,14 @@ WiFiStatus WiFi::response() {
 	while(true) {
 		if (uport.serial()->available()) {
 			String resp = uport.serial()->readStringUntil('\n');
-			if ((ret=resp.indexOf("OK")) >= 0) {
+			if ((ret=resp.indexOf("OK")) == 0) {
 				return SUCCESS;
-			} else if ((ret=resp.indexOf("ERROR")) >= 0) {
+			} else if ((ret=resp.indexOf("ERROR")) == 0) {
 				return FAILURE;
-			} else if ((ret=resp.indexOf("+IPD,")) >= 0) {
-				return DATA;
+			} else if ((ret=resp.indexOf(">")) == 0) {
+				return SEND_DATA;
+			} else if ((ret=resp.indexOf("+IPD,")) == 0) {
+				process_data(resp);
 			} else {
 				output = output + resp;
 			}
@@ -163,7 +217,6 @@ WiFiStatus WiFi::setApConfig(ApConfig &config) {
 	sprintf(cmd, "AT+CWSAP=\"%s\",\"%s\",%d,%d",
 			config.ssid.c_str(), config.password.c_str(),
 			(int)config.channel, (int)config.encryption);
-	Serial.println(cmd);
 	return execCommand(cmd);
 }
 
@@ -171,7 +224,6 @@ WiFiStatus WiFi::setStaConfig(StaConfig &config) {
 	char cmd[100];
 	sprintf(cmd, "AT+CWJAP=\"%s\",\"%s\"",
 			config.ssid.c_str(), config.password.c_str());
-	Serial.println(cmd);
 	return execCommand(cmd);
 }
 
@@ -373,13 +425,22 @@ WiFiStatus WiFi::disconnect(byte id) {
 		return SUCCESS;
 	} else if (result.equals("link not")) {
 		return NOT_CONNECTED;
+	} else {
+		return FAILURE;
 	}
 }
 
-WiFiStatus WiFi::send(byte connectionId, char *data, int length) {
-	return SUCCESS;
+WiFiStatus WiFi::send(byte connectionId, const char *data, int length) {
+	String cmd = "AT+CIPSEND=" + String(connectionId) + "," + String(length);
+	WiFiStatus ret = execCommand(cmd);
+	if (ret != SEND_DATA) {
+		return ret;
+	}
+	uport.serial()->write(data, length);
+	WiFiStatus status = response();
+	return status;
 }
 
 WiFiStatus WiFi::send(byte connectionId, String str) {
-	return SUCCESS;
+	return send(connectionId, str.c_str(), str.length());
 }

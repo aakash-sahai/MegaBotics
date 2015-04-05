@@ -44,8 +44,10 @@
 
 #include <MegaBotics.h>
 
+PwmMuxMode PwmMux::_currentMode;
+
 PwmMux::PwmMux() {
-	// TODO Auto-generated constructor stub
+	setup();
 }
 
 PwmMux::~PwmMux() {
@@ -54,14 +56,14 @@ PwmMux::~PwmMux() {
 
 void PwmMux::setup(void) {
 	pinMode(PWMMUX_SEL_PIN, OUTPUT);
-	currentMode = PWMIN;
+	_currentMode = PWMIN;
 	setMode(PWMIN);
 }
 
 void PwmMux::setMode(PwmMuxMode mode) {
 	if (mode == PWMIN) {
-		digitalWrite(PWMMUX_SEL_PIN, LOW);
-	} else {
 		digitalWrite(PWMMUX_SEL_PIN, HIGH);
+	} else {
+		digitalWrite(PWMMUX_SEL_PIN, LOW);
 	}
 }

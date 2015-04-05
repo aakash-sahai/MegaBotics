@@ -97,7 +97,7 @@ enum WiFiConnectionStatus {
 enum WiFiStatus {
 	SUCCESS = 0,
 	FAILURE = 1,
-	DATA = 2,
+	SEND_DATA = 2,
 	NOT_AVAILABLE = 3,
 	TIMEDOUT = 4,
 	NOT_CONNECTED = 5
@@ -122,7 +122,7 @@ struct Connection {
 struct ListenHandlers {
 	void (* connect)(Connection &connection);
 	void (* disconnect)(byte connectionId);
-	void (* receive)(char *data, int length);
+	void (* receive)(byte connectionId, const char *data, int length);
 };
 
 struct ApConfig {
@@ -155,7 +155,7 @@ public:
 	WiFiStatus listen(int port, ListenHandlers *handlers);
 	WiFiStatus connect(int port, String host, byte &conectionId);
 	WiFiStatus disconnect(byte connectionId);
-	WiFiStatus send(byte connectionId, char *data, int length);
+	WiFiStatus send(byte connectionId, const char *data, int length);
 	WiFiStatus send(byte connectionId, String str);
 	String	   connection(byte id) { return connections[id].toStr(); }
 
@@ -186,6 +186,8 @@ public:
 	String		readGpio2(void);
 	WiFiStatus	writeGpio(byte pin, bool value);
 
+	void		poll(void);
+
 	String output;
 
 private:
@@ -204,6 +206,7 @@ private:
 	void initConnections(void);
 	void flushInput(void);
 	String readGpio(byte pin);
+	void process_data(String response);
 };
 
 #endif /* MEGABOTICS_WIFI_H_ */
