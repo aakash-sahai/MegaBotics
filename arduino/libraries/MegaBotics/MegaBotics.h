@@ -54,3 +54,4 @@
 #include "WiFi.h"
 #include "PwmIn.h"
 #include "PwmOut.h"
+#include "PwmMux.h"

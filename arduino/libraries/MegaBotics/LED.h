@@ -35,7 +35,7 @@
  * LED.h
  *
  *  Created on: 14-Mar-2015
- *      Author: eashan
+ *      Author: Eashan Sahai
  */
 
 #include <Arduino.h>
@@ -43,9 +43,12 @@
 #ifndef LED_H_
 #define LED_H_
 
+#define DEFAULT_LED_PIN			13
+#define DEFAULT_LED_BLINK_PAUSE	100	// Default pause for blink fn (in msec)
+
 struct LedConfig {
-	uint8_t pin;
-	uint8_t blinkPause;
+	byte pin;
+	byte blinkPause;
 };
 
 class LED {
@@ -55,13 +58,11 @@ private:
 	void init(void);
 
 public:
-	static const uint8_t DEF_PIN = 2;
-	static const uint8_t DEF_BLINK_PAUSE = 100;	// Default pause for blink fn
 	LED();
-	LED(uint8_t);
+	LED(byte);
+	LED(LedConfig &aConfig);
 	virtual ~LED();
 
-	void setup(LedConfig &aConfig);
 	void on(void) { digitalWrite(_config.pin, HIGH); }
 	void off(void) {  digitalWrite(_config.pin, LOW); }
 	void blink(void) { on(); delay(_config.blinkPause); off(); }

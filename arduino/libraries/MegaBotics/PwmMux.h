@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2015, Aakash Sahai and other contributors, a list of which is
  * maintained in the associated repository. All rights reserved.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,7 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *    + Redistributions of source code must retain the above copyright
  *      notice, this list of conditions and the following disclaimer.
  *    + Redistributions in binary form must reproduce the above copyright
@@ -32,36 +32,37 @@
  */
 
 /*
- * LED.cpp
+ * Module:		PwmMux.cpp - The multiplexer for PWM Output - allows the PWM Output channels 1-4
+ * 				on the MegaBotics platform to be driven either by Arduino pins or by the
+ * 				PWM Input channels 1-4. This way servos/motors attached to PWM Output
+ * 				channels 1-4 can be controlled either programmatically, or directly from
+ * 				a RC radio receiver connected to channels 1-4.
  *
- *  Created on: 14-Mar-2015
- *      Author: Eashan Sahai
+ * Created on:	Mar 30, 2015
+ * Author:		Aakash Sahai
  */
 
-#include <LED.h>
+#ifndef PWMMUX_H_
+#define PWMMUX_H_
 
-LED::LED() {
-	_config.pin = DEFAULT_LED_PIN;
-	_config.blinkPause = DEFAULT_LED_BLINK_PAUSE;
-	init();
-}
+enum PwmMuxMode {
+	PWMIN = 0,
+	PROGRAM = 1
+};
 
-LED::LED(uint8_t aPin) {
-	_config.pin = aPin;
-	_config.blinkPause = DEFAULT_LED_BLINK_PAUSE;
-	init();
-}
+#define PWMMUX_SEL_PIN	38
 
-LED::LED(LedConfig &aConfig) {
-	_config = aConfig;
-	init();
-}
+class PwmMux {
+public:
+	PwmMux();
+	virtual ~PwmMux();
 
-void LED::init(void) {
-	  pinMode(_config.pin, OUTPUT);
-}
+	static void setup(void);
+	static void setMode(PwmMuxMode mode);
+	static PwmMuxMode getMode(void) { return currentMode; }
 
-LED::~LED() {
-	// Nothing to do
-}
+private:
+	static PwmMuxMode currentMode;
+};
 
+#endif /* PWMMUX_H_ */

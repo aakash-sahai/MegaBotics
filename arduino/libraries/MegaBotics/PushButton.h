@@ -43,38 +43,30 @@
 #ifndef PUSHBUTTON_H_
 #define PUSHBUTTON_H_
 
-struct PushButtonConfig {
-	uint8_t pin;
-	uint8_t type;
-};
+#define DEFAULT_PUSHBUTTON_PIN	2
 
 class PushButton {
 private:
 	bool _isPressed;
 	bool _wasClicked;
 	int _clickQty;
-	PushButtonConfig _config;
+	byte	_pin;
 
 	void init(void);
 
 public:
-	static const uint8_t DEF_PIN = 2;
-	static const uint8_t DEF_TYPE = INPUT;
 
 	PushButton();
-	PushButton(uint8_t);
+	PushButton(byte);
 
 	virtual ~PushButton();
 
-	void setup(PushButtonConfig &aConfig);
 	void check(void);
 	int timesClicked() { check(); return _clickQty; }
 	void clear() { this->_clickQty = 0; }
 	bool pressed(void) { check(); return _isPressed; }
 	bool clicked(void);
-	uint8_t getPin() { return _config.pin; }
-	uint8_t getType() { return _config.type; }
-
+	byte getPin() { return _pin; }
 };
 
 #endif /* PUSHBUTTON_H_ */

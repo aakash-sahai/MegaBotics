@@ -41,23 +41,12 @@
 #include "PushButton.h"
 
 PushButton::PushButton() {
-	_config.pin = DEF_PIN;
-	_config.type = DEF_TYPE;
+	_pin = DEFAULT_PUSHBUTTON_PIN;
 	init();
 }
 
-PushButton::PushButton(uint8_t aPin) {
-	_config.pin = aPin;
-	_config.type = DEF_TYPE;
-	init();
-}
-
-void PushButton::setup(PushButtonConfig &aConfig) {
-	if (aConfig.type == OUTPUT) {
-		Serial.println("Silly you! Button can't be OUTPUT type.");
-		aConfig.type = INPUT;
-	}
-	_config = aConfig;
+PushButton::PushButton(byte aPin) {
+	_pin = aPin;
 	init();
 }
 
@@ -65,16 +54,15 @@ PushButton::~PushButton() {
 	// Nothing to do
 }
 
-
 void PushButton::init(void) {
 	this->_clickQty = 0;
 	this->_isPressed = false;
 	this->_wasClicked = false;
-	pinMode(_config.pin, _config.type);
+	pinMode(_pin, INPUT);
 }
 
 void PushButton::check(void) {
-	int state = digitalRead(_config.pin);
+	int state = digitalRead(_pin);
 	if (state == HIGH) {
 		this->_isPressed = true;
 	} else {
