@@ -32,87 +32,45 @@
  */
 
 /*
- * The calibration routine for calibrating the Rover. The details of the setup
- * and instructions can be found on the project Wiki.
+ * An example sketch to test the PWM Input and Multiplexer module.
  */
 #include <Servo.h>
 #include <MegaBotics.h>
 
-#define ROVER_CALIBRATE 0
+#define PWM_TEST	0
 
-#if ROVER_CALIBRATE
+#define PWMIN_CONTROL_CHANNEL	5
+
+#if PWM_TEST
 
 UPort uPort;
 HardwareSerial * serial;
 
-int steerVal = 90;
-int throttleVal = 1400;
-bool calibrateSteer = true;
-
-const int BUTTON_UP_PIN = 2;
-const int BUTTON_DOWN_PIN = 3;
-
-PushButton up;
-PushButton down;
-Rover rover;
-
 void setup() {
-	up = PushButton(BUTTON_UP_PIN);
-	down = PushButton(BUTTON_DOWN_PIN);
-	rover = Rover();
 	uPort = UPort(1);
 	serial = uPort.serial();
-
-	serial->begin(9600);
-	serial->println("Click UP button to calibrate steering or DOWN to throttle.");
-	rover.setup();
-	selectMode();
-	serial->println("Press UP/DOWN Button and note down the various values.");
-}
-
-void selectMode() {
-	while (true) {
-		up.check();
-		down.check();
-		if (up.clicked()) {
-			calibrateSteer = true;
-			break;
-		}
-		if (down.clicked()) {
-			calibrateSteer = false;
-			break;
-		}
-	}
-	serial->print("Calibrating ");
-	serial->println(calibrateSteer ? "Steering" : "Throttle");
+	serial->begin(115200);
+	PwmIn::setup();
+	PwmMux::setup();
 }
 
 void loop() {
-	up.check();
-	down.check();
-	if (up.pressed()) {
-		if (calibrateSteer)
-			steerVal += 1;
-		else
-			throttleVal += 1;
-		serial->print("Value: ");
-		serial->println(calibrateSteer ? steerVal : throttleVal);
+	char buf[64];
+	for (byte ch = 1; ch <= MAX_PWMIN_CHANNELS; ch++) {
+		sprintf(buf, "[ CH%d: %d - %d - %d ] ", (int)ch,
+				PwmIn::minimum(ch), PwmIn::current(ch), PwmIn::maximum(ch));
+		serial->print(buf);
+	}
+	serial->println("");
+	if (PwmIn::current(PWMIN_CONTROL_CHANNEL) < 1400) {
+		serial->println("Switching to Manual mode");
+		PwmMux::setMode(PWMIN);
+	} else {
+		serial->println("Switching to Autopilot mode");
+		PwmMux::setMode(PROGRAM);
 	}
 
-	if (down.pressed()) {
-		if (calibrateSteer)
-			steerVal -= 1;
-		else
-			throttleVal -= 1;
-		serial->print("Value: ");
-		serial->println(calibrateSteer ? steerVal : throttleVal);
-	}
-
-	if (calibrateSteer)
-		rover.steerRaw(steerVal);
-	else
-		rover.throttleRaw(throttleVal);
-
-	delay(100);
+	delay(1000);
 }
+
 #endif

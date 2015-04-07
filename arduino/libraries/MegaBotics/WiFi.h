@@ -64,7 +64,7 @@
 #include <Uport.h>
 
 #define WIFI_DEFAULT_UPORT		4
-#define WIFI_DEFAULT_BAUD		115200L
+#define WIFI_DEFAULT_BAUD		57600L
 #define WIFI_RST_PIN			1
 #define WIFI_ENABLE_PIN			2
 #define WIFI_MAX_CONNECTIONS	5
@@ -100,7 +100,8 @@ enum WiFiStatus {
 	SEND_DATA = 2,
 	NOT_AVAILABLE = 3,
 	TIMEDOUT = 4,
-	NOT_CONNECTED = 5
+	BUSY = 5,
+	NOT_CONNECTED = 6
 };
 
 enum Protocol {
@@ -115,14 +116,14 @@ struct Connection {
 	char	host[WIFI_MAX_HOSTLEN+1];
 
 	String toStr(void) {
-		return String(id) + ",\"TCP\",\"" + String(host) + "\","  + String(port);
+		return String(id) + ",\"TCP\",\"" + String(host) + "\","  + String(port) + ':' + String(status);
 	}
 };
 
 struct ListenHandlers {
-	void (* connect)(Connection &connection);
+	void (* connect)(byte connectionId);
 	void (* disconnect)(byte connectionId);
-	void (* receive)(byte connectionId, const char *data, int length);
+	void (* receive)(byte connectionId, const char *data, int length, int remaining);
 };
 
 struct ApConfig {
@@ -206,7 +207,10 @@ private:
 	void initConnections(void);
 	void flushInput(void);
 	String readGpio(byte pin);
-	void process_data(String response);
+	void process_data(const char *ptr, int len);
+	byte replenish(void);
+	void consume(int size);
+	WiFiStatus checkBusy(void);
 };
 
 #endif /* MEGABOTICS_WIFI_H_ */

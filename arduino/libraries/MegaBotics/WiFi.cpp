@@ -5,20 +5,16 @@
  *      Author: aakash
  */
 
-#include <WiFi.h>
+#include <MegaBotics.h>
 
 WiFi::WiFi() {
 	baud = WIFI_DEFAULT_BAUD;
 	uport = UPort(WIFI_DEFAULT_UPORT);
-	output = "";
-	listenPort = 0;
 }
 
 WiFi::WiFi(int port) {
 	baud = WIFI_DEFAULT_BAUD;
 	uport = UPort(port);
-	output = "";
-	listenPort = 0;
 }
 
 WiFi::~WiFi() {
@@ -26,16 +22,24 @@ WiFi::~WiFi() {
 }
 
 WiFiStatus WiFi::setup(void) {
+	listenPort = 0;
+	output = "";
 	pinMode(uport.getDigitalPin(WIFI_RST_PIN), OUTPUT);
 	pinMode(uport.getDigitalPin(WIFI_ENABLE_PIN), OUTPUT);
 	pinMode(uport.getAnalogPin(), INPUT);
+	pinMode(uport.getPwmInputPin(), INPUT);
 	uport.serial()->begin(baud);
 	initConnections();
+	DBG_PRINTLN("WIFI: RESET");
 	hardReset();
 	flushInput();
+	DBG_PRINTLN("WIFI: ENABLE");
 	enable();
+	DBG_PRINTLN("WIFI: SET MODE AP+STA");
 	setMode(MODE_BOTH);
+	DBG_PRINTLN("WIFI: SET MUX");
 	setMux();
+
 	return SUCCESS;
 }
 
@@ -74,51 +78,156 @@ WiFiStatus WiFi::execCommand(String cmd) {
 	return response();
 }
 
-void WiFi::process_data(String resp) {
-	const char *ptr;
-	int len;
-	byte id;
-	int msgLen = 0;
+#define STATE_IDLE			0
+#define STATE_WAITOK		1
+#define STATE_IPD_MSGLEN	3
+#define STATE_LF			4
+#define STATE_DATA			5
+#define STATE_SEND			6
 
-	ptr = resp.c_str();
-	len = resp.length();
+#define POLL_BUF_SIZE	64
+static char pollbuf[POLL_BUF_SIZE+1];
+static byte  pollsize = 0;
+static int  msgLen = 0;
+static byte msgConnId = 0;
+static int  state = STATE_IDLE;
 
-	ptr += 5; len -= 5;		// Point past "+IPD,"
-	id = *ptr - '0';		// Decode ID
+byte WiFi::replenish(void) {
+	int ch;
 
-	ptr += 2; len -= 2;  	// Point past "+IPD,x"
-
-	for (;*ptr != ':'; ptr++, len--) {		// Decode message length
-		msgLen = msgLen * 10 + (*ptr - '0');
+	serialEventRun();
+	while (pollsize < POLL_BUF_SIZE && (ch=uport.serial()->read()) != -1) {
+		pollbuf[pollsize++] = (char)ch;
 	}
-	ptr++; len--;
+	pollbuf[pollsize] = 0;	// Null terminate
+	return pollsize;
+}
 
-	if (listenHandlers.receive != 0)
-		listenHandlers.receive(id, ptr, len);
-
-	msgLen -= len;			// msgLen is now the number of unread bytes
-
-	if (msgLen > 0) {		// Read the rest of the data
-		char *ptr = (char *)malloc(msgLen);
-		while (msgLen > 0) {
-			len = uport.serial()->readBytes(ptr, msgLen);
-			msgLen -= len;
-			if (listenHandlers.receive != 0)
-				listenHandlers.receive(id, ptr, len);
-		}
-		free((void *)ptr);
+void WiFi::consume(int size) {
+	pollsize -= size;
+	if (pollsize) {
+		memcpy(pollbuf, pollbuf+size, pollsize);
 	}
 }
 
-void WiFi::poll() {
-	int ret;
+int popState = -1;
 
-	while (uport.serial()->available()) {
-		String resp = uport.serial()->readStringUntil('\n');
-		if ((ret=resp.indexOf("+IPD,")) == 0) {
-			process_data(resp);
-		} else {
-			output = output + resp;
+void WiFi::poll() {
+	int size;
+
+	while (replenish()) {
+		switch (state) {
+		case STATE_SEND:
+			if (pollsize < 9) {
+				break;
+			}
+			if (strstr(pollbuf, "SEND OK\r\n") == pollbuf) {
+				consume(9);
+				int ret = checkBusy();
+				state = STATE_IDLE;
+			} else if (strstr(pollbuf, "+IPD,") == pollbuf) {
+				msgConnId = pollbuf[5] - '0';	// Get the ID
+				consume(7);						// advance by 7 ( + I P D , x , )
+				popState = STATE_SEND;
+				state = STATE_IPD_MSGLEN;
+			} else {
+				consume(1);
+			}
+			break;
+		case STATE_DATA:		// In the middle of processing DATA (aka IPD) message
+			size = min((int)pollsize, msgLen);
+			msgLen -= size;
+
+			if (listenHandlers.receive != 0)
+				listenHandlers.receive(msgConnId, pollbuf, size, msgLen);
+
+			consume(size);
+
+			if (msgLen == 0) {
+				state = STATE_WAITOK;
+			}
+			break;
+		case STATE_WAITOK:
+			if (pollsize < 6) {
+				break;
+			}
+			if (strstr(pollbuf, "\r\nOK\r\n") == pollbuf) {
+				consume(6);
+				if (popState == -1)
+					state = STATE_IDLE;
+				else {
+					state = popState;
+					popState = -1;
+				}
+			} else {
+				DBG_PRINT("O<"); DBG_PRINT(pollbuf);DBG_PRINT(">");
+				consume(1);
+				state = STATE_IDLE;
+			}
+			break;
+		case STATE_IDLE:
+			if (pollsize < 10) {
+				break;
+			}
+			if (strstr(pollbuf, "+IPD,") == pollbuf) {
+				msgConnId = pollbuf[5] - '0';	// Get the ID
+				consume(7);						// advance by 7 ( + I P D , x , )
+				state = STATE_IPD_MSGLEN;
+			} else if (strstr(pollbuf, ",CONNECT\r") == pollbuf+1) {
+				consume(10);
+
+				byte id = pollbuf[0] - '0';
+				connections[id].status = OPEN;
+				connections[id].port = listenPort;
+				strcpy(connections[id].host, "0.0.0.0");
+
+				if (listenHandlers.connect != 0)
+					listenHandlers.connect(id);
+				while (true) {
+					if (!pollsize) {
+						replenish();
+					} else {
+						if (pollbuf[0] == '\n') {
+							consume(1);
+							break;
+						} else {
+							DBG_PRINT("N<"); DBG_PRINT(pollbuf);DBG_PRINT(">");
+							consume(1);
+							break;
+						}
+					}
+				}
+			} else if (strstr(pollbuf, ",CLOSED\r\n") == pollbuf+1) {
+				byte id = pollbuf[0] - '0';
+				connections[id].status = CLOSED;
+				connections[id].port = 0;
+				connections[id].host[0] = 0;
+				consume(10);
+				if (listenHandlers.disconnect != 0)
+					listenHandlers.disconnect(id);
+			} else if (strstr(pollbuf, "\r\n") == pollbuf) {
+				consume(2);
+			} else {
+				consume(1);
+			}
+			break;
+		case STATE_IPD_MSGLEN:
+			msgLen = 0;
+			while (true) {
+				if (!pollsize) {
+					replenish();
+				} else {
+					if (pollbuf[0] == ':') {
+						consume(1);
+						break;
+					} else {
+						msgLen = msgLen * 10 + (pollbuf[0] - '0');
+						consume(1);
+					}
+				}
+			}
+			state = STATE_DATA;
+			break;
 		}
 	}
 }
@@ -134,17 +243,17 @@ WiFiStatus WiFi::response() {
 				return SUCCESS;
 			} else if ((ret=resp.indexOf("ERROR")) == 0) {
 				return FAILURE;
+			} else if ((ret=resp.indexOf("busy s...")) >= 0) {
+				return BUSY;
 			} else if ((ret=resp.indexOf(">")) == 0) {
 				return SEND_DATA;
-			} else if ((ret=resp.indexOf("+IPD,")) == 0) {
-				process_data(resp);
 			} else {
 				output = output + resp;
 			}
 		} else {
 			if (times++ > 100)
 				return TIMEDOUT;
-			delay(10);
+			delay(1);
 		}
 	}
 }
@@ -369,9 +478,7 @@ WiFiStatus	WiFi::writeGpio(byte pin, bool value) {
 }
 
 void WiFi::flushInput() {
-	while (uport.serial()->available()) {
-		volatile int ch = uport.serial()->read();
-	}
+	while (uport.serial()->read() != -1);
 }
 
 WiFiStatus WiFi::listen(int port, ListenHandlers *handlers) {
@@ -430,15 +537,38 @@ WiFiStatus WiFi::disconnect(byte id) {
 	}
 }
 
+WiFiStatus WiFi::checkBusy(void) {
+	output="";
+	uport.serial()->println("AT");
+	for (int attempt = 0; ; attempt++) {
+		WiFiStatus ret = response();
+		if (ret == BUSY) {
+			if (attempt > 100) {
+				return BUSY;
+			} else {
+				delay(10);
+				uport.serial()->println("AT");
+			}
+		} else {
+			return ret;
+		}
+	}
+}
+
 WiFiStatus WiFi::send(byte connectionId, const char *data, int length) {
+	while (state != STATE_IDLE) {
+		poll();
+	}
 	String cmd = "AT+CIPSEND=" + String(connectionId) + "," + String(length);
 	WiFiStatus ret = execCommand(cmd);
 	if (ret != SEND_DATA) {
 		return ret;
 	}
 	uport.serial()->write(data, length);
-	WiFiStatus status = response();
-	return status;
+	uport.serial()->flush();
+	state = STATE_SEND;
+	poll();
+	return SUCCESS;
 }
 
 WiFiStatus WiFi::send(byte connectionId, String str) {

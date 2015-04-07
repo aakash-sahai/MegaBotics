@@ -32,33 +32,45 @@
  */
 
 /*
- * The calibration routine for calibrating the Rover. The details of the setup
- * and instructions can be found on the project Wiki.
+ * An example sketch to test ESP8266 WiFi module.
  */
 #include <Servo.h>
 #include <MegaBotics.h>
 
-HardwareSerial * terminal;
+#define WIFI_TEST 	1
+#define INTERACT 	0
+#define GOOGLE_TEST	1
+#if WIFI_TEST
 
-WiFi wifi;
-
-#define INTERACT 1
-
+#define WIFI_UPORT	3
 #define TERMINAL_UPORT	1
 
-void doConnect(Connection &connection)
+HardwareSerial * terminal;
+WiFi wifi;
+byte openId = 255;
+
+void doConnect(byte connectionId)
 {
 	terminal->print("Inbound Connection: ");
-	terminal->println(connection.toStr());
+	terminal->println(wifi.connection(connectionId));
+	openId = connectionId;
 }
 
 void doDisconnect(byte connectionId) {
 	terminal->print("Disconnecting from: ");
 	terminal->println(wifi.connection(connectionId));
+	openId = 255;
 }
 
-void doReceive(char *data, int length) {
-	terminal->print("Received data: <<<");
+void doReceive(byte connectionId, const char *data, int length, int remaining) {
+	terminal->print("RX ");
+	terminal->print(length);
+	terminal->print(" bytes on ");
+	terminal->print(connectionId);
+	terminal->print(" remaining ");
+	terminal->print(remaining);
+
+	terminal->print(" <<<");
 	for (int i = 0; i < length; i++) {
 		terminal->print(data[i]);
 	}
@@ -70,9 +82,10 @@ void setup() {
 	terminal = uPort.serial();
 	terminal->begin(115200);
 
-	wifi = WiFi(WIFI_DEFAULT_UPORT);
+	wifi = WiFi(WIFI_UPORT);
 	wifi.setup();
 
+	DBG_PRINTLN("WIFI: CONFIG AP");
 	configAp();
 	delay(5000);
 
@@ -86,13 +99,12 @@ void setup() {
 	 */
 
 	info();
+	serve80();
 	io();
 }
 
 void info() {
 	terminal->println("-----------------------------");
-	terminal->print("FIRMWARE VERSION: ");
-	terminal->println(wifi.getFirmwareVersion());
 	terminal->print("STA IP: ");
 	terminal->println(wifi.getStaIp());
 	terminal->print("AP IP: ");
@@ -123,8 +135,7 @@ void info() {
 	terminal->println(wifi.readGpio0());
 }
 
-void io(void) {
-	byte id;
+void serve80(void) {
 	WiFiStatus status;
 	ListenHandlers handlers;
 
@@ -138,7 +149,12 @@ void io(void) {
 	} else {
 		terminal->println("Listen Failed");
 	}
-	showConnections();
+}
+
+void io(void) {
+#if GOOGLE_TEST
+	WiFiStatus status;
+	byte id;
 
 	status = wifi.connect(80, "216.58.217.46", id);		// Connect to Google
 	if (status == SUCCESS) {
@@ -149,6 +165,13 @@ void io(void) {
 	}
 	showConnections();
 
+	status = wifi.send(id, "GET /\n");
+	if (status == SUCCESS) {
+		terminal->print("Sent Request");
+	} else {
+		terminal->println("Send Failed");
+	}
+
 	status = wifi.disconnect(id);
 	if (status == SUCCESS) {
 		terminal->println("Disconnected");
@@ -156,6 +179,7 @@ void io(void) {
 		terminal->println("Disconnect Failed");
 	}
 	showConnections();
+#endif
 }
 
 void showConnections(void) {
@@ -169,7 +193,7 @@ void configAp() {
 
 	apConfig.ssid = "MEGABOTICS";
 	apConfig.password = "r@n$0mone";
-	apConfig.channel = 1;
+	apConfig.channel = 6;
 	apConfig.encryption = ENC_WPA_WPA2_PSK;
 	wifi.setApConfig(apConfig);
 }
@@ -182,47 +206,58 @@ void configSta() {
 	wifi.setStaConfig(staConfig);
 }
 
-String save = "";
+void sendData(void) {
+	if (openId != 255) {
+		terminal->print("Send returned: ");
+		terminal->println(wifi.send(openId, "ABCDEFGHIJKLMNOPQRSTUVWXYZ\n", 27));
+	}
+}
 
 void loop() {
 #if	INTERACT
 	interact();
 #else
-	info();
-	delay(5000);
+	//info();
+	wifi.poll();
+	if (terminal->available()) {
+		int ch = terminal->read();
+		switch(ch) {
+		case 's':
+			sendData();
+			break;
+		case 'r':
+			wifi.setup();
+			serve80();
+			break;
+		case 'c':
+			showConnections();
+			break;
+		case 'i':
+			info();
+			break;
+		}
+	}
 #endif
 }
 
 void interact(void) {
 	int ch;
-	int ret;
 
-	UPort uPort = UPort(WIFI_DEFAULT_UPORT);
+	UPort uPort = UPort(WIFI_UPORT);
 	HardwareSerial * wifiSerial = uPort.serial();
 
 	while (true) {
+		serialEventRun();
 		if (terminal->available()) {
 			ch = terminal->read();
 			wifiSerial->write(ch);
 		}
 
 		if (wifiSerial->available()) {
-			String resp = wifiSerial->readStringUntil('\n');
-			if ((ret = resp.indexOf("OK")) >= 0) {
-				terminal->println("GOT OK");
-				save = "";
-			} else if ((ret = resp.indexOf("ERROR")) >= 0) {
-				terminal->println("GOT ERROR");
-				save = "";
-			} else if ((ret = resp.indexOf("+IPD,")) >= 0) {
-				terminal->println("GOT DATA");
-				terminal->print(resp);
-				save = "";
-			} else {
-				save = save + resp;
-				terminal->print(">");
-				terminal->print(save);
-			}
+			ch = wifiSerial->read();
+			terminal->write(ch);
 		}
 	}
 }
+
+#endif
