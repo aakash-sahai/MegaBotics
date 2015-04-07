@@ -64,7 +64,7 @@
 #include <Uport.h>
 
 #define WIFI_DEFAULT_UPORT		4
-#define WIFI_DEFAULT_BAUD		57600L
+#define WIFI_DEFAULT_BAUD		115200L
 #define WIFI_RST_PIN			1
 #define WIFI_ENABLE_PIN			2
 #define WIFI_MAX_CONNECTIONS	5

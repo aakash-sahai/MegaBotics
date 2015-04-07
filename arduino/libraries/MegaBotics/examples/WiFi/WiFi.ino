@@ -39,7 +39,8 @@
 
 #define WIFI_TEST 	1
 #define INTERACT 	0
-#define GOOGLE_TEST	1
+#define GOOGLE_TEST	0
+
 #if WIFI_TEST
 
 #define WIFI_UPORT	3
@@ -100,7 +101,7 @@ void setup() {
 
 	info();
 	serve80();
-	io();
+	client();
 }
 
 void info() {
@@ -151,7 +152,7 @@ void serve80(void) {
 	}
 }
 
-void io(void) {
+void client(void) {
 #if GOOGLE_TEST
 	WiFiStatus status;
 	byte id;
