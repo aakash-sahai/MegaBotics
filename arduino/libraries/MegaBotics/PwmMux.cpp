@@ -55,8 +55,7 @@ PwmMux::~PwmMux() {
 
 void PwmMux::setup(PwmMuxMode mode) {
 	pinMode(PWMMUX_SEL_PIN, OUTPUT);
-	_currentMode = mode;
-	setMode(PWMIN);
+	setMode(mode);
 }
 
 void PwmMux::setMode(PwmMuxMode mode) {
@@ -65,4 +64,5 @@ void PwmMux::setMode(PwmMuxMode mode) {
 	} else {
 		digitalWrite(PWMMUX_SEL_PIN, LOW);
 	}
+	_currentMode = mode;
 }
