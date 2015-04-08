@@ -46,15 +46,18 @@
 
 class PwmIn {
 public:
+	PwmIn();
 	virtual ~PwmIn();
 
-	static void setup();
-	static void reset();
-	static byte getPin(byte channel) { return _pinMappings[channel-1]; }
-	static byte getPcint(byte channel) { return _pcintMappings[channel-1]; }
-	static int current(byte channel) { return _pwmCurrent[channel-1]; }
-	static int minimum(byte channel) { return _pwmMin[channel-1]; }
-	static int maximum(byte channel) { return _pwmMax[channel-1]; }
+	void setup(byte channel);
+	void reset();
+	byte getPin() { return _pinMappings[_channel-1]; }
+	byte getPcint() { return _pcintMappings[_channel-1]; }
+	int current() { return _pwmCurrent[_channel-1]; }
+	int minimum() { return _pwmMin[_channel-1]; }
+	int maximum() { return _pwmMax[_channel-1]; }
+
+	static int _intCount;
 
 	static unsigned long _prevTime[MAX_PWMIN_CHANNELS];
 	static unsigned int _pwmCurrent[MAX_PWMIN_CHANNELS];
@@ -63,12 +66,10 @@ public:
 	static const byte _pinMappings[MAX_PWMIN_CHANNELS];
 	static const byte _pcintMappings[MAX_PWMIN_CHANNELS];
 
-	static int _intCount;
-
 private:
-	PwmIn();
-	static void init(void);
-	static bool _initialized;
+	byte _channel;
+	bool _initialized;
+	void init(void);
 };
 
 #endif /* MEGABOTICS_PWMIN_H_ */

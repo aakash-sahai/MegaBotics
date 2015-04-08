@@ -42,6 +42,7 @@
 const byte PwmOut::_pinMappings[MAX_PWMOUT_CHANNELS] = { 4, 5, 6, 7, 8, 9 };
 
 PwmOut::PwmOut() {
+	_channel = 1;
 }
 
 PwmOut::~PwmOut() {

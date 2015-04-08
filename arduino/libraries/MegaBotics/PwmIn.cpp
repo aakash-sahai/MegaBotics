@@ -47,16 +47,18 @@ unsigned long PwmIn::_prevTime[MAX_PWMIN_CHANNELS] = { 0L, 0L, 0L, 0L, 0L, 0L };
 unsigned int PwmIn::_pwmCurrent[MAX_PWMIN_CHANNELS] = { 0L, 0L, 0L, 0L, 0L, 0L };
 unsigned int PwmIn::_pwmMax[MAX_PWMIN_CHANNELS] = { 0L, 0L, 0L, 0L, 0L, 0L };
 unsigned int PwmIn::_pwmMin[MAX_PWMIN_CHANNELS] = { 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF };
-bool PwmIn::_initialized = false;
 int PwmIn::_intCount = 0;
 
 PwmIn::PwmIn() {
+	_channel = 1;
+	_initialized = false;
 }
 
 PwmIn::~PwmIn() {
 }
 
-void PwmIn::setup() {
+void PwmIn::setup(byte channel) {
+	_channel = channel;
 	if (!_initialized) {
 		init();
 		reset();
@@ -64,19 +66,15 @@ void PwmIn::setup() {
 }
 
 void PwmIn::init(void) {
-	for (int i = 0; i < MAX_PWMIN_CHANNELS; i++ ) {
-		pinMode(_pinMappings[i], INPUT);
-		attachPinChangeInterrupt(_pcintMappings[i], CHANGE);
-	}
+	pinMode(_pinMappings[_channel-1], INPUT);
+	attachPinChangeInterrupt(_pcintMappings[_channel-1], CHANGE);
 	_initialized = true;
 }
 
 void PwmIn::reset(void) {
-	for (int i = 0; i < MAX_PWMIN_CHANNELS; i++ ) {
-		_pwmMin[i] = 0xFFFF;
-		_pwmMax[i] = 0;
-		_pwmCurrent[i] = 0;
-	}
+	_pwmMin[_channel-1] = 0xFFFF;
+	_pwmMax[_channel-1] = 0;
+	_pwmCurrent[_channel-1] = 0;
 	_initialized = true;
 }
 

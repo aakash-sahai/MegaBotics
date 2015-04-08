@@ -46,28 +46,35 @@
 UPort uPort;
 HardwareSerial * serial;
 
+PwmIn pwmIn1, pwmIn2, pwmIn3, pwmIn4, pwmIn5, pwmIn6;
+PwmIn pwmIns[MAX_PWMIN_CHANNELS] = {pwmIn1, pwmIn2, pwmIn3, pwmIn4, pwmIn5, pwmIn6};
+PwmMux pwmMux;
+
 void setup() {
 	uPort = UPort(1);
 	serial = uPort.serial();
 	serial->begin(115200);
-	PwmIn::setup();
-	PwmMux::setup();
+	for (byte ch = 1; ch <= MAX_PWMIN_CHANNELS; ch++) {
+		pwmIns[ch].setup(ch);
+	}
+
+	pwmMux.setup();
 }
 
 void loop() {
 	char buf[64];
 	for (byte ch = 1; ch <= MAX_PWMIN_CHANNELS; ch++) {
 		sprintf(buf, "[ CH%d: %d - %d - %d ] ", (int)ch,
-				PwmIn::minimum(ch), PwmIn::current(ch), PwmIn::maximum(ch));
+				pwmIns[ch].minimum(), pwmIns[ch].current(), pwmIns[ch].maximum());
 		serial->print(buf);
 	}
 	serial->println("");
-	if (PwmIn::current(PWMIN_CONTROL_CHANNEL) < 1400) {
+	if (pwmIns[PWMIN_CONTROL_CHANNEL].current() < 1400) {
 		serial->println("Switching to Manual mode");
-		PwmMux::setMode(PWMIN);
+		pwmMux.setMode(PWMIN);
 	} else {
 		serial->println("Switching to Autopilot mode");
-		PwmMux::setMode(PROGRAM);
+		pwmMux.setMode(PROGRAM);
 	}
 
 	delay(1000);

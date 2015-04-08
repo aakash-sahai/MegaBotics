@@ -42,9 +42,8 @@
  * Author:		Aakash Sahai
  */
 
-#include <MegaBotics.h>
-
-PwmMuxMode PwmMux::_currentMode;
+#include <Arduino.h>
+#include <PwmMux.h>
 
 PwmMux::PwmMux() {
 	setup();
@@ -54,9 +53,9 @@ PwmMux::~PwmMux() {
 	// TODO Auto-generated destructor stub
 }
 
-void PwmMux::setup(void) {
+void PwmMux::setup(PwmMuxMode mode) {
 	pinMode(PWMMUX_SEL_PIN, OUTPUT);
-	_currentMode = PWMIN;
+	_currentMode = mode;
 	setMode(PWMIN);
 }
 

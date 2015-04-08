@@ -54,15 +54,16 @@ enum PwmMuxMode {
 
 class PwmMux {
 public:
+	PwmMux();
 	virtual ~PwmMux();
 
-	static void setup(void);
-	static void setMode(PwmMuxMode mode);
-	static PwmMuxMode getMode(void) { return _currentMode; }
+	void setup(void) { setup(PWMIN); }
+	void setup(PwmMuxMode mode);
+	void setMode(PwmMuxMode mode);
+	PwmMuxMode getMode(void) { return _currentMode; }
 
 private:
-	PwmMux();
-	static PwmMuxMode _currentMode;
+	PwmMuxMode _currentMode;
 };
 
 #endif /* PWMMUX_H_ */
