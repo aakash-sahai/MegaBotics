@@ -44,7 +44,6 @@
 #if PWM_TEST
 
 UPort uPort;
-HardwareSerial * serial;
 
 PwmIn pwmIn1, pwmIn2, pwmIn3, pwmIn4, pwmIn5, pwmIn6;
 PwmIn pwmIns[MAX_PWMIN_CHANNELS] = {pwmIn1, pwmIn2, pwmIn3, pwmIn4, pwmIn5, pwmIn6};
@@ -52,8 +51,7 @@ PwmMux pwmMux;
 
 void setup() {
 	uPort = UPort(1);
-	serial = uPort.serial();
-	serial->begin(115200);
+	uPort.serial().begin(115200);
 	for (byte ch = 1; ch <= MAX_PWMIN_CHANNELS; ch++) {
 		pwmIns[ch].setup(ch);
 	}
@@ -66,14 +64,14 @@ void loop() {
 	for (byte ch = 1; ch <= MAX_PWMIN_CHANNELS; ch++) {
 		sprintf(buf, "[ CH%d: %d - %d - %d ] ", (int)ch,
 				pwmIns[ch].minimum(), pwmIns[ch].current(), pwmIns[ch].maximum());
-		serial->print(buf);
+		uPort.serial().print(buf);
 	}
-	serial->println("");
+	uPort.serial().println("");
 	if (pwmIns[PWMIN_CONTROL_CHANNEL].current() < 1400) {
-		serial->println("Switching to Manual mode");
+		uPort.serial().println("Switching to Manual mode");
 		pwmMux.setMode(PWMIN);
 	} else {
-		serial->println("Switching to Autopilot mode");
+		uPort.serial().println("Switching to Autopilot mode");
 		pwmMux.setMode(PROGRAM);
 	}
 

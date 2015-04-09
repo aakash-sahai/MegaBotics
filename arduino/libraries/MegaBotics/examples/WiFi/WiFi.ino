@@ -46,94 +46,70 @@
 #define WIFI_UPORT	3
 #define TERMINAL_UPORT	1
 
-HardwareSerial * terminal;
+UPort uPort = UPort(TERMINAL_UPORT);
+HardwareSerial terminal = uPort.serial();
+
 WiFi wifi;
 byte openId = 255;
 
 void doConnect(byte connectionId)
 {
-	terminal->print("Inbound Connection: ");
-	terminal->println(wifi.connection(connectionId));
+	terminal.print("Inbound Connection: ");
+	terminal.println(wifi.connection(connectionId));
 	openId = connectionId;
 }
 
 void doDisconnect(byte connectionId) {
-	terminal->print("Disconnecting from: ");
-	terminal->println(wifi.connection(connectionId));
+	terminal.print("Disconnecting from: ");
+	terminal.println(wifi.connection(connectionId));
 	openId = 255;
 }
 
 void doReceive(byte connectionId, const char *data, int length, int remaining) {
-	terminal->print("RX ");
-	terminal->print(length);
-	terminal->print(" bytes on ");
-	terminal->print(connectionId);
-	terminal->print(" remaining ");
-	terminal->print(remaining);
+	terminal.print("RX ");
+	terminal.print(length);
+	terminal.print(" bytes on ");
+	terminal.print(connectionId);
+	terminal.print(" remaining ");
+	terminal.print(remaining);
 
-	terminal->print(" <<<");
+	terminal.print(" <<<");
 	for (int i = 0; i < length; i++) {
-		terminal->print(data[i]);
+		terminal.print(data[i]);
 	}
-	terminal->println(">>>");
-}
-
-void setup() {
-	UPort uPort = UPort(TERMINAL_UPORT);
-	terminal = uPort.serial();
-	terminal->begin(115200);
-
-	wifi = WiFi(WIFI_UPORT);
-	wifi.setup();
-
-	DBG_PRINTLN("WIFI: CONFIG AP");
-	configAp();
-	delay(5000);
-
-	/*
-	 * Uncomment the following two lines after configuring your SSID and Password in configSta()
-	 * Note that you need to configure your SSID only once as the WiFi chip persists it in internal Flash/EEPROM.
-	 *
-	 * configSta();
-	 * delay(5000);
-	 *
-	 */
-
-	info();
-	serve80();
-	client();
+	terminal.println(">>>");
 }
 
 void info() {
-	terminal->println("-----------------------------");
-	terminal->print("STA IP: ");
-	terminal->println(wifi.getStaIp());
-	terminal->print("AP IP: ");
-	terminal->println(wifi.getApIp());
-	terminal->print("STA MAC: ");
-	terminal->println(wifi.getStaMac());
-	terminal->print("AP MAC: ");
-	terminal->println(wifi.getApMac());
-	terminal->print("BAUD: ");
-	terminal->println(wifi.getBaud());
-	terminal->print("MUX: ");
-	terminal->println(wifi.getMux());
-	terminal->print("MODE: ");
-	terminal->println(wifi.getMode());
-	terminal->print("AP CONFIG: ");
-	terminal->println(wifi.getApConfig());
-	terminal->print("STA CONFIG: ");
-	terminal->println(wifi.getStaConfig());
-	terminal->print("ANALOG: ");
-	terminal->println(wifi.readAnalog());
-	terminal->print("READ DIGITAL 0: ");
-	terminal->println(wifi.readGpio0());
-	terminal->print("READ DIGITAL 2: ");
-	terminal->println(wifi.readGpio2());
-	terminal->println("WRITE DIGITAL 0: [LOW]");
+	terminal.println("-----------------------------");
+	terminal.print("STA IP: ");
+	terminal.println(wifi.getStaIp());
+	terminal.print("AP IP: ");
+	terminal.println(wifi.getApIp());
+	terminal.print("STA MAC: ");
+	terminal.println(wifi.getStaMac());
+	terminal.print("AP MAC: ");
+	terminal.println(wifi.getApMac());
+	terminal.print("BAUD: ");
+	terminal.println(wifi.getBaud());
+	terminal.print("MUX: ");
+	terminal.println(wifi.getMux());
+	terminal.print("MODE: ");
+	terminal.println(wifi.getMode());
+	terminal.print("AP CONFIG: ");
+	terminal.println(wifi.getApConfig());
+	terminal.print("STA CONFIG: ");
+	terminal.println(wifi.getStaConfig());
+	terminal.print("ANALOG: ");
+	terminal.println(wifi.readAnalog());
+	terminal.print("READ DIGITAL 0: ");
+	terminal.println(wifi.readGpio0());
+	terminal.print("READ DIGITAL 2: ");
+	terminal.println(wifi.readGpio2());
+	terminal.println("WRITE DIGITAL 0: [LOW]");
 	wifi.writeGpio(0, 0);
-	terminal->print("READ DIGITAL 0: ");
-	terminal->println(wifi.readGpio0());
+	terminal.print("READ DIGITAL 0: ");
+	terminal.println(wifi.readGpio0());
 }
 
 void serve80(void) {
@@ -146,9 +122,9 @@ void serve80(void) {
 
 	status = wifi.listen(80, &handlers);	// Listen on port 80 for inbound connections
 	if (status == SUCCESS) {
-		terminal->println("Listening on port 80");
+		terminal.println("Listening on port 80");
 	} else {
-		terminal->println("Listen Failed");
+		terminal.println("Listen Failed");
 	}
 }
 
@@ -159,25 +135,25 @@ void client(void) {
 
 	status = wifi.connect(80, "216.58.217.46", id);		// Connect to Google
 	if (status == SUCCESS) {
-		terminal->print("Connected, ID = ");
-		terminal->println(id);
+		terminal.print("Connected, ID = ");
+		terminal.println(id);
 	} else {
-		terminal->println("Connect Failed");
+		terminal.println("Connect Failed");
 	}
 	showConnections();
 
 	status = wifi.send(id, "GET /\n");
 	if (status == SUCCESS) {
-		terminal->print("Sent Request");
+		terminal.print("Sent Request");
 	} else {
-		terminal->println("Send Failed");
+		terminal.println("Send Failed");
 	}
 
 	status = wifi.disconnect(id);
 	if (status == SUCCESS) {
-		terminal->println("Disconnected");
+		terminal.println("Disconnected");
 	} else {
-		terminal->println("Disconnect Failed");
+		terminal.println("Disconnect Failed");
 	}
 	showConnections();
 #endif
@@ -185,7 +161,7 @@ void client(void) {
 
 void showConnections(void) {
 	for (byte i = 0; i < WIFI_MAX_CONNECTIONS; i++) {
-		terminal->println(wifi.connection(i));
+		terminal.println(wifi.connection(i));
 	}
 }
 
@@ -209,9 +185,33 @@ void configSta() {
 
 void sendData(void) {
 	if (openId != 255) {
-		terminal->print("Send returned: ");
-		terminal->println(wifi.send(openId, "ABCDEFGHIJKLMNOPQRSTUVWXYZ\n", 27));
+		terminal.print("Send returned: ");
+		terminal.println(wifi.send(openId, "ABCDEFGHIJKLMNOPQRSTUVWXYZ\n", 27));
 	}
+}
+
+void setup() {
+	terminal.begin(115200);
+
+	wifi = WiFi(WIFI_UPORT);
+	wifi.setup();
+
+	DBG_PRINTLN("WIFI: CONFIG AP");
+	configAp();
+	delay(5000);
+
+	/*
+	 * Uncomment the following two lines after configuring your SSID and Password in configSta()
+	 * Note that you need to configure your SSID only once as the WiFi chip persists it in internal Flash/EEPROM.
+	 *
+	 * configSta();
+	 * delay(5000);
+	 *
+	 */
+
+	info();
+	serve80();
+	client();
 }
 
 void loop() {
@@ -220,8 +220,8 @@ void loop() {
 #else
 	//info();
 	wifi.poll();
-	if (terminal->available()) {
-		int ch = terminal->read();
+	if (terminal.available()) {
+		int ch = terminal.read();
 		switch(ch) {
 		case 's':
 			sendData();
@@ -245,20 +245,21 @@ void interact(void) {
 	int ch;
 
 	UPort uPort = UPort(WIFI_UPORT);
-	HardwareSerial * wifiSerial = uPort.serial();
+	HardwareSerial wifiSerial = uPort.serial();
 
 	while (true) {
 		serialEventRun();
-		if (terminal->available()) {
-			ch = terminal->read();
-			wifiSerial->write(ch);
+		if (terminal.available()) {
+			ch = terminal.read();
+			wifiSerial.write(ch);
 		}
 
-		if (wifiSerial->available()) {
-			ch = wifiSerial->read();
-			terminal->write(ch);
+		if (wifiSerial.available()) {
+			ch = wifiSerial.read();
+			terminal.write(ch);
 		}
 	}
 }
 
 #endif
+

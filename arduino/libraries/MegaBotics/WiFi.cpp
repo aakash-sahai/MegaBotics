@@ -28,7 +28,7 @@ WiFiStatus WiFi::setup(void) {
 	pinMode(uport.getDigitalPin(WIFI_ENABLE_PIN), OUTPUT);
 	pinMode(uport.getAnalogPin(), INPUT);
 	pinMode(uport.getPwmInputPin(), INPUT);
-	uport.serial()->begin(baud);
+	uport.serial().begin(baud);
 	initConnections();
 	DBG_PRINTLN("WIFI: RESET");
 	hardReset();
@@ -69,12 +69,12 @@ WiFiStatus WiFi::newConnection(byte &id)
 }
 
 WiFiStatus WiFi::execCommand(const char *cmd) {
-	uport.serial()->println(cmd);
+	uport.serial().println(cmd);
 	return response();
 }
 
 WiFiStatus WiFi::execCommand(String cmd) {
-	uport.serial()->println(cmd);
+	uport.serial().println(cmd);
 	return response();
 }
 
@@ -96,7 +96,7 @@ byte WiFi::replenish(void) {
 	int ch;
 
 	serialEventRun();
-	while (pollsize < POLL_BUF_SIZE && (ch=uport.serial()->read()) != -1) {
+	while (pollsize < POLL_BUF_SIZE && (ch=uport.serial().read()) != -1) {
 		pollbuf[pollsize++] = (char)ch;
 	}
 	pollbuf[pollsize] = 0;	// Null terminate
@@ -237,8 +237,8 @@ WiFiStatus WiFi::response() {
 	int times = 0;
 	output = "";
 	while(true) {
-		if (uport.serial()->available()) {
-			String resp = uport.serial()->readStringUntil('\n');
+		if (uport.serial().available()) {
+			String resp = uport.serial().readStringUntil('\n');
 			if ((ret=resp.indexOf("OK")) == 0) {
 				return SUCCESS;
 			} else if ((ret=resp.indexOf("ERROR")) == 0) {
@@ -478,7 +478,7 @@ WiFiStatus	WiFi::writeGpio(byte pin, bool value) {
 }
 
 void WiFi::flushInput() {
-	while (uport.serial()->read() != -1);
+	while (uport.serial().read() != -1);
 }
 
 WiFiStatus WiFi::listen(int port, ListenHandlers *handlers) {
@@ -539,7 +539,7 @@ WiFiStatus WiFi::disconnect(byte id) {
 
 WiFiStatus WiFi::checkBusy(void) {
 	output="";
-	uport.serial()->println("AT");
+	uport.serial().println("AT");
 	for (int attempt = 0; ; attempt++) {
 		WiFiStatus ret = response();
 		if (ret == BUSY) {
@@ -547,7 +547,7 @@ WiFiStatus WiFi::checkBusy(void) {
 				return BUSY;
 			} else {
 				delay(10);
-				uport.serial()->println("AT");
+				uport.serial().println("AT");
 			}
 		} else {
 			return ret;
@@ -564,8 +564,8 @@ WiFiStatus WiFi::send(byte connectionId, const char *data, int length) {
 	if (ret != SEND_DATA) {
 		return ret;
 	}
-	uport.serial()->write(data, length);
-	uport.serial()->flush();
+	uport.serial().write(data, length);
+	uport.serial().flush();
 	state = STATE_SEND;
 	poll();
 	return SUCCESS;

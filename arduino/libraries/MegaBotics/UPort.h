@@ -44,7 +44,7 @@ public:
 	UPort(int number);
 	virtual ~UPort();
 
-	HardwareSerial * serial();
+	HardwareSerial& serial();
 
 	void init(void);
 	const PortInfo& getPortInfo();

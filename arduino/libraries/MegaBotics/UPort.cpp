@@ -64,8 +64,8 @@ UPort::~UPort() {
 	// Nothing to do
 }
 
-HardwareSerial * UPort::serial() {
-	return serialDrivers[portInfo.portNumber - 1];
+HardwareSerial& UPort::serial() {
+	return *serialDrivers[portInfo.portNumber - 1];
 }
 
 byte UPort::getDigitalPin(int number) {

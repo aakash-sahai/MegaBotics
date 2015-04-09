@@ -43,7 +43,6 @@
 #if ROVER_CALIBRATE
 
 UPort uPort;
-HardwareSerial * serial;
 
 int steerVal = 90;
 int throttleVal = 1400;
@@ -61,13 +60,12 @@ void setup() {
 	down = PushButton(BUTTON_DOWN_PIN);
 	rover = Rover();
 	uPort = UPort(1);
-	serial = uPort.serial();
 
-	serial->begin(9600);
-	serial->println("Click UP button to calibrate steering or DOWN to throttle.");
+	uPort.serial().begin(9600);
+	uPort.serial().println("Click UP button to calibrate steering or DOWN to throttle.");
 	rover.setup();
 	selectMode();
-	serial->println("Press UP/DOWN Button and note down the various values.");
+	uPort.serial().println("Press UP/DOWN Button and note down the various values.");
 }
 
 void selectMode() {
@@ -83,8 +81,8 @@ void selectMode() {
 			break;
 		}
 	}
-	serial->print("Calibrating ");
-	serial->println(calibrateSteer ? "Steering" : "Throttle");
+	uPort.serial().print("Calibrating ");
+	uPort.serial().println(calibrateSteer ? "Steering" : "Throttle");
 }
 
 void loop() {
@@ -95,8 +93,8 @@ void loop() {
 			steerVal += 1;
 		else
 			throttleVal += 1;
-		serial->print("Value: ");
-		serial->println(calibrateSteer ? steerVal : throttleVal);
+		uPort.serial().print("Value: ");
+		uPort.serial().println(calibrateSteer ? steerVal : throttleVal);
 	}
 
 	if (down.pressed()) {
@@ -104,8 +102,8 @@ void loop() {
 			steerVal -= 1;
 		else
 			throttleVal -= 1;
-		serial->print("Value: ");
-		serial->println(calibrateSteer ? steerVal : throttleVal);
+		uPort.serial().print("Value: ");
+		uPort.serial().println(calibrateSteer ? steerVal : throttleVal);
 	}
 
 	if (calibrateSteer)
