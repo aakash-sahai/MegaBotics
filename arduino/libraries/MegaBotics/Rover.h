@@ -58,6 +58,11 @@ struct RoverConfig {
 	int			steerMax;
 };
 
+enum Direction {
+	FORWARD = 0,
+	REVERSE = 1
+};
+
 class Rover {
 public:
 	static const uint8_t  DEF_THROTTLE_CHANNEL = 1;	// default pin connected to ESC throttle
@@ -70,6 +75,8 @@ public:
 	static const int DEF_STEER_MIN = 53;			// default trim to steer right
 	static const int DEF_STEER_MID = 90;			// default trim to steer straight
 	static const int DEF_STEER_MAX = 153;			// default trim to steer left
+	static const int RAMP_STEP = 50;				// increment step when ramping the throttle to the desired usec
+	static const int RAMP_STEP_DELAY = 50;			// delay in milli-seconds when ramping the throttle to the desired usec
 
 	Rover();
 	virtual ~Rover();
@@ -82,20 +89,25 @@ public:
 	void straight(void) { steer(0); }
 	void steer(int8_t pct);
 	void steerRaw(int val) { _steering.writeServo(val); }	// Takes values from 0 - 180
-	void forward(uint8_t pct) { throttle(pct); };
-	void reverse(uint8_t pct ) { throttle(-1 * pct); };
+	void forward(uint8_t pct) {throttle(pct);}
+	void reverse(uint8_t pct ) {throttle(-1 * pct);}
 	void idle(void) { throttle(0); };
 	void throttle(int8_t pct);
-	void throttleRaw(int val) { _throttle.writeMicrosecondsServo(val); } // Takes values from 0 - 180
-	void brake(void);
+	void throttleRaw(int val) { rampTo(val); } // Takes values from 0 - 180
+	void stop(void);
+	Direction currentDirection() {return _currentDirection;}
 
 private:
 	RoverConfig _config;
 	PwmOut	_throttle;
 	PwmOut	_steering;
+	Direction _currentDirection;
+	int _currentUsec;
 
 	int8_t clipPercent(int8_t pct);
 	int8_t percentToDegrees(int8_t percent);
+	Direction direction(int8_t pct);
+	void rampTo(int usec);
 };
 
 #endif /* ROVER_H_ */

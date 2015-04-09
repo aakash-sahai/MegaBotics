@@ -51,6 +51,7 @@ Rover::Rover() {
 	_config.steerMin = DEF_STEER_MIN;
 	_config.steerMid = DEF_STEER_MID;
 	_config.steerMax = DEF_STEER_MAX;
+	_currentDirection = FORWARD;
 }
 
 Rover::~Rover() {
@@ -94,16 +95,57 @@ void Rover::throttle(int8_t percent) {
 	int usec;
 
 	percent = clipPercent(percent);
+	Direction direc = direction(percent);
+
+	if (_currentDirection == FORWARD && direc == REVERSE) {
+		stop();
+	}
+
 	if (percent == 0) {
 		usec = _config.idlePwm;
-	} else if (percent > 0) {
+	} else if (direc == FORWARD) {
 		// forward
 		usec = map(percent, 0, 100, _config.fwdPwmMin, _config.fwdPwmMax);
 	} else {
 		// reverse
 		usec = map(percent, 0, -100, _config.revPwmMin, _config.revPwmMax);
 	}
-	_throttle.writeMicrosecondsServo(usec);
+
+	rampTo(usec);
+	_currentDirection = direc;
+}
+
+Direction Rover::direction(int8_t percent) {
+	if (percent < 0)
+		return REVERSE;
+	return FORWARD;
+}
+
+void Rover::rampTo(int usec) {
+	if (usec == _currentUsec || _currentUsec == 0) {
+		_throttle.writeMicrosecondsServo(usec);
+	} else if (usec < _currentUsec) {
+		for (int i = _currentUsec; i > usec; i -= RAMP_STEP) {
+			_throttle.writeMicrosecondsServo(i);
+			delay(RAMP_STEP_DELAY);
+		}
+		_throttle.writeMicrosecondsServo(usec);
+	} else if (usec > _currentUsec) {
+		for (int i = _currentUsec; i < usec; i += RAMP_STEP) {
+			_throttle.writeMicrosecondsServo(i);
+			delay(RAMP_STEP_DELAY);
+		}
+		_throttle.writeMicrosecondsServo(usec);
+	}
+
+	_currentUsec = usec;
+}
+
+void Rover::stop() {
+	rampTo(_config.revPwmMax);
+	delay(100);
+	rampTo(_config.idlePwm);
+	delay(100);
 }
 
 int8_t Rover::clipPercent(int8_t percent) {
