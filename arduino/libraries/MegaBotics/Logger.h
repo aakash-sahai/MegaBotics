@@ -1,16 +1,65 @@
 /*
+ * This file is part of the support libraries for the Arduino based MegaBotics
+ * platform.
+ *
+ * Copyright (c) 2015, Aakash Sahai and other contributors, a list of which is
+ * maintained in the associated repository. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *    + Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *    + Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in the
+ *      documentation and/or other materials provided with the distribution.
+ *    + Neither the name of the copyright holder nor the names of its contributors
+ *	may be used to endorse or promote products derived from this software
+ *	without specific prior written permission.
+ */
+
+/*
  * Logger.h
  *
  *  Created on: Apr 7, 2015
- *      Author: aakash
+ *      Author: Aakash Sahai
  */
 
 #ifndef MEGABOTICS_LOGGER_H_
 #define MEGABOTICS_LOGGER_H_
 
-#include <Arduino.h>
-#include <CircularBuffer.h>
-#include <MegaBotics.h>
+#include <string.h>
+#include <stdlib.h>
+#include "CircularBuffer.h"
+#ifdef ARDUINO
+#include <avr/pgmspace.h>
+#include "MegaBotics.h"
+#else
+#include <iostream>
+#include <stdio.h>
+using namespace std;
+#define __FlashStringHelper	char
+#define	PGM_P	const char *
+#define pgm_read_byte(c)	(*c)
+#define	WiFi	char
+#define F(s)	s
+#define strlen_P	strlen
+char * itoa(int value, char *buf, int radix);
+char * dtostrf(double value, int x, int y, char * buf);
+#endif
 
 /*
  * Logger for logging data and status. This logger maintains a circular buffer to
@@ -30,7 +79,8 @@ public:
 		LEVEL_ERROR = 2,
 		LEVEL_WARN = 3,
 		LEVEL_INFO = 4,
-		LEVEL_DEBUG = 5
+		LEVEL_DEBUG = 5,
+		LEVEL_MAX = 5
 	};
 
 	enum Destination {
@@ -41,10 +91,11 @@ public:
 
 	struct Config {
 		int	bufsize;	// should preferably be a power of 2
-		WiFi *wifi;		// Reference to WiFi object
+		WiFi * wifi;	// Reference to WiFi object
 	};
 
-	static Logger & instance() { static Logger instance; return instance; }
+	static Logger & getInstance() { static Logger _instance; return _instance; }
+	Logger() { _destMask = 0; _nvLevel = _logLevel = LEVEL_NONE; _firstValue = false; _config.bufsize = 0; _config.wifi = 0; }
 
 	virtual ~Logger();
 	void setup(Config &config);
@@ -53,9 +104,9 @@ public:
 	void disable(Destination dest) { _destMask &= ~( 1 << dest); }		// Disable logging to a destination
 	void setLevel(Destination dest, Level level)  {
 		_level[dest] = level;
-		_maxLevel = LEVEL_NONE;
+		_logLevel = LEVEL_NONE;
 		for (int i = 0; i < LOGGER_MAX_DESTINATIONS; i++) {
-			if (_level[dest] > _maxLevel) _maxLevel = _level[dest];
+			if (_level[dest] > _logLevel) _logLevel = _level[dest];
 		}
 	}
 
@@ -82,17 +133,16 @@ public:
 							// Should preferably be called periodically at low priority to flush the buffer
 
 private:
-	char _destMask;	// Bit-field of destinations to send the log to
+	char _destMask;		// Bit-field of destinations to send the log to
 	Level _level[LOGGER_MAX_DESTINATIONS];
-	Level _maxLevel;
+	Level _logLevel;
 	Level _nvLevel;
 	bool _firstValue;
 	Config _config;
 	CircularBuffer<char> _buffer;		// The circular buffer used to store the logs
-	Logger() { _destMask = 0; _nvLevel = _maxLevel = LEVEL_NONE; _firstValue = false; _config.bufsize = 0; _config.wifi = 0; }
 	void writeLevelType(Level level, const __FlashStringHelper *type);
 	void writeNameValue(const __FlashStringHelper *name, char *value);
-	bool doLog(Level level) { return (_destMask != 0 && level <= _maxLevel); }
+	bool doLog(Level level) { return (_destMask != 0 && level <= _logLevel); }
 	Logger(Logger const&);              // Don't Implement to disallow copy by assignment
     void operator=(Logger const&);		// Don't implement to disallow copy by assignment
 };

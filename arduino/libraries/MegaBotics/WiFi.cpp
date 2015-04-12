@@ -10,11 +10,15 @@
 WiFi::WiFi() {
 	baud = WIFI_DEFAULT_BAUD;
 	uport = UPort(WIFI_DEFAULT_UPORT);
+	txHead = 0;
+	listenId = -1;
 }
 
 WiFi::WiFi(int port) {
 	baud = WIFI_DEFAULT_BAUD;
 	uport = UPort(port);
+	txHead = 0;
+	listenId = -1;
 }
 
 WiFi::~WiFi() {
@@ -176,13 +180,13 @@ void WiFi::poll() {
 			} else if (strstr(pollbuf, ",CONNECT\r") == pollbuf+1) {
 				consume(10);
 
-				byte id = pollbuf[0] - '0';
-				connections[id].status = OPEN;
-				connections[id].port = listenPort;
-				strcpy(connections[id].host, "0.0.0.0");
+				listenId = pollbuf[0] - '0';
+				connections[listenId].status = OPEN;
+				connections[listenId].port = listenPort;
+				strcpy(connections[listenId].host, "0.0.0.0");
 
 				if (listenHandlers.connect != 0)
-					listenHandlers.connect(id);
+					listenHandlers.connect(listenId);
 				while (true) {
 					if (!pollsize) {
 						replenish();
@@ -198,13 +202,14 @@ void WiFi::poll() {
 					}
 				}
 			} else if (strstr(pollbuf, ",CLOSED\r\n") == pollbuf+1) {
-				byte id = pollbuf[0] - '0';
-				connections[id].status = CLOSED;
-				connections[id].port = 0;
-				connections[id].host[0] = 0;
+				listenId = pollbuf[0] - '0';
+				connections[listenId].status = CLOSED;
+				connections[listenId].port = 0;
+				connections[listenId].host[0] = 0;
 				consume(10);
 				if (listenHandlers.disconnect != 0)
-					listenHandlers.disconnect(id);
+					listenHandlers.disconnect(listenId);
+				listenId = -1;
 			} else if (strstr(pollbuf, "\r\n") == pollbuf) {
 				consume(2);
 			} else {
@@ -529,6 +534,9 @@ WiFiStatus WiFi::disconnect(byte id) {
 		connections[id].status = CLOSED;
 		connections[id].port = 0;
 		connections[id].host[0] = 0;
+		if (id == listenId) {
+			listenId = -1;
+		}
 		return SUCCESS;
 	} else if (result.equals("link not")) {
 		return NOT_CONNECTED;
@@ -556,6 +564,9 @@ WiFiStatus WiFi::checkBusy(void) {
 }
 
 WiFiStatus WiFi::send(byte connectionId, const char *data, int length) {
+	if (connectionId < 0 || connections[connectionId].status != OPEN) {
+		return NOT_CONNECTED;
+	}
 	while (state != STATE_IDLE) {
 		poll();
 	}
@@ -573,4 +584,25 @@ WiFiStatus WiFi::send(byte connectionId, const char *data, int length) {
 
 WiFiStatus WiFi::send(byte connectionId, String str) {
 	return send(connectionId, str.c_str(), str.length());
+}
+
+WiFiStatus WiFi::write(byte connectionId, char ch) {
+	if (connectionId < 0 || connections[connectionId].status != OPEN) {
+		return NOT_CONNECTED;
+	}
+	WiFiStatus ret = SUCCESS;
+	txBuf[txHead++] = ch;
+	if (txHead == WIFI_TXBUF_SIZE) {
+		ret = flush(connectionId);
+	}
+	return ret;
+}
+
+WiFiStatus WiFi::flush(byte connectionId) {
+	WiFiStatus ret = SUCCESS;
+	if (txHead) {
+		ret = send(connectionId, txBuf, txHead);
+		txHead = 0;
+	}
+	return ret;
 }

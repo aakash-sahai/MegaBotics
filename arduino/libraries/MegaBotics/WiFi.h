@@ -70,6 +70,7 @@
 #define WIFI_MAX_CONNECTIONS	5
 #define WIFI_RESET_DELAY		2000
 #define WIFI_MAX_HOSTLEN		16
+#define	WIFI_TXBUF_SIZE			32
 
 enum WiFiMode {
 	MODE_STA = 1,
@@ -157,7 +158,13 @@ public:
 	WiFiStatus connect(int port, String host, byte &conectionId);
 	WiFiStatus disconnect(byte connectionId);
 	WiFiStatus send(byte connectionId, const char *data, int length);
+	WiFiStatus send(const char *data, int length) { return send(listenId, data, length); }
 	WiFiStatus send(byte connectionId, String str);
+	WiFiStatus send(String str) { return send(listenId, str); }
+	WiFiStatus write(byte connectionId, char ch);
+	WiFiStatus write(char ch) { return write(listenId, ch); }
+	WiFiStatus flush(byte connectionId);
+	WiFiStatus flush(void) { return flush(listenId); }
 	String	   connection(byte id) { return connections[id].toStr(); }
 
 	String	 getApConfig(void);
@@ -189,13 +196,15 @@ public:
 
 	void		poll(void);
 
-	String output;
-
 private:
 	UPort uport;
 	long baud;
 	int listenPort;
+	byte listenId;
+	byte txHead;
 	ListenHandlers listenHandlers;
+	char txBuf[WIFI_TXBUF_SIZE];
+
 	Connection connections[WIFI_MAX_CONNECTIONS];
 	WiFiStatus execCommand(const char *cmd);
 	WiFiStatus execCommand(String cmd);
@@ -211,6 +220,7 @@ private:
 	byte replenish(void);
 	void consume(int size);
 	WiFiStatus checkBusy(void);
+	String output;
 };
 
 #endif /* MEGABOTICS_WIFI_H_ */

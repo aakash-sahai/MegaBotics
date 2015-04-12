@@ -55,3 +55,4 @@
 #include "PwmIn.h"
 #include "PwmOut.h"
 #include "PwmMux.h"
+#include "Logger.h"

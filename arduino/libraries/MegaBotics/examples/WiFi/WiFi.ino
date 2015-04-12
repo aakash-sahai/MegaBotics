@@ -47,7 +47,7 @@
 #define TERMINAL_UPORT	1
 
 UPort uPort = UPort(TERMINAL_UPORT);
-HardwareSerial terminal = uPort.serial();
+HardwareSerial &terminal = uPort.serial();
 
 WiFi wifi;
 byte openId = 255;
@@ -183,11 +183,37 @@ void configSta() {
 	wifi.setStaConfig(staConfig);
 }
 
+const char *sendStr = (const char *)"ABCDEFGHIJKLMNOPQRSTUVWXYZ\n";
+
 void sendData(void) {
 	if (openId != 255) {
+		int len = strlen(sendStr);
 		terminal.print("Send returned: ");
-		terminal.println(wifi.send(openId, "ABCDEFGHIJKLMNOPQRSTUVWXYZ\n", 27));
+		terminal.println(wifi.send(openId, sendStr, len));
 	}
+}
+
+void writeData(void) {
+	if (openId != 255) {
+		int len = strlen(sendStr);
+		for (int i = 0; i < len; i++) {
+			wifi.write(openId, sendStr[i]);
+		}
+		terminal.print("Flush returned: ");
+		terminal.println(wifi.flush(openId));
+	}
+}
+
+Logger & logger = Logger::getInstance();
+
+void log(void) {
+	logger.start("Starting the log");
+	logger.log(Logger::LEVEL_INFO, F("INFO"), "Hello, World!");
+	logger.flush();
+	logger.begin(Logger::LEVEL_DEBUG, F("DEBUG")).nv(F("ONE"), 1).nv(F("TWO"), (char *)"22").nv(F("THREE"), 3.3333).end();
+	logger.flush();
+	logger.finish("Finishing the log");
+	logger.flush();
 }
 
 void setup() {
@@ -195,6 +221,15 @@ void setup() {
 
 	wifi = WiFi(WIFI_UPORT);
 	wifi.setup();
+
+	Logger::Config config;
+	config.bufsize = 128;
+	config.wifi = &wifi;
+	logger.setup(config);
+	logger.enable(Logger::LOG_SERIAL);
+	logger.enable(Logger::LOG_TCP);
+	logger.setLevel(Logger::LOG_SERIAL, Logger::LEVEL_DEBUG);
+	logger.setLevel(Logger::LOG_TCP, Logger::LEVEL_DEBUG);
 
 	DBG_PRINTLN("WIFI: CONFIG AP");
 	configAp();
@@ -223,6 +258,9 @@ void loop() {
 	if (terminal.available()) {
 		int ch = terminal.read();
 		switch(ch) {
+		case 'w':
+			writeData();
+			break;
 		case 's':
 			sendData();
 			break;
@@ -235,6 +273,9 @@ void loop() {
 			break;
 		case 'i':
 			info();
+			break;
+		case 'l':
+			log();
 			break;
 		}
 	}
@@ -262,4 +303,3 @@ void interact(void) {
 }
 
 #endif
-
