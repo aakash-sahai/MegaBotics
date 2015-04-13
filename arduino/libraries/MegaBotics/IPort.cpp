@@ -52,7 +52,7 @@ IPort::IPort(int aPort) : Port(aPort) {
 }
 
 void IPort::init(void) {
-	portInfo.type = I2C;
+	portInfo.type = PORT_I2C;
 	portInfo.digitalQty = 2;
 	portInfo.analogQty = 1;
 	portInfo.pwmInQty = 0;

@@ -41,7 +41,7 @@ const byte SPort::digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS] = {
 };
 
 const byte SPort::analogPins[MAX_PORTS] = { A4, A5, A6, A7 };
-const byte SPort::ssPins[MAX_PORTS] = { 39, 47, 48, 49 };
+const byte SPort::ssPins[MAX_PORTS] = { 53, 47, 48, 49 };
 
 SPort::SPort() : Port(1) {
 	init();
@@ -52,7 +52,7 @@ SPort::SPort(int aPort) : Port(aPort) {
 }
 
 void SPort::init(void) {
-		portInfo.type = SPI;
+		portInfo.type = PORT_SPI;
 		portInfo.digitalQty = 1;
 		portInfo.analogQty = 1;
 		portInfo.pwmInQty = 0;

@@ -47,7 +47,7 @@ public:
 	byte getAnalogPin() { return analogPins[portInfo.portNumber - 1]; }
 	byte getDigitalPin(int number);
 	byte getPwmOutputPin() { return pwmOutPins[portInfo.portNumber - 1]; }
-	int getPortType() { return I2C; }
+	int getPortType() { return PORT_I2C; }
 
 private:
 	static const byte digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS];

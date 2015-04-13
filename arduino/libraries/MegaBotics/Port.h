@@ -37,9 +37,9 @@
 #include <Arduino.h>
 
 enum PortType {
-	UART = 1,
-	SPI = 2,
-	I2C = 3
+	PORT_UART = 1,
+	PORT_SPI = 2,
+	PORT_I2C = 3
 };
 
 #define MAX_PORTS	4				// Maximum number of ports of a given type

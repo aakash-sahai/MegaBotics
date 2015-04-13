@@ -51,7 +51,7 @@ public:
 	byte getAnalogPin() { return analogPins[portInfo.portNumber - 1]; }
 	byte getDigitalPin(int number);
 	byte getPwmInputPin() { return pwmInPins[portInfo.portNumber - 1]; }
-	int getPortType() { return UART; }
+	int getPortType() { return PORT_UART; }
 	void cross(UPort &uport);
 	void uncross();
 	void interact(void);

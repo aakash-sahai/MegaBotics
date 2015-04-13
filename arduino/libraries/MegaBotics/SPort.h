@@ -48,7 +48,7 @@ public:
 	byte getAnalogPin() { return analogPins[portInfo.portNumber - 1]; }
 	byte getDigitalPin(int number);
 	byte getSlaveSelectPin(int number) { return ssPins[portInfo.portNumber - 1]; }
-	int getPortType() { return SPI; }
+	int getPortType() { return PORT_SPI; }
 
 private:
 	static const byte digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS];

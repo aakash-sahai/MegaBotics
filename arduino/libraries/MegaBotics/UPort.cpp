@@ -53,7 +53,7 @@ UPort::UPort(int aPort) : Port(aPort) {
 }
 
 void UPort::init(void) {
-	portInfo.type = UART;
+	portInfo.type = PORT_UART;
 	portInfo.digitalQty = 2;
 	portInfo.analogQty = 1;
 	portInfo.pwmInQty = 1;
