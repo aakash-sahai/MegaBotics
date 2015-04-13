@@ -38,16 +38,15 @@
 #include <MegaBotics.h>
 
 #define WIFI_TEST 	1
-#define INTERACT 	0
 #define GOOGLE_TEST	0
 
 #if WIFI_TEST
 
-#define WIFI_UPORT	3
+#define WIFI_UPORT	4
 #define TERMINAL_UPORT	1
 
-UPort uPort = UPort(TERMINAL_UPORT);
-HardwareSerial &terminal = uPort.serial();
+UPort terminalPort = UPort(TERMINAL_UPORT);
+HardwareSerial &terminal = terminalPort.serial();
 
 WiFi wifi;
 byte openId = 255;
@@ -250,10 +249,6 @@ void setup() {
 }
 
 void loop() {
-#if	INTERACT
-	interact();
-#else
-	//info();
 	wifi.poll();
 	if (terminal.available()) {
 		int ch = terminal.read();
@@ -277,29 +272,17 @@ void loop() {
 		case 'l':
 			log();
 			break;
+		case 'x':
+			cross();
+			break;
 		}
 	}
-#endif
 }
 
-void interact(void) {
-	int ch;
-
-	UPort uPort = UPort(WIFI_UPORT);
-	HardwareSerial wifiSerial = uPort.serial();
-
-	while (true) {
-		serialEventRun();
-		if (terminal.available()) {
-			ch = terminal.read();
-			wifiSerial.write(ch);
-		}
-
-		if (wifiSerial.available()) {
-			ch = wifiSerial.read();
-			terminal.write(ch);
-		}
-	}
+void cross(void) {
+	wifi.getUPort().cross(terminalPort);
+	terminalPort.interact();
+	wifi.getUPort().uncross();
 }
 
 #endif

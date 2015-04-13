@@ -52,8 +52,13 @@ public:
 	byte getDigitalPin(int number);
 	byte getPwmInputPin() { return pwmInPins[portInfo.portNumber - 1]; }
 	int getPortType() { return UART; }
+	void cross(UPort &uport);
+	void uncross();
+	void interact(void);
+	bool doEscape(int ch);
 
 private:
+	UPort *_crossPort;
 	static const byte digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS];
 	static const byte analogPins[MAX_PORTS];
 	static const byte pwmInPins[MAX_PORTS];

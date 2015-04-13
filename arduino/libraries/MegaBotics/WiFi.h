@@ -195,6 +195,7 @@ public:
 	WiFiStatus	writeGpio(byte pin, bool value);
 
 	void		poll(void);
+	UPort	&	getUPort(void) { return uport; }
 
 private:
 	UPort uport;

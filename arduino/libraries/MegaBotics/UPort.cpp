@@ -58,6 +58,7 @@ void UPort::init(void) {
 	portInfo.analogQty = 1;
 	portInfo.pwmInQty = 1;
 	portInfo.pwmOutQty = 0;
+	_crossPort = 0;
 }
 
 UPort::~UPort() {
@@ -73,5 +74,51 @@ byte UPort::getDigitalPin(int number) {
 		return -1;
 	} else {
 		return digitalPins[portInfo.portNumber - 1][number - 1];
+	}
+}
+
+void  UPort::cross(UPort &uport) {
+	_crossPort = &uport;
+	uport._crossPort = this;
+}
+
+void  UPort::uncross() {
+	_crossPort->_crossPort = 0;
+	_crossPort = 0;
+}
+
+bool UPort::doEscape(int ch) {
+	static byte escapeCount = 0;
+	if (ch == '~')
+		escapeCount++;
+	else
+		escapeCount = 0;
+
+	return (escapeCount >= 3);
+}
+
+void  UPort::interact(void) {
+	int ch;
+
+	if (!_crossPort) {
+		return;
+	}
+
+	HardwareSerial &me = serial();
+	HardwareSerial &other = _crossPort->serial();
+
+	while (true) {
+		serialEventRun();
+		if (me.available()) {
+			ch = me.read();
+			if (doEscape(ch))
+				break;
+			other.write(ch);
+		}
+
+		if (other.available()) {
+			ch = other.read();
+			me.write(ch);
+		}
 	}
 }
