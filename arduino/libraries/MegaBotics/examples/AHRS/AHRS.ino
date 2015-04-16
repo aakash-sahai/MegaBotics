@@ -31,29 +31,64 @@
  *	without specific prior written permission.
  */
 
-#include <stddef.h>
-#include <inttypes.h>
-#include <Arduino.h>
+/*
+ * An example sketch to test AHRS module.
+ */
 #include <Servo.h>
+#include <MegaBotics.h>
 
-#define	RAD2DEG(_r)	(_r * RAD_TO_DEG)
-#define	DEG2RAD(_d)	(_d * DEG_TO_RAD)
+#define AHRS_TEST 	1
+#define GOOGLE_TEST	0
 
-#define DBG_PRINT	Serial.print
-#define DBG_PRINTLN	Serial.println
+#if AHRS_TEST
 
-#include "PushButton.h"
-#include "Port.h"
-#include "UPort.h"
-#include "SPort.h"
-#include "IPort.h"
-#include "LED.h"
-#include "Coord.h"
-#include "Sonar.h"
-#include "Rover.h"
-#include "WiFi.h"
-#include "PwmIn.h"
-#include "PwmOut.h"
-#include "PwmMux.h"
-#include "Logger.h"
-#include "AHRS.h"
+#define AHRS_UPORT		2
+#define TERMINAL_UPORT	1
+
+UPort terminalPort(TERMINAL_UPORT);
+
+AHRS ahrs(AHRS_UPORT);
+
+void setup() {
+	terminalPort.serial().begin(115200);
+	ahrs.setup();
+}
+
+void loop() {
+	ahrs.poll();
+
+	if (terminalPort.serial().available()) {
+		int ch = terminalPort.serial().read();
+		switch(ch) {
+		case 'y':	// Get Yaw/Pitch/Roll data
+		{
+			AHRS::ypr &_ypr = ahrs.getYPR();
+			terminalPort.serial().print(_ypr);
+			break;
+		}
+		case 'c':	// Get calibrated sensor data
+		{
+			AHRS::amg & _amg = ahrs.getCalibratedAMG();
+			terminalPort.serial().print(_amg);
+			break;
+		}
+		case 'r':	// Get raw sensor data
+		{
+			AHRS::amg & _amg = ahrs.getRawAMG();
+			terminalPort.serial().print(_amg);
+			break;
+		}
+		case 'x':
+			cross();
+			break;
+		}
+	}
+}
+
+void cross(void) {
+	ahrs.getUPort().cross(terminalPort);
+	terminalPort.interact();
+	ahrs.getUPort().uncross();
+}
+
+#endif
