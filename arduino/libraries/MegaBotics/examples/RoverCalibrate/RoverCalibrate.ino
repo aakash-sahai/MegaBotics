@@ -42,7 +42,7 @@
 
 #if ROVER_CALIBRATE
 
-UPort uPort;
+UPort uPort(1);
 
 int steerVal = 90;
 int throttleVal = 1400;
@@ -59,7 +59,6 @@ void setup() {
 	up = PushButton(BUTTON_UP_PIN);
 	down = PushButton(BUTTON_DOWN_PIN);
 	rover = Rover();
-	uPort = UPort(1);
 
 	uPort.serial().begin(9600);
 	uPort.serial().println("Click UP button to calibrate steering or DOWN to throttle.");

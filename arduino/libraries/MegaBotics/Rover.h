@@ -43,28 +43,29 @@
 
 #include <PwmOut.h>
 
-struct RoverConfig {
-	uint8_t		throttleChannel;
-	uint8_t		steerChannel;
-
-	int			idlePwm;
-	int		 	fwdPwmMin;
-	int			fwdPwmMax;
-	int		 	revPwmMin;
-	int			revPwmMax;
-
-	int			steerMin;
-	int			steerMid;
-	int			steerMax;
-};
-
-enum Direction {
-	FORWARD = 0,
-	REVERSE = 1
-};
-
 class Rover {
 public:
+
+	enum Direction {
+		FORWARD = 0,
+		REVERSE = 1
+	};
+
+	struct Config {
+		uint8_t		throttleChannel;
+		uint8_t		steerChannel;
+
+		int			idlePwm;
+		int		 	fwdPwmMin;
+		int			fwdPwmMax;
+		int		 	revPwmMin;
+		int			revPwmMax;
+
+		int			steerMin;
+		int			steerMid;
+		int			steerMax;
+	};
+
 	static const uint8_t  DEF_THROTTLE_CHANNEL = 1;	// default pin connected to ESC throttle
 	static const uint8_t  DEF_STEER_CHANNEL = 2;	// default pin connected to steering servo
 	static const uint16_t DEF_IDLE_PWM =	1340;	// default PWM value to idle the throttle
@@ -81,7 +82,7 @@ public:
 	Rover();
 	virtual ~Rover();
 
-	void setup(RoverConfig &aConfig);
+	void setup(Config &aConfig);
 	void setup();
 
 	void steerLeft(uint8_t pct) { steer(-1 * pct); }
@@ -98,7 +99,7 @@ public:
 	Direction currentDirection() {return _currentDirection;}
 
 private:
-	RoverConfig _config;
+	Config _config;
 	PwmOut	_throttle;
 	PwmOut	_steering;
 	Direction _currentDirection;

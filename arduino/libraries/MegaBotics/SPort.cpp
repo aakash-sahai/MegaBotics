@@ -34,10 +34,10 @@
 #include <SPort.h>
 
 const byte SPort::digitalPins[MAX_PORTS][PORT_MAX_DIGITAL_PINS] = {
-		{ 40, -1 },
-		{ 41, -1 },
-		{ 42, -1 },
-		{ 43, -1 }
+		{ 40, (byte)-1 },
+		{ 41, (byte)-1 },
+		{ 42, (byte)-1 },
+		{ 43, (byte)-1 }
 };
 
 const byte SPort::analogPins[MAX_PORTS] = { A4, A5, A6, A7 };

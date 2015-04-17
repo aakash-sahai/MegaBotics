@@ -59,7 +59,7 @@ Rover::~Rover() {
 	idle();
 }
 
-void Rover::setup(RoverConfig &aConfig)
+void Rover::setup(Config &aConfig)
 {
 	_config = aConfig;
 	setup();
@@ -115,7 +115,7 @@ void Rover::throttle(int8_t percent) {
 	_currentDirection = direc;
 }
 
-Direction Rover::direction(int8_t percent) {
+Rover::Direction Rover::direction(int8_t percent) {
 	if (percent < 0)
 		return REVERSE;
 	return FORWARD;
