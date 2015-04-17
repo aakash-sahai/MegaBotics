@@ -37,42 +37,51 @@
 #include <Servo.h>
 #include <MegaBotics.h>
 
-#define PWM_TEST	0
+#define PWM_TEST				1
 
-#define PWMIN_CONTROL_CHANNEL	5
+#define PWMIN_CONTROL_CHANNEL	(5-1)		// Channel used for Auto/Manual control
+#define WHEEL_ENCODER_CHANNEL	(6-1)		// Channel used for wheel encoder
 
 #if PWM_TEST
 
-UPort uPort;
+UPort uPort(1);
 
-PwmIn pwmIn1, pwmIn2, pwmIn3, pwmIn4, pwmIn5, pwmIn6;
-PwmIn pwmIns[MAX_PWMIN_CHANNELS] = {pwmIn1, pwmIn2, pwmIn3, pwmIn4, pwmIn5, pwmIn6};
+PwmIn pwmIns[MAX_PWMIN_CHANNELS] = { PwmIn(), PwmIn(), PwmIn(), PwmIn(), PwmIn(), PwmIn() };
 PwmMux pwmMux;
 
 void setup() {
-	uPort = UPort(1);
 	uPort.serial().begin(115200);
-	for (byte ch = 1; ch <= MAX_PWMIN_CHANNELS; ch++) {
-		pwmIns[ch].setup(ch);
+	for (byte ch = 0; ch < MAX_PWMIN_CHANNELS; ch++) {
+		pwmIns[ch].setup(ch+1);
 	}
 
+	pwmIns[WHEEL_ENCODER_CHANNEL].pullup();
 	pwmMux.setup();
 }
 
 void loop() {
-	char buf[64];
-	for (byte ch = 1; ch <= MAX_PWMIN_CHANNELS; ch++) {
-		sprintf(buf, "[ CH%d: %d - %d - %d ] ", (int)ch,
-				pwmIns[ch].minimum(), pwmIns[ch].current(), pwmIns[ch].maximum());
+	char buf[80];
+	static unsigned long oldIntrCount[MAX_PWMIN_CHANNELS] = { 0, 0, 0, 0, 0, 0 };
+	for (byte ch = 0; ch < MAX_PWMIN_CHANNELS; ch++) {
+		unsigned long intrCount = pwmIns[ch].intrCount();
+		if (pwmIns[ch].isAliveSince()) {
+			// minimum uSec - current uSec - maximum uSec - interrupt count - interrupt rate
+			sprintf(buf, "[ CH%d: %d - %d - %d - %lu - %lu ] ", (int)(ch+1),
+					pwmIns[ch].minimum(), pwmIns[ch].current(), pwmIns[ch].maximum(), pwmIns[ch].intrCount(),
+					intrCount - oldIntrCount[ch]);
+					oldIntrCount[ch] = intrCount;
+
+		} else {
+			sprintf(buf, "[ CH%d: DEAD ]", (int)(ch+1));
+		}
 		uPort.serial().print(buf);
 	}
-	uPort.serial().println("");
 	if (pwmIns[PWMIN_CONTROL_CHANNEL].current() < 1400) {
-		uPort.serial().println("Switching to Manual mode");
 		pwmMux.setMode(PWMIN);
+		uPort.serial().println(" MANUAL ");
 	} else {
-		uPort.serial().println("Switching to Autopilot mode");
 		pwmMux.setMode(PROGRAM);
+		uPort.serial().println(" AUTOPILOT ");
 	}
 
 	delay(1000);

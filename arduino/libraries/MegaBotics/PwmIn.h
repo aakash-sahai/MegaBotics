@@ -50,14 +50,16 @@ public:
 	virtual ~PwmIn();
 
 	void setup(byte channel);
-	void reset();
-	byte getPin() { return _pinMappings[_channel-1]; }
-	byte getPcint() { return _pcintMappings[_channel-1]; }
-	int current() { return _pwmCurrent[_channel-1]; }
-	int minimum() { return _pwmMin[_channel-1]; }
-	int maximum() { return _pwmMax[_channel-1]; }
-
-	static int _intCount;
+	void reset(void);
+	bool isAliveSince(void);	// Checks if the channel is alive since last checked
+	byte getPin() { return _pinMappings[_channel]; }
+	byte getPcint() { return _pcintMappings[_channel]; }
+	int current() { return _pwmCurrent[_channel]; }
+	int minimum() { return _pwmMin[_channel]; }
+	int maximum() { return _pwmMax[_channel]; }
+	unsigned long intrCount() { return _intrCount[_channel]; }
+	unsigned long intrRate();
+	void pullup();		// Pullup the Pin - needed for wheel encoder
 
 	static unsigned long _prevTime[MAX_PWMIN_CHANNELS];
 	static unsigned int _pwmCurrent[MAX_PWMIN_CHANNELS];
@@ -65,6 +67,8 @@ public:
 	static unsigned int _pwmMax[MAX_PWMIN_CHANNELS];
 	static const byte _pinMappings[MAX_PWMIN_CHANNELS];
 	static const byte _pcintMappings[MAX_PWMIN_CHANNELS];
+	static unsigned long _intrCount[MAX_PWMIN_CHANNELS];
+	static bool _alive[MAX_PWMIN_CHANNELS];
 
 private:
 	byte _channel;

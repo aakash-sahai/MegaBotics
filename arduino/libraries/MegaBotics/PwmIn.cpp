@@ -44,44 +44,58 @@
 const byte PwmIn::_pinMappings[MAX_PWMIN_CHANNELS] = { A12, A13, A14, A15, 11, 12 };
 const byte PwmIn::_pcintMappings[MAX_PWMIN_CHANNELS] = { 20, 21, 22, 23, 5, 6 };
 unsigned long PwmIn::_prevTime[MAX_PWMIN_CHANNELS] = { 0L, 0L, 0L, 0L, 0L, 0L };
+unsigned long PwmIn::_intrCount[MAX_PWMIN_CHANNELS] = { 0L, 0L, 0L, 0L, 0L, 0L };
 unsigned int PwmIn::_pwmCurrent[MAX_PWMIN_CHANNELS] = { 0L, 0L, 0L, 0L, 0L, 0L };
 unsigned int PwmIn::_pwmMax[MAX_PWMIN_CHANNELS] = { 0L, 0L, 0L, 0L, 0L, 0L };
 unsigned int PwmIn::_pwmMin[MAX_PWMIN_CHANNELS] = { 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF };
-int PwmIn::_intCount = 0;
+bool PwmIn::_alive[MAX_PWMIN_CHANNELS] = { false, false, false, false, false, false };
 
 PwmIn::PwmIn() {
-	_channel = 1;
+	_channel = 0;
 	_initialized = false;
 }
 
 PwmIn::~PwmIn() {
 }
 
-void PwmIn::setup(byte channel) {
-	_channel = channel;
+void PwmIn::setup(byte channelNum) {
+	_channel = channelNum - 1;		// Channels are numbered 1-based; internally they are kept as 0-based index
 	if (!_initialized) {
 		init();
 		reset();
 	}
 }
 
+bool PwmIn::isAliveSince(void) {
+	 if (!_alive[_channel]) {
+		 reset();
+		 return false;
+	 }
+	 _alive[_channel] = false;
+	 return true;
+}
+
 void PwmIn::init(void) {
-	pinMode(_pinMappings[_channel-1], INPUT);
-	attachPinChangeInterrupt(_pcintMappings[_channel-1], CHANGE);
+	pinMode(_pinMappings[_channel], INPUT);
+	attachPinChangeInterrupt(_pcintMappings[_channel], CHANGE);
 	_initialized = true;
 }
 
 void PwmIn::reset(void) {
-	_pwmMin[_channel-1] = 0xFFFF;
-	_pwmMax[_channel-1] = 0;
-	_pwmCurrent[_channel-1] = 0;
+	_pwmMin[_channel] = 0xFFFF;
+	_pwmMax[_channel] = 0;
+	_pwmCurrent[_channel] = 0;
+	_intrCount[_channel] = 0;
+	_alive[_channel] = false;
 	_initialized = true;
+}
+
+void PwmIn::pullup(void) {
+	pinMode(_pinMappings[_channel], INPUT_PULLUP);
 }
 
 void PinChangeInterruptEvent(uint8_t pcintNum, bool rising) {
 	byte index;
-
-	PwmIn::_intCount++;
 
 	for (index = 0; index < MAX_PWMIN_CHANNELS; index++ ) {
 		if (PwmIn::_pcintMappings[index] == pcintNum)
@@ -90,8 +104,12 @@ void PinChangeInterruptEvent(uint8_t pcintNum, bool rising) {
 	if (index == MAX_PWMIN_CHANNELS) {
 		return;		// No matching PCINT found
 	}
+
+	PwmIn::_alive[index] = true;
+
 	if (rising) {
 		PwmIn::_prevTime[index] = micros();
+		PwmIn::_intrCount[index]++;
 	} else {
 		PwmIn::_pwmCurrent[index] = micros() - PwmIn::_prevTime[index];
 		if (PwmIn::_pwmCurrent[index] < PwmIn::_pwmMin[index]) {
