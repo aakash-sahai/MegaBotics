@@ -127,7 +127,7 @@ void WiFi::poll() {
 			}
 			if (strstr(pollbuf, "SEND OK\r\n") == pollbuf) {
 				consume(9);
-				int ret = checkBusy();
+				checkBusy();
 				state = STATE_IDLE;
 			} else if (strstr(pollbuf, "+IPD,") == pollbuf) {
 				msgConnId = pollbuf[5] - '0';	// Get the ID
