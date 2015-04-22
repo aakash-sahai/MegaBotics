@@ -54,7 +54,7 @@ AHRS::Status AHRS::setMode(Mode mode) {
 
 AHRS::Status AHRS::setDataType(DataType dataType) {
 	switch (dataType) {
-	case YPR:
+	case YAW_PITCH_ROLL:
 		_uport.serial().print("#ob#f");
 		break;
 	case SENSOR_RAW:
@@ -76,15 +76,15 @@ AHRS::Status AHRS::setErrorOutput(bool tf) {
 	return SUCCESS;
 }
 
-AHRS::ypr & AHRS::getYPR(void) {
+AHRS::YPR & AHRS::getYPR(void) {
 	return _ypr;
 }
 
-AHRS::amg & AHRS::getRawAMG(void) {
+AHRS::AMG & AHRS::getRawAMG(void) {
 	return _rawAmg;
 }
 
-AHRS::amg & AHRS::getCalibratedAMG(void) {
+AHRS::AMG & AHRS::getCalibratedAMG(void) {
 	return _calAmg;
 }
 
@@ -94,35 +94,62 @@ void	AHRS::poll(void) {
 	fetchCalibratedSensor();
 }
 
-void	AHRS::zero(void) {
+void	AHRS::resetYPR(void) {
 	fetchYPR();
 	_zeroYpr = _ypr;
+}
+
+float AHRS::normalize(float val) {
+	if (val < -180.0) {
+		val += 360.0;
+	}
+	else if (val > 180.0) {
+		val -= 360.0;
+	}
+	return val;
+}
+
+AHRS::YPR & AHRS::getRelativeYPR(void) {
+	fetchYPR();
+	_relativeYpr.yaw =  normalize(_ypr.yaw -_zeroYpr.yaw);
+	_relativeYpr.pitch =  normalize(_ypr.pitch -_zeroYpr.pitch);
+	_relativeYpr.roll =  normalize(_ypr.roll -_zeroYpr.roll);
+	return _relativeYpr;
+}
+
+
+float	AHRS::getOrientation(void) {
+	fetchYPR();
+	return normalize(_ypr.yaw - _zeroYpr.yaw);
 }
 
 void AHRS::readFloats(char *buf, int n) {
 	_uport.serial().readBytes(buf, n*4);
 }
 
-void AHRS::fetchYPR(void) {
-	setDataType(YPR);
+AHRS::YPR & AHRS::fetchYPR(void) {
+	setDataType(YAW_PITCH_ROLL);
 	_ypr.millis = millis();
 	readFloats((char *)&_ypr.yaw, 3);
+	return _ypr;
 }
 
-void AHRS::fetchRawSensor(void) {
+AHRS::AMG & AHRS::fetchRawSensor(void) {
 	setDataType(SENSOR_RAW);
 	_rawAmg.millis = millis();
 	readFloats((char *)&_rawAmg.accel[0], 9);
+	return _rawAmg;
 }
 
-void AHRS::fetchCalibratedSensor(void) {
+AHRS::AMG & AHRS::fetchCalibratedSensor(void) {
 	setDataType(SENSOR_CALIBRATED);
 	_calAmg.millis = millis();
 	readFloats((char *)&_calAmg.accel[0], 9);
+	return _calAmg;
 
 }
 
-size_t AHRS::ypr::printTo(Print& p) const
+size_t AHRS::YPR::printTo(Print& p) const
 {
     size_t n = p.print('[');
     n += p.print(millis);
@@ -146,7 +173,7 @@ size_t AHRS::print3Floats(Print& p, const float buf[], String type) {
 	return n;
 }
 
-size_t AHRS::amg::printTo(Print& p) const
+size_t AHRS::AMG::printTo(Print& p) const
 {
     size_t n = AHRS::print3Floats(p, accel, "ACCEL: ");
     n += AHRS::print3Floats(p, mag, "MAG: ");

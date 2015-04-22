@@ -64,29 +64,29 @@ public:
 	};
 
 	enum DataType {
-		YPR = 0,
+		YAW_PITCH_ROLL = 0,
 		SENSOR_CALIBRATED = 1,
 		SENSOR_RAW = 2,
 		SENSOR_BOTH = 3
 	};
 
-	struct ypr : Printable {
+	typedef struct YPR : Printable {
 		float	yaw;
 		float	pitch;
 		float	roll;
 		long	millis;
 
 		virtual size_t printTo(Print& p) const;
-	};
+	} YPR;
 
-	struct amg : Printable {
+	typedef struct AMG : Printable {
 		float	accel[3];
 		float	mag[3];
 		float	gyro[3];
 		long	millis;
 
 		virtual size_t printTo(Print& p) const;
-	};
+	} AMG;
 
 	AHRS();
 	AHRS(int port);
@@ -98,25 +98,29 @@ public:
 	Status setErrorOutput(bool tf);
 	Status setBaud(long baud);
 
-	ypr & getYPR(void);
-	amg & getRawAMG(void);
-	amg & getCalibratedAMG(void);
+	YPR & getYPR(void);
+	YPR & getRelativeYPR(void);
+	AMG & getRawAMG(void);
+	AMG & getCalibratedAMG(void);
 	UPort & getUPort(void) { return _uport; }
 
 	void poll(void);
-	void zero(void);
+	void resetYPR(void);
+	float getOrientation(void);
+	static float normalize(float val);
 
 private:
 	UPort _uport;
 	long _baud;
-	struct ypr	_ypr;
-	struct amg	_rawAmg;
-	struct amg	_calAmg;
-	struct ypr	_zeroYpr;
+	YPR	_ypr;
+	AMG	_rawAmg;
+	AMG	_calAmg;
+	YPR	_zeroYpr;
+	YPR	_relativeYpr;
 
-	void fetchYPR(void);
-	void fetchRawSensor(void);
-	void fetchCalibratedSensor(void);
+	YPR &fetchYPR(void);
+	AMG &fetchRawSensor(void);
+	AMG &fetchCalibratedSensor(void);
 	void readFloats(char *buf, int n);
 	static size_t print3Floats(Print& p, const float buf[], String type);
 };

@@ -46,34 +46,59 @@
 
 class PwmIn {
 public:
-	PwmIn();
+	typedef void (*IntrCallback)(unsigned long intrCount);
+	typedef void (*ThresCallback)(unsigned int uSec);
+
 	virtual ~PwmIn();
 
-	void setup(byte channel);
+	static PwmIn * getInstance(byte channelNum);
+	static PwmIn & getReference(byte channelNum);
 	void reset(void);
 	bool isAliveSince(void);	// Checks if the channel is alive since last checked
 	byte getPin() { return _pinMappings[_channel]; }
 	byte getPcint() { return _pcintMappings[_channel]; }
-	int current() { return _pwmCurrent[_channel]; }
-	int minimum() { return _pwmMin[_channel]; }
-	int maximum() { return _pwmMax[_channel]; }
-	unsigned long intrCount() { return _intrCount[_channel]; }
-	unsigned long intrRate();
-	void pullup();		// Pullup the Pin - needed for wheel encoder
 
-	static unsigned long _prevTime[MAX_PWMIN_CHANNELS];
-	static unsigned int _pwmCurrent[MAX_PWMIN_CHANNELS];
-	static unsigned int _pwmMin[MAX_PWMIN_CHANNELS];
-	static unsigned int _pwmMax[MAX_PWMIN_CHANNELS];
+	String name() { return _name; }
+	void setName(String aName) { _name = aName; }
+	int current() { return _current; }
+	int minimum() { return _min; }
+	int maximum() { return _max; }
+	unsigned long intrCount() { return _intrCount; }
+
+	void onInterrupt(int everySoMany, IntrCallback fn);
+	void onBelowThreshold(unsigned int value, ThresCallback fn);
+	void onAboveThreshold(unsigned int value, ThresCallback fn);
+
+	void pullup();		// Call to pullup the Pin - needed for wheel encoder
+	static void PinChangeInterrupt(byte pcintNum, bool rising);
+
+	static PwmIn *_instance[MAX_PWMIN_CHANNELS];
 	static const byte _pinMappings[MAX_PWMIN_CHANNELS];
 	static const byte _pcintMappings[MAX_PWMIN_CHANNELS];
-	static unsigned long _intrCount[MAX_PWMIN_CHANNELS];
-	static bool _alive[MAX_PWMIN_CHANNELS];
+
 
 private:
+	String _name;
 	byte _channel;
+	bool _alive;
 	bool _initialized;
+	unsigned int _min;
+	unsigned int _max;
+	unsigned int _current;
+	unsigned long _prevTime;
+	unsigned long _intrCount;
+	IntrCallback _intrCallback;
+	unsigned int _intrCallbackFreq;
+	ThresCallback _thresBelowCallback;
+	ThresCallback _thresAboveCallback;
+	unsigned int _thresBelowValue;
+	unsigned int _thresAboveValue;
 	void init(void);
+
+	PwmIn();
+	PwmIn(int channelNum);
+	PwmIn(PwmIn const&);          		// Don't Implement to disallow copy by assignment
+    void operator=(PwmIn const&);		// Don't implement to disallow copy by assignment
 };
 
 #endif /* MEGABOTICS_PWMIN_H_ */

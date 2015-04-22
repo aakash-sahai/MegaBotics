@@ -57,3 +57,5 @@
 #include "PwmMux.h"
 #include "Logger.h"
 #include "AHRS.h"
+#include "EepromStore.h"
+#include "WheelEncoder.h"

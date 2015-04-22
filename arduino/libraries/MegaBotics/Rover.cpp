@@ -40,9 +40,12 @@
 
 #include <MegaBotics.h>
 
+Rover Rover::_instance;
+
 Rover::Rover() {
 	_config.throttleChannel = DEF_THROTTLE_CHANNEL;
 	_config.steerChannel = DEF_STEER_CHANNEL;
+	_config.controlChannel = DEF_CONTROL_CHANNEL;
 	_config.idlePwm = DEF_IDLE_PWM;
 	_config.fwdPwmMin = DEF_FWD_PWM_MIN;
 	_config.fwdPwmMax = DEF_FWD_PWM_MAX;
@@ -52,6 +55,13 @@ Rover::Rover() {
 	_config.steerMid = DEF_STEER_MID;
 	_config.steerMax = DEF_STEER_MAX;
 	_currentDirection = FORWARD;
+	_runMode = IDLE;
+	_controlMode = MANUAL;
+	_currentUsec = 0;
+	_throttleIn = PwmIn::getInstance(DEF_THROTTLE_CHANNEL);
+	_steeringIn = PwmIn::getInstance(DEF_STEER_CHANNEL);
+	_controlIn = PwmIn::getInstance(DEF_CONTROL_CHANNEL);
+	_autoManualMux = PwmMux::getInstance();
 }
 
 Rover::~Rover() {
@@ -65,11 +75,24 @@ void Rover::setup(Config &aConfig)
 	setup();
 }
 
+void Rover::setManual(unsigned int val) {
+	_instance._autoManualMux->setMode(PwmMux::PWMIN);
+}
+
+void Rover::setAuto(unsigned int val) {
+	_instance._autoManualMux->setMode(PwmMux::PROGRAM);
+}
+
 void Rover::setup(void) {
-	_steering.setup(_config.steerChannel);
-	_throttle.setup(_config.throttleChannel);
-	_steering.attachServo();
-	_throttle.attachServo();
+	_steeringOut.setup(_config.steerChannel);
+	_throttleOut.setup(_config.throttleChannel);
+	_throttleIn = PwmIn::getInstance(_config.steerChannel);
+	_steeringIn = PwmIn::getInstance(_config.throttleChannel);
+	_controlIn = PwmIn::getInstance(_config.controlChannel);
+	_steeringOut.attachServo();
+	_throttleOut.attachServo();
+	_controlIn->onBelowThreshold(1200, Rover::setManual);
+	_controlIn->onAboveThreshold(1600, Rover::setAuto);
 	delay(2000);
 	straight();
 	idle();
@@ -88,14 +111,14 @@ void Rover::steer(int8_t percent) {
 		// steer to right
 		degrees = map(percent, 0, 100, _config.steerMid, _config.steerMin);
 	}
-	_steering.writeServo(degrees);
+	_steeringOut.writeServo(degrees);
 }
 
 void Rover::throttle(int8_t percent) {
 	int usec;
 
 	percent = clipPercent(percent);
-	Direction direc = direction(percent);
+	Direction direc = throtleToDirection(percent);
 
 	if (_currentDirection == FORWARD && direc == REVERSE) {
 		stop();
@@ -115,7 +138,7 @@ void Rover::throttle(int8_t percent) {
 	_currentDirection = direc;
 }
 
-Rover::Direction Rover::direction(int8_t percent) {
+Rover::Direction Rover::throtleToDirection(int8_t percent) {
 	if (percent < 0)
 		return REVERSE;
 	return FORWARD;
@@ -123,19 +146,19 @@ Rover::Direction Rover::direction(int8_t percent) {
 
 void Rover::rampTo(int usec) {
 	if (usec == _currentUsec || _currentUsec == 0) {
-		_throttle.writeMicrosecondsServo(usec);
+		_throttleOut.writeMicrosecondsServo(usec);
 	} else if (usec < _currentUsec) {
 		for (int i = _currentUsec; i > usec; i -= RAMP_STEP) {
-			_throttle.writeMicrosecondsServo(i);
+			_throttleOut.writeMicrosecondsServo(i);
 			delay(RAMP_STEP_DELAY);
 		}
-		_throttle.writeMicrosecondsServo(usec);
+		_throttleOut.writeMicrosecondsServo(usec);
 	} else if (usec > _currentUsec) {
 		for (int i = _currentUsec; i < usec; i += RAMP_STEP) {
-			_throttle.writeMicrosecondsServo(i);
+			_throttleOut.writeMicrosecondsServo(i);
 			delay(RAMP_STEP_DELAY);
 		}
-		_throttle.writeMicrosecondsServo(usec);
+		_throttleOut.writeMicrosecondsServo(usec);
 	}
 
 	_currentUsec = usec;

@@ -95,7 +95,6 @@ public:
 	};
 
 	static Logger & getInstance() { static Logger _instance; return _instance; }
-	Logger() { _destMask = 0; _nvLevel = _logLevel = LEVEL_NONE; _firstValue = false; _config.bufsize = 0; _config.wifi = 0; }
 
 	virtual ~Logger();
 	void setup(Config &config);
@@ -143,6 +142,7 @@ private:
 	void writeLevelType(Level level, const __FlashStringHelper *type);
 	void writeNameValue(const __FlashStringHelper *name, char *value);
 	bool doLog(Level level) { return (_destMask != 0 && level <= _logLevel); }
+	Logger() { _destMask = 0; _nvLevel = _logLevel = LEVEL_NONE; _firstValue = false; _config.bufsize = 0; _config.wifi = 0; }
 	Logger(Logger const&);              // Don't Implement to disallow copy by assignment
     void operator=(Logger const&);		// Don't implement to disallow copy by assignment
 };

@@ -43,36 +43,74 @@
 
 const byte PwmIn::_pinMappings[MAX_PWMIN_CHANNELS] = { A12, A13, A14, A15, 11, 12 };
 const byte PwmIn::_pcintMappings[MAX_PWMIN_CHANNELS] = { 20, 21, 22, 23, 5, 6 };
-unsigned long PwmIn::_prevTime[MAX_PWMIN_CHANNELS] = { 0L, 0L, 0L, 0L, 0L, 0L };
-unsigned long PwmIn::_intrCount[MAX_PWMIN_CHANNELS] = { 0L, 0L, 0L, 0L, 0L, 0L };
-unsigned int PwmIn::_pwmCurrent[MAX_PWMIN_CHANNELS] = { 0L, 0L, 0L, 0L, 0L, 0L };
-unsigned int PwmIn::_pwmMax[MAX_PWMIN_CHANNELS] = { 0L, 0L, 0L, 0L, 0L, 0L };
-unsigned int PwmIn::_pwmMin[MAX_PWMIN_CHANNELS] = { 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF };
-bool PwmIn::_alive[MAX_PWMIN_CHANNELS] = { false, false, false, false, false, false };
+PwmIn *PwmIn::_instance[MAX_PWMIN_CHANNELS] = { NULL, NULL, NULL, NULL, NULL, NULL };
 
-PwmIn::PwmIn() {
-	_channel = 0;
+PwmIn::PwmIn(int channelNum) {
+	_channel = channelNum - 1;
+	_intrCallback = NULL;
+	_intrCallbackFreq = 0;
+	_thresBelowCallback = NULL;
+	_thresAboveCallback = NULL;
+	_thresBelowValue = 0;
+	_thresAboveValue = 0;
 	_initialized = false;
+	_name = "CH" + String(channelNum);
+	reset();
 }
 
 PwmIn::~PwmIn() {
+	_instance[_channel] = NULL;
 }
 
-void PwmIn::setup(byte channelNum) {
-	_channel = channelNum - 1;		// Channels are numbered 1-based; internally they are kept as 0-based index
-	if (!_initialized) {
-		init();
-		reset();
+PwmIn * PwmIn::getInstance(byte channelNum) {
+	byte channelId = channelNum - 1;
+	if (channelId < 0 || channelId >= MAX_PWMIN_CHANNELS) {
+		channelId = 0;
 	}
+	if (_instance[channelId] == NULL) {
+		_instance[channelId] = new PwmIn(channelNum);
+		_instance[channelId]->init();
+	}
+	return _instance[channelId];
 }
 
+PwmIn & PwmIn::getReference(byte channelNum) {
+	return *getInstance(channelNum);
+}
+
+/*
+ * This routine must be called periodically to check if the pulse interrupts are
+ * being generated. If a RC Radio is connected to the PWM input, lack of interrupts
+ * signify that the transmitter may have been turned off, or gone out of range. If
+ * a wheel encoder is connected to the PWM input then lack of interrupts signify that
+ * the wheels have stopped rotating.
+ */
 bool PwmIn::isAliveSince(void) {
-	 if (!_alive[_channel]) {
+	 if (!_alive) {
+		 // Invoke the callback if configured
+		 if (_intrCallback) {
+			 _intrCallback(_intrCount);
+		 }
 		 reset();
 		 return false;
 	 }
-	 _alive[_channel] = false;
+	 _alive = false;
 	 return true;
+}
+
+void PwmIn::onInterrupt(int freq, IntrCallback fn) {
+	_intrCallback = fn;
+	_intrCallbackFreq = freq;
+}
+
+void PwmIn::onBelowThreshold(unsigned int value, ThresCallback fn) {
+		_thresBelowCallback = fn;
+		_thresBelowValue = value;
+}
+
+void PwmIn::onAboveThreshold(unsigned int value, ThresCallback fn) {
+		_thresAboveCallback = fn;
+		_thresAboveValue = value;
 }
 
 void PwmIn::init(void) {
@@ -82,12 +120,13 @@ void PwmIn::init(void) {
 }
 
 void PwmIn::reset(void) {
-	_pwmMin[_channel] = 0xFFFF;
-	_pwmMax[_channel] = 0;
-	_pwmCurrent[_channel] = 0;
-	_intrCount[_channel] = 0;
-	_alive[_channel] = false;
-	_initialized = true;
+	_min = 0xFFFF;
+	_max = 0;
+	_current = 0;
+	_intrCount = 0;
+	_alive = false;
+	_prevTime = 0;
+	_intrCount = 0;
 }
 
 void PwmIn::pullup(void) {
@@ -95,28 +134,46 @@ void PwmIn::pullup(void) {
 }
 
 void PinChangeInterruptEvent(uint8_t pcintNum, bool rising) {
+	PwmIn::PinChangeInterrupt(pcintNum, rising);
+}
+
+void PwmIn::PinChangeInterrupt(uint8_t pcintNum, bool rising) {
 	byte index;
+	PwmIn *aPwm = NULL;
 
 	for (index = 0; index < MAX_PWMIN_CHANNELS; index++ ) {
-		if (PwmIn::_pcintMappings[index] == pcintNum)
+		if (_pcintMappings[index] == pcintNum) {
+			aPwm = _instance[index];
 			break;
-	}
-	if (index == MAX_PWMIN_CHANNELS) {
-		return;		// No matching PCINT found
+		}
 	}
 
-	PwmIn::_alive[index] = true;
+	if (aPwm == NULL) {
+		return;
+	}
+
+	aPwm->_alive = true;
 
 	if (rising) {
-		PwmIn::_prevTime[index] = micros();
-		PwmIn::_intrCount[index]++;
-	} else {
-		PwmIn::_pwmCurrent[index] = micros() - PwmIn::_prevTime[index];
-		if (PwmIn::_pwmCurrent[index] < PwmIn::_pwmMin[index]) {
-			PwmIn::_pwmMin[index] = PwmIn::_pwmCurrent[index];
+		aPwm->_prevTime = micros();
+		unsigned long count = aPwm->_intrCount++;
+		if (aPwm->_intrCallback) {
+			if (count % aPwm->_intrCallbackFreq == 0) {
+				aPwm->_intrCallback(aPwm->_intrCount);
+			}
 		}
-		if (PwmIn::_pwmCurrent[index] > PwmIn::_pwmMax[index]) {
-			PwmIn::_pwmMax[index] = PwmIn::_pwmCurrent[index];
+	} else {
+		aPwm->_current = micros() - aPwm->_prevTime;
+		if (aPwm->_current < aPwm->_min) {
+			aPwm->_min = aPwm->_current;
+		}
+		if (aPwm->_current > aPwm->_max) {
+			aPwm->_max = aPwm->_current;
+		}
+		if (aPwm->_thresBelowCallback && aPwm->_current < aPwm->_thresBelowValue) {
+				aPwm->_thresBelowCallback(aPwm->_current);
+		} else if (aPwm->_thresAboveCallback && aPwm->_current > aPwm->_thresAboveValue) {
+					aPwm->_thresAboveCallback(aPwm->_current);
 		}
 	}
 }

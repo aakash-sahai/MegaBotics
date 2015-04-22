@@ -45,20 +45,22 @@
 #include <Arduino.h>
 #include <PwmMux.h>
 
+PwmMux PwmMux::_instance;
+
 PwmMux::PwmMux() {
 	setup();
 }
 
 PwmMux::~PwmMux() {
-	// TODO Auto-generated destructor stub
+	// Nothing to do
 }
 
-void PwmMux::setup(PwmMuxMode mode) {
+void PwmMux::setup(Mode mode) {
 	pinMode(PWMMUX_SEL_PIN, OUTPUT);
 	setMode(mode);
 }
 
-void PwmMux::setMode(PwmMuxMode mode) {
+void PwmMux::setMode(Mode mode) {
 	if (mode == PWMIN) {
 		digitalWrite(PWMMUX_SEL_PIN, HIGH);
 	} else {

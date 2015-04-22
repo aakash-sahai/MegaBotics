@@ -45,25 +45,32 @@
 #ifndef PWMMUX_H_
 #define PWMMUX_H_
 
-enum PwmMuxMode {
-	PWMIN = 0,
-	PROGRAM = 1
-};
-
 #define PWMMUX_SEL_PIN	38
 
 class PwmMux {
 public:
-	PwmMux();
+	enum Mode {
+		PWMIN = 0,
+		PROGRAM = 1
+	};
+
 	virtual ~PwmMux();
 
+	static PwmMux * getInstance() { return &_instance; }
+	static PwmMux & getReference() { return _instance; }
+
 	void setup(void) { setup(PWMIN); }
-	void setup(PwmMuxMode mode);
-	void setMode(PwmMuxMode mode);
-	PwmMuxMode getMode(void) { return _currentMode; }
+	void setup(Mode mode);
+	void setMode(Mode mode);
+	Mode getMode(void) { return _currentMode; }
 
 private:
-	PwmMuxMode _currentMode;
+	Mode _currentMode;
+	static PwmMux _instance;
+
+	PwmMux();
+	PwmMux(PwmMux const&);              // Don't Implement to disallow copy by assignment
+    void operator=(PwmMux const&);		// Don't implement to disallow copy by assignment
 };
 
 #endif /* PWMMUX_H_ */
