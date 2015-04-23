@@ -47,7 +47,7 @@ public:
 	const PortInfo& getPortInfo();
 	byte getAnalogPin() { return analogPins[portInfo.portNumber - 1]; }
 	byte getDigitalPin(int number);
-	byte getSlaveSelectPin(int number) { return ssPins[portInfo.portNumber - 1]; }
+	byte getSlaveSelectPin() { return ssPins[portInfo.portNumber - 1]; }
 	int getPortType() { return PORT_SPI; }
 
 private:

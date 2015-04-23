@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2015, Aakash Sahai and other contributors, a list of which is
  * maintained in the associated repository. All rights reserved.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,44 +20,46 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *    + Redistributions of source code must retain the above copyright
  *      notice, this list of conditions and the following disclaimer.
  *    + Redistributions in binary form must reproduce the above copyright
  *      notice, this list of conditions and the following disclaimer in the
  *      documentation and/or other materials provided with the distribution.
  *    + Neither the name of the copyright holder nor the names of its contributors
- *	may be used to endorse or promote products derived from this software
- *	without specific prior written permission.
+ *		may be used to endorse or promote products derived from this software
+ *		without specific prior written permission.
+ */
+/*
+ * Module		SDCard.h
+ *
+ * Created on:	Apr 22, 2015
+ * Author:		Srinivas Raj
  */
 
-#include <stddef.h>
-#include <inttypes.h>
-#include <Arduino.h>
-#include <Servo.h>
+#ifndef MEGABOTICS_SDCARD_H_
+#define MEGABOTICS_SDCARD_H_
 
-#define	RAD2DEG(_r)	(_r * RAD_TO_DEG)
-#define	DEG2RAD(_d)	(_d * DEG_TO_RAD)
+#include <SD.h>
+#include <SPort.h>
 
-#define DBG_PRINT	Serial.print
-#define DBG_PRINTLN	Serial.println
+#define SDCARD_DEFAULT_SPORT		4
 
-#include "PushButton.h"
-#include "Port.h"
-#include "UPort.h"
-#include "SPort.h"
-#include "IPort.h"
-#include "LED.h"
-#include "Coord.h"
-#include "Sonar.h"
-#include "Rover.h"
-#include "WiFi.h"
-#include "PwmIn.h"
-#include "PwmOut.h"
-#include "PwmMux.h"
-#include "Logger.h"
-#include "AHRS.h"
-#include "EepromStore.h"
-#include "WheelEncoder.h"
-#include "Display.h"
-#include "SDCard.h"
+class SDCard {
+public:
+	enum Status {
+		SUCCESS = 0,
+		FAILURE = 1
+	};
+
+	SDCard();
+	SDCard(int port);
+	virtual ~SDCard();
+	Status setup(void);
+	File open(const char *filepath, uint8_t mode) {return SD.open(filepath, mode);}
+
+private:
+	SPort _sport;
+};
+
+#endif /* MEGABOTICS_SDCARD_H_ */
