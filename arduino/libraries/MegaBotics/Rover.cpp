@@ -76,10 +76,12 @@ void Rover::setup(Config &aConfig)
 }
 
 void Rover::setManual(unsigned int val) {
+	_instance._controlMode = MANUAL;
 	_instance._autoManualMux->setMode(PwmMux::PWMIN);
 }
 
 void Rover::setAuto(unsigned int val) {
+	_instance._controlMode = AUTO;
 	_instance._autoManualMux->setMode(PwmMux::PROGRAM);
 }
 

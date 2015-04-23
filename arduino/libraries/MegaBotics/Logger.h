@@ -86,21 +86,24 @@ public:
 	enum Destination {
 		LOG_SERIAL = 0,
 		LOG_SD = 1,
-		LOG_TCP = 2
+		LOG_UDP = 2
 	};
 
 	struct Config {
-		int	bufsize;	// should preferably be a power of 2
-		WiFi * wifi;	// Reference to WiFi object
+		int	bufsize;		// Buffer size: should preferably be a power of 2
+		String host;		// UDP host to send the log to
+		unsigned int port;	// UDP port to send the log to
 	};
 
-	static Logger & getInstance() { static Logger _instance; return _instance; }
+	static Logger * getInstance() { return & _instance; }
+	static Logger & getReference() { return _instance; }
 
 	virtual ~Logger();
 	void setup(Config &config);
 
 	void enable(Destination dest) { _destMask |= ( 1 << dest); }		// Enable logging to a destination
 	void disable(Destination dest) { _destMask &= ~( 1 << dest); }		// Disable logging to a destination
+	void autoFlush(bool val) { _autoFlush = val; }
 	void setLevel(Destination dest, Level level)  {
 		_level[dest] = level;
 		_logLevel = LEVEL_NONE;
@@ -132,6 +135,10 @@ public:
 							// Should preferably be called periodically at low priority to flush the buffer
 
 private:
+	static Logger _instance;
+	WiFi *_wifi;
+	byte _wifiConnectionId;
+	bool _autoFlush;
 	char _destMask;		// Bit-field of destinations to send the log to
 	Level _level[LOGGER_MAX_DESTINATIONS];
 	Level _logLevel;
@@ -142,7 +149,8 @@ private:
 	void writeLevelType(Level level, const __FlashStringHelper *type);
 	void writeNameValue(const __FlashStringHelper *name, char *value);
 	bool doLog(Level level) { return (_destMask != 0 && level <= _logLevel); }
-	Logger() { _destMask = 0; _nvLevel = _logLevel = LEVEL_NONE; _firstValue = false; _config.bufsize = 0; _config.wifi = 0; }
+
+	Logger();
 	Logger(Logger const&);              // Don't Implement to disallow copy by assignment
     void operator=(Logger const&);		// Don't implement to disallow copy by assignment
 };

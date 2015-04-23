@@ -44,9 +44,8 @@ WheelEncoder WheelEncoder::_instance;
 
 WheelEncoder::WheelEncoder() {
 	_config.wheelEncoderChannel = DEF_WHEEL_ENCODER_CHANNEL;
-	_config.pulsesPerFeet = DEF_PULSES_PER_FEET;
-	_speed = 0; _distance = 0;
-	_prevPulses = 0;
+	_config.pulsesPerMeter = DEF_PULSES_PER_METER;
+	_config.pulsesPerRev = DEF_PULSES_PER_REV;
 }
 
 WheelEncoder::~WheelEncoder() {
@@ -54,19 +53,40 @@ WheelEncoder::~WheelEncoder() {
 }
 
 void WheelEncoder::setup(void) {
-	_wheelEncoderIn = PwmIn::getInstance(_config.wheelEncoderChannel);
-	_wheelEncoderIn->pullup();
+	_pwmIn = PwmIn::getInstance(_config.wheelEncoderChannel);
+	_pwmIn->pullup();
 }
 
 void WheelEncoder::setup(byte wheelEncoderChannel, byte pulsesPerFeet) {
 	_config.wheelEncoderChannel = wheelEncoderChannel;
-	_config.pulsesPerFeet = pulsesPerFeet;
+	_config.pulsesPerMeter = pulsesPerFeet;
 	setup();
 }
 
+float WheelEncoder::getMeanRps() {
+	unsigned long tm = _pwmIn->getElapsedTime();
+	if (tm) {
+		return (float)_pwmIn->getPulseCount() / (float)tm;
+	} else {
+		return 0;
+	}
+}
+
+float WheelEncoder::getRps() {
+	unsigned long tm = _pwmIn->getPulsePeriod();
+	if (tm) {
+		return 1000000.0 / (float)tm;
+	} else {
+		return 0;
+	}
+}
 void WheelEncoder::setup(Config &aConfig)
 {
 	_config = aConfig;
 	setup();
+}
+
+void WheelEncoder::poll(void) {
+	_pwmIn->isAliveSince();
 }
 

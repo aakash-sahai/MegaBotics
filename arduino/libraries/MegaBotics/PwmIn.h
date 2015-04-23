@@ -46,13 +46,14 @@
 
 class PwmIn {
 public:
-	typedef void (*IntrCallback)(unsigned long intrCount);
+	typedef void (*IntrCallback)(unsigned long gePulseCount);
 	typedef void (*ThresCallback)(unsigned int uSec);
 
 	virtual ~PwmIn();
 
 	static PwmIn * getInstance(byte channelNum);
 	static PwmIn & getReference(byte channelNum);
+
 	void reset(void);
 	bool isAliveSince(void);	// Checks if the channel is alive since last checked
 	byte getPin() { return _pinMappings[_channel]; }
@@ -60,10 +61,12 @@ public:
 
 	String name() { return _name; }
 	void setName(String aName) { _name = aName; }
-	int current() { return _current; }
-	int minimum() { return _min; }
-	int maximum() { return _max; }
-	unsigned long intrCount() { return _intrCount; }
+	unsigned int getPulsePeriod() { return _period; }
+	unsigned int getPulseWidth() { return _width; }
+	unsigned int getMinPulseWidth() { return _minWidth; }
+	unsigned int getMaxPulseWidth() { return _maxWidth; }
+	unsigned long getPulseCount() { return _pulseCount; }
+	unsigned int getElapsedTime() { return _elapsedTime; }
 
 	void onInterrupt(int everySoMany, IntrCallback fn);
 	void onBelowThreshold(unsigned int value, ThresCallback fn);
@@ -82,11 +85,13 @@ private:
 	byte _channel;
 	bool _alive;
 	bool _initialized;
-	unsigned int _min;
-	unsigned int _max;
-	unsigned int _current;
+	unsigned int _minWidth;
+	unsigned int _maxWidth;
+	unsigned int _width;
+	unsigned int _period;
 	unsigned long _prevTime;
-	unsigned long _intrCount;
+	unsigned long _elapsedTime;
+	unsigned long _pulseCount;
 	IntrCallback _intrCallback;
 	unsigned int _intrCallbackFreq;
 	ThresCallback _thresBelowCallback;

@@ -7,11 +7,14 @@
 
 #include <MegaBotics.h>
 
+WiFi WiFi::_instance;
+
 WiFi::WiFi() {
 	baud = WIFI_DEFAULT_BAUD;
 	uport = UPort(WIFI_DEFAULT_UPORT);
 	txHead = 0;
 	listenId = -1;
+	listenPort = 0;
 }
 
 WiFi::WiFi(int port) {
@@ -19,6 +22,7 @@ WiFi::WiFi(int port) {
 	uport = UPort(port);
 	txHead = 0;
 	listenId = -1;
+	listenPort = 0;
 }
 
 WiFi::~WiFi() {
@@ -26,7 +30,6 @@ WiFi::~WiFi() {
 }
 
 WiFiStatus WiFi::setup(void) {
-	listenPort = 0;
 	output = "";
 	pinMode(uport.getDigitalPin(WIFI_RST_PIN), OUTPUT);
 	pinMode(uport.getDigitalPin(WIFI_ENABLE_PIN), OUTPUT);
@@ -178,13 +181,13 @@ void WiFi::poll() {
 				consume(7);						// advance by 7 ( + I P D , x , )
 				state = STATE_IPD_MSGLEN;
 			} else if (strstr(pollbuf, ",CONNECT\r") == pollbuf+1) {
-				consume(10);
-
+				DBG_PRINT("CONN"); DBG_PRINTLN(pollbuf[0]);
 				listenId = pollbuf[0] - '0';
+				connections[listenId].id = listenId;
 				connections[listenId].status = OPEN;
 				connections[listenId].port = listenPort;
 				strcpy(connections[listenId].host, "0.0.0.0");
-
+				consume(10);
 				if (listenHandlers.connect != 0)
 					listenHandlers.connect(listenId);
 				while (true) {
@@ -499,11 +502,17 @@ WiFiStatus WiFi::listen(int port, ListenHandlers *handlers) {
 	return SUCCESS;
 }
 
-WiFiStatus WiFi::connect(int port, String host, byte &id) {
+WiFiStatus WiFi::connect(Protocol proto, String host, int port, byte &id) {
 	WiFiStatus ret = newConnection(id);
+	String sproto;
 	if (ret != SUCCESS)
 		return ret;
-	String cmd = "AT+CIPSTART" + String(id) + ",\"TCP\",\"" + host + "\"," + String(port);
+	if (proto == TCP) {
+		sproto = ",\"TCP\",\"";
+	} else {
+		sproto = ",\"UDP\",\"";
+	}
+	String cmd = "AT+CIPSTART" + String(id) + sproto + host + "\"," + String(port);
 	String resp = String(id) + ",CONNECT";
 	ret = execCommand(cmd);
 	if (ret != SUCCESS) {
@@ -513,6 +522,7 @@ WiFiStatus WiFi::connect(int port, String host, byte &id) {
 	String result = parseResult(cmd + "\r", "\r\r");
 	if (result.equals(resp)) {
 		connections[id].status = OPEN;
+		connections[id].proto = proto;
 		connections[id].port = port;
 		strncpy(connections[id].host, host.c_str(), WIFI_MAX_HOSTLEN);
 		return SUCCESS;
@@ -564,6 +574,7 @@ WiFiStatus WiFi::checkBusy(void) {
 }
 
 WiFiStatus WiFi::send(byte connectionId, const char *data, int length) {
+	//DBG_PRINT("SEND ID: "); DBG_PRINT((int)connectionId); DBG_PRINT(" LEN:");DBG_PRINTLN(length);
 	if (connectionId < 0 || connections[connectionId].status != OPEN) {
 		return NOT_CONNECTED;
 	}

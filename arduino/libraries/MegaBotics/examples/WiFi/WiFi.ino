@@ -42,13 +42,12 @@
 
 #if WIFI_TEST
 
-#define WIFI_UPORT	4
 #define TERMINAL_UPORT	1
 
 UPort terminalPort = UPort(TERMINAL_UPORT);
 HardwareSerial &terminal = terminalPort.serial();
 
-WiFi wifi;
+WiFi & wifi = WiFi::getReference();
 byte openId = 255;
 
 void doConnect(byte connectionId)
@@ -203,7 +202,7 @@ void writeData(void) {
 	}
 }
 
-Logger & logger = Logger::getInstance();
+Logger & logger = Logger::getReference();
 
 void log(void) {
 	logger.start("Starting the log");
@@ -217,18 +216,17 @@ void log(void) {
 
 void setup() {
 	terminal.begin(115200);
-
-	wifi = WiFi(WIFI_UPORT);
 	wifi.setup();
 
 	Logger::Config config;
 	config.bufsize = 128;
-	config.wifi = &wifi;
+	config.host = "192.168.4.2";
+	config.port = 8080;
 	logger.setup(config);
 	logger.enable(Logger::LOG_SERIAL);
-	logger.enable(Logger::LOG_TCP);
+	logger.enable(Logger::LOG_UDP);
 	logger.setLevel(Logger::LOG_SERIAL, Logger::LEVEL_DEBUG);
-	logger.setLevel(Logger::LOG_TCP, Logger::LEVEL_DEBUG);
+	logger.setLevel(Logger::LOG_UDP, Logger::LEVEL_DEBUG);
 
 	DBG_PRINTLN("WIFI: CONFIG AP");
 	configAp();

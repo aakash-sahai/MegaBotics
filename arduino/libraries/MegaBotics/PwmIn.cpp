@@ -87,11 +87,9 @@ PwmIn & PwmIn::getReference(byte channelNum) {
  */
 bool PwmIn::isAliveSince(void) {
 	 if (!_alive) {
-		 // Invoke the callback if configured
-		 if (_intrCallback) {
-			 _intrCallback(_intrCount);
-		 }
-		 reset();
+		 _prevTime = micros();
+		 _period = 0;
+		 _width = 0;
 		 return false;
 	 }
 	 _alive = false;
@@ -120,13 +118,14 @@ void PwmIn::init(void) {
 }
 
 void PwmIn::reset(void) {
-	_min = 0xFFFF;
-	_max = 0;
-	_current = 0;
-	_intrCount = 0;
+	_minWidth = 0xFFFF;
+	_maxWidth = 0;
+	_width = 0;
+	_period = 0;
+	_pulseCount = 0;
 	_alive = false;
 	_prevTime = 0;
-	_intrCount = 0;
+	_elapsedTime = 0;
 }
 
 void PwmIn::pullup(void) {
@@ -155,25 +154,28 @@ void PwmIn::PinChangeInterrupt(uint8_t pcintNum, bool rising) {
 	aPwm->_alive = true;
 
 	if (rising) {
-		aPwm->_prevTime = micros();
-		unsigned long count = aPwm->_intrCount++;
+		unsigned long ts = micros();
+		aPwm->_period = ts - aPwm->_prevTime;
+		aPwm->_elapsedTime += aPwm->_period;
+		aPwm->_prevTime = ts;
+		unsigned long count = aPwm->_pulseCount++;
 		if (aPwm->_intrCallback) {
 			if (count % aPwm->_intrCallbackFreq == 0) {
-				aPwm->_intrCallback(aPwm->_intrCount);
+				aPwm->_intrCallback(aPwm->_pulseCount);
 			}
 		}
 	} else {
-		aPwm->_current = micros() - aPwm->_prevTime;
-		if (aPwm->_current < aPwm->_min) {
-			aPwm->_min = aPwm->_current;
+		aPwm->_width = micros() - aPwm->_prevTime;
+		if (aPwm->_width < aPwm->_minWidth) {
+			aPwm->_minWidth = aPwm->_width;
 		}
-		if (aPwm->_current > aPwm->_max) {
-			aPwm->_max = aPwm->_current;
+		if (aPwm->_width > aPwm->_maxWidth) {
+			aPwm->_maxWidth = aPwm->_width;
 		}
-		if (aPwm->_thresBelowCallback && aPwm->_current < aPwm->_thresBelowValue) {
-				aPwm->_thresBelowCallback(aPwm->_current);
-		} else if (aPwm->_thresAboveCallback && aPwm->_current > aPwm->_thresAboveValue) {
-					aPwm->_thresAboveCallback(aPwm->_current);
+		if (aPwm->_thresBelowCallback && aPwm->_width < aPwm->_thresBelowValue) {
+				aPwm->_thresBelowCallback(aPwm->_width);
+		} else if (aPwm->_thresAboveCallback && aPwm->_width > aPwm->_thresAboveValue) {
+					aPwm->_thresAboveCallback(aPwm->_width);
 		}
 	}
 }

@@ -39,7 +39,7 @@
 
 #define PWM_TEST				1
 
-#define PWMIN_STEER_CHANNEL	1		// Channel used for Steering
+#define PWMIN_STEER_CHANNEL		1		// Channel used for Steering
 #define PWMIN_THROTTLE_CHANNEL	2		// Channel used for Throttle
 #define PWMIN_CONTROL_CHANNEL	5		// Channel used for Auto/Manual control
 #define WHEEL_ENCODER_CHANNEL	6		// Channel used for wheel encoder
@@ -67,7 +67,7 @@ void checkChannel(PwmIn &chan) {
 	if (chan.isAliveSince()) {
 		// minimum uSec - current uSec - maximum uSec - interrupt count
 		sprintf(buf, "[ %s: %d - %d - %d - %lu ] ",
-				chan.name().c_str(), chan.minimum(), chan.current(), chan.maximum(), chan.intrCount());
+				chan.name().c_str(), chan.getMinPulseWidth(), chan.getPulseWidth(), chan.getMaxPulseWidth(), chan.getPulseCount());
 
 	} else {
 		sprintf(buf, "[ %s: DEAD ] ", chan.name().c_str());

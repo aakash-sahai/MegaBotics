@@ -70,7 +70,7 @@
 #define WIFI_MAX_CONNECTIONS	5
 #define WIFI_RESET_DELAY		2000
 #define WIFI_MAX_HOSTLEN		16
-#define	WIFI_TXBUF_SIZE			32
+#define	WIFI_TXBUF_SIZE			64
 
 enum WiFiMode {
 	MODE_STA = 1,
@@ -112,6 +112,7 @@ enum Protocol {
 
 struct Connection {
 	byte	id;
+	Protocol proto;
 	byte	status;
 	int		port;
 	char	host[WIFI_MAX_HOSTLEN+1];
@@ -141,9 +142,10 @@ struct StaConfig {
 
 class WiFi {
 public:
-	WiFi();
-	WiFi(int port);
 	virtual ~WiFi();
+
+	static WiFi * getInstance() { return & _instance; }
+	static WiFi & getReference() { return _instance; }
 
 	WiFiStatus setup(void);
 
@@ -155,7 +157,7 @@ public:
 	WiFiStatus hardReset(void);
 
 	WiFiStatus listen(int port, ListenHandlers *handlers);
-	WiFiStatus connect(int port, String host, byte &conectionId);
+	WiFiStatus connect(Protocol proto, String host, int port, byte &conectionId);
 	WiFiStatus disconnect(byte connectionId);
 	WiFiStatus send(byte connectionId, const char *data, int length);
 	WiFiStatus send(const char *data, int length) { return send(listenId, data, length); }
@@ -198,6 +200,7 @@ public:
 	UPort	&	getUPort(void) { return uport; }
 
 private:
+	static WiFi _instance;
 	UPort uport;
 	long baud;
 	int listenPort;
@@ -222,6 +225,11 @@ private:
 	void consume(int size);
 	WiFiStatus checkBusy(void);
 	String output;
+
+	WiFi();
+	WiFi(int port);
+	WiFi(WiFi const&);              // Don't Implement to disallow copy by assignment
+    void operator=(WiFi const&);	// Don't implement to disallow copy by assignment
 };
 
 #endif /* MEGABOTICS_WIFI_H_ */

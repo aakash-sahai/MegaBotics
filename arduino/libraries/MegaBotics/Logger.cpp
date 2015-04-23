@@ -40,12 +40,28 @@
 
 #include "MegaBotics.h"
 
+Logger Logger::_instance;
+
+Logger::Logger() {
+	_destMask = 0;
+	_nvLevel = _logLevel = LEVEL_NONE;
+	_firstValue = false;
+	_config.bufsize = 0;
+	_wifiConnectionId = -1;
+	_wifi = WiFi::getInstance();
+}
+
+
 Logger::~Logger() {
 }
 
 void Logger::setup(Config &aConfig) {
 	_config.bufsize = aConfig.bufsize;
-	_config.wifi = aConfig.wifi;
+	_config.host = aConfig.host;
+	_config.port = aConfig.port;
+	if (aConfig.port != 0) {
+		_wifi->connect(UDP, aConfig.host, aConfig.port, _wifiConnectionId);
+	}
 	_buffer.setup(_config.bufsize);
 }
 
@@ -94,16 +110,19 @@ bool Logger::log(Level level, const __FlashStringHelper *type, const char *messa
 	if (!doLog(level)) return false;
 	int typeLen = strlen_P((const char *)type);
 	int msgLen = strlen(message);
-	if (_buffer.capacity() < (4 + typeLen + msgLen)) {	// Make sure the whole log will fit
-		return false;
-	} else {
-		char ch;
-		writeLevelType(level, type);
-		while ((ch = *message++)) {
-			_buffer.enqueue(ch);
+	if (_buffer.capacity() < (4 + typeLen + msgLen)) { // Make sure the whole log will fit
+		if (_autoFlush) {
+			flush();
+		} else {
+			return false;
 		}
-		_buffer.enqueue('\n');
 	}
+	char ch;
+	writeLevelType(level, type);
+	while ((ch = *message++)) {
+		_buffer.enqueue(ch);
+	}
+	_buffer.enqueue('\n');
 	return true;
 }
 
@@ -111,9 +130,14 @@ Logger & Logger::begin(Level level, const __FlashStringHelper *type) {
 	_nvLevel = level;
 	if (!doLog(level)) return *this;
 	int typeLen = strlen_P((const char *)type);
-	if (_buffer.capacity() >= (3 + typeLen)) {	// Make sure the whole begin clause will fit
-		writeLevelType(level, type);
+	if (_buffer.capacity() < (3 + typeLen)) {	// Make sure the whole begin clause will fit
+		if (_autoFlush) {
+			flush();
+		} else {
+			return *this;
+		}
 	}
+	writeLevelType(level, type);
 	_firstValue = true;
 	return *this;
 }
@@ -122,9 +146,14 @@ Logger & Logger::nv(const __FlashStringHelper *name, char *value) {
 	if (!doLog(_nvLevel)) return *this;
 	int nameLen = strlen_P((const char *)name);
 	int valueLen = strlen(value);
-	if (_buffer.capacity() >= (3 + nameLen + valueLen)) {	// Make sure the whole NameValue will fit
-		writeNameValue(name, value);
+	if (_buffer.capacity() < (3 + nameLen + valueLen)) {	// Make sure the whole NameValue will fit
+		if (_autoFlush) {
+			flush();
+		} else {
+			return *this;
+		}
 	}
+	writeNameValue(name, value);
 	return *this;
 }
 
@@ -163,11 +192,8 @@ void   Logger::flush(void) {
 			cout << ch;
 #endif
 		}
-		if (_config.wifi && (_destMask & (1 << LOG_TCP)) && level <= _level[LOG_TCP])	{
-			_config.wifi->write(ch);
+		if (_wifiConnectionId != -1 && (_destMask & (1 << LOG_UDP)) && level <= _level[LOG_UDP])	{
+			_wifi->write(_wifiConnectionId, ch);
 		}
-	}
-	if (_config.wifi) {
-		_config.wifi->flush();
 	}
 }

@@ -90,7 +90,7 @@ public:
 	static const int DEF_STEER_MID = 90;				// default trim to steer straight
 	static const int DEF_STEER_MAX = 153;				// default trim to steer left
 	static const int RAMP_STEP = 50;					// increment step when ramping the throttle to the desired usec
-	static const int RAMP_STEP_DELAY = 50;				// delay in milliseconds when ramping the throttle to the desired usec
+	static const int RAMP_STEP_DELAY = 1;				// delay in milliseconds when ramping the throttle to the desired usec
 
 	virtual ~Rover();
 

@@ -46,11 +46,13 @@
 class WheelEncoder {
 public:
 	static const byte  DEF_WHEEL_ENCODER_CHANNEL = 6;	// default PwmIn channel connected to wheel encoder
-	static const byte  DEF_PULSES_PER_FEET = 30;		// default number of pulses generated per feet of linear travel
+	static const byte  DEF_PULSES_PER_METER = 45;		// default number of pulses generated per meter of linear travel
+	static const byte  DEF_PULSES_PER_REV = 22;			// default number of pulses generated per revolution
 
 	struct Config {
 		byte	wheelEncoderChannel;
-		byte	pulsesPerFeet;
+		byte	pulsesPerMeter;
+		byte	pulsesPerRev;
 	};
 
 	static WheelEncoder * getInstance() { return &_instance; }
@@ -62,17 +64,18 @@ public:
 	void setup(byte	wheelEncoderChannel, byte pulsesPerFeet);
 	void setup(void);
 
-	float getSpeed() {  return _speed; }
-	float getDistance() {  return _distance; }
+	void poll(void);
+	void reset(void) { _pwmIn->reset(); }
+
+	float getRotations() { return (float)_pwmIn->getPulseCount() / _config.pulsesPerRev; }
+	float getMeanRps();
+	float getRps();
 
 private:
 	static WheelEncoder _instance;
 
 	Config		 _config;
-	PwmIn	*	 _wheelEncoderIn;
-	unsigned int _prevPulses;
-	float		_speed;
-	float		_distance;
+	PwmIn	*	 _pwmIn;
 
 	WheelEncoder();
 	WheelEncoder(WheelEncoder const&);          // Don't Implement to disallow copy by assignment

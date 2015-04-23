@@ -38,11 +38,12 @@
 #include <Servo.h>
 #include <MegaBotics.h>
 
-#define ROVER_CALIBRATE 0
+#define ROVER_CALIBRATE 1
 
 #if ROVER_CALIBRATE
 
 UPort uPort(1);
+HardwareSerial &serial = uPort.serial();
 
 int steerVal = 90;
 int throttleVal = 1400;
@@ -53,18 +54,17 @@ const int BUTTON_DOWN_PIN = 3;
 
 PushButton up;
 PushButton down;
-Rover rover;
+Rover & rover = Rover::getReference();
 
 void setup() {
 	up = PushButton(BUTTON_UP_PIN);
 	down = PushButton(BUTTON_DOWN_PIN);
-	rover = Rover();
 
-	uPort.serial().begin(9600);
-	uPort.serial().println("Click UP button to calibrate steering or DOWN to throttle.");
+	serial.begin(9600);
+	serial.println("Click UP button to calibrate steering or DOWN to throttle.");
 	rover.setup();
 	selectMode();
-	uPort.serial().println("Press UP/DOWN Button and note down the various values.");
+	serial.println("Press UP/DOWN Button and note down the various values.");
 }
 
 void selectMode() {
@@ -80,8 +80,8 @@ void selectMode() {
 			break;
 		}
 	}
-	uPort.serial().print("Calibrating ");
-	uPort.serial().println(calibrateSteer ? "Steering" : "Throttle");
+	serial.print("Calibrating ");
+	serial.println(calibrateSteer ? "Steering" : "Throttle");
 }
 
 void loop() {
@@ -92,8 +92,8 @@ void loop() {
 			steerVal += 1;
 		else
 			throttleVal += 1;
-		uPort.serial().print("Value: ");
-		uPort.serial().println(calibrateSteer ? steerVal : throttleVal);
+		serial.print("Value: ");
+		serial.println(calibrateSteer ? steerVal : throttleVal);
 	}
 
 	if (down.pressed()) {
@@ -101,8 +101,8 @@ void loop() {
 			steerVal -= 1;
 		else
 			throttleVal -= 1;
-		uPort.serial().print("Value: ");
-		uPort.serial().println(calibrateSteer ? steerVal : throttleVal);
+		serial.print("Value: ");
+		serial.println(calibrateSteer ? steerVal : throttleVal);
 	}
 
 	if (calibrateSteer)
