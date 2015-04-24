@@ -46,12 +46,12 @@
 class WheelEncoder {
 public:
 	static const byte  DEF_WHEEL_ENCODER_CHANNEL = 6;	// default PwmIn channel connected to wheel encoder
-	static const byte  DEF_PULSES_PER_METER = 45;		// default number of pulses generated per meter of linear travel
-	static const byte  DEF_PULSES_PER_REV = 22;			// default number of pulses generated per revolution
+	static const byte  DEF_FEET_PER_REV = 14.5;			// default feet of linear travel per revolution of the wheel
+	static const byte  DEF_PULSES_PER_REV = 12;			// default number of pulses generated per revolution
 
 	struct Config {
 		byte	wheelEncoderChannel;
-		byte	pulsesPerMeter;
+		byte	feetsPerRev;
 		byte	pulsesPerRev;
 	};
 
@@ -67,9 +67,12 @@ public:
 	void poll(void);
 	void reset(void) { _pwmIn->reset(); }
 
-	float getRotations() { return (float)_pwmIn->getPulseCount() / _config.pulsesPerRev; }
-	float getMeanRps();
-	float getRps();
+	float getRevolutions() { return (float)_pwmIn->getPulseCount() / _config.pulsesPerRev; }
+	float getMeanRps();		// Mean Revs/sec since last reset
+	float getRps();			// Instantaneous Revs/sec
+	float getDistance();	// Total distance traveled since last reset
+	float getMeanSpeed();	// Mean speed in feet/sec since last reset
+	float getSpeed();		// Instantaneous speed in feet/sec
 
 private:
 	static WheelEncoder _instance;

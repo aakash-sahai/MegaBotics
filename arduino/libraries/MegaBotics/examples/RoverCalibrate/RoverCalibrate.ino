@@ -38,7 +38,7 @@
 #include <Servo.h>
 #include <MegaBotics.h>
 
-#define ROVER_CALIBRATE 1
+#define ROVER_CALIBRATE 0
 
 #if ROVER_CALIBRATE
 

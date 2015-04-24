@@ -47,12 +47,12 @@
 
 #if PWM_TEST
 
-UPort uPort(1);
 PwmIn & steer = PwmIn::getReference(PWMIN_STEER_CHANNEL);
 PwmIn & throttle = PwmIn::getReference(PWMIN_THROTTLE_CHANNEL);
 PwmIn & control = PwmIn::getReference(PWMIN_CONTROL_CHANNEL);
 WheelEncoder & encoder = WheelEncoder::getReference();
 PwmMux & pwmMux = PwmMux::getReference();
+Logger & logger = Logger::getReference();
 
 void setManual(unsigned int val) {
 	pwmMux.setMode(PwmMux::PWMIN);
@@ -63,36 +63,69 @@ void setAuto(unsigned int val) {
 }
 
 void checkChannel(PwmIn &chan) {
-	char buf[80];
+	logger.begin(Logger::LEVEL_DEBUG, F("PWMIN")).
+			nv(F("NAME"), (char *)chan.name().c_str());
 	if (chan.isAliveSince()) {
-		// minimum uSec - current uSec - maximum uSec - interrupt count
-		sprintf(buf, "[ %s: %d - %d - %d - %lu ] ",
-				chan.name().c_str(), chan.getMinPulseWidth(), chan.getPulseWidth(), chan.getMaxPulseWidth(), chan.getPulseCount());
-
+			logger.nv(F("MIN"), chan.getMinPulseWidth()).
+			nv(F("CURR"), chan.getPulseWidth()).
+			nv(F("MAX"), chan.getMaxPulseWidth());
 	} else {
-		sprintf(buf, "[ %s: DEAD ] ", chan.name().c_str());
+		logger.nv(F("STATE"), '-');
 	}
-	uPort.serial().print(buf);
+	logger.end();
+}
 
+void checkEncoder(void) {
+	encoder.poll();
+	logger.begin(Logger::LEVEL_DEBUG, F("ENCODER")).
+			nv(F("REVS"), encoder.getRevolutions()).
+			nv(F("MEAN RPS"), encoder.getMeanRps()).
+			nv(F("INSTANT RPS"), encoder.getRps()).
+			end();
+}
+
+void loggerSetup(void) {
+	Logger::Config config;
+	config.bufsize = 128;
+	config.host = "";
+	config.port = 0;
+	logger.setup(config);
+	logger.autoFlush(true);
+	logger.enable(Logger::LOG_SERIAL);
+	logger.setLevel(Logger::LOG_SERIAL, Logger::LEVEL_DEBUG);
 }
 
 void setup() {
+	UPort uPort(1);
 	uPort.serial().begin(115200);
+
 	throttle.setName("THROTTLE");
 	steer.setName("STEER");
-	control.setName("CONTROL");
 	encoder.setup(WHEEL_ENCODER_CHANNEL, PULSES_PER_FEET);
-	control.onBelowThreshold(1200, setManual);
-	control.onAboveThreshold(1600, setAuto);
+
+	loggerSetup();
+
+	/*
+	 * Uncomment the following three lines to use the RC receiver channel 5 to
+	 * control the auto/manual mode.
+	 * 		control.setName("CONTROL");
+	 * 		control.onBelowThreshold(1200, setManual);
+	 * 		control.onAboveThreshold(1800, setAuto);
+	 */
 	pwmMux.setup();
+	pwmMux.setMode(PwmMux::PWMIN);
 }
 
 void loop() {
+	const char * mode;
 	checkChannel(throttle);
 	checkChannel(steer);
 	checkChannel(control);
-	uPort.serial().println((String)((pwmMux.getMode() == PwmMux::PWMIN) ? " MANUAL " : " AUTO"));
-	delay(1000);
+	mode = (pwmMux.getMode() == PwmMux::PWMIN) ? " MANUAL " : " AUTO";
+	logger.nv(F("PWMMUX"), mode);
+	checkEncoder();
+	logger.endln();
+	delay(100);
 }
 
 #endif

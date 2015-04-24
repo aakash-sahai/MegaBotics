@@ -157,9 +157,18 @@ Logger & Logger::nv(const __FlashStringHelper *name, char *value) {
 	return *this;
 }
 
+Logger & Logger::nv(const __FlashStringHelper *name, const char *value) {
+	return nv(name, (char *)value);
+}
+
 Logger & Logger::nv(const __FlashStringHelper *name, int value) {
 	char buf[10];
 	return nv(name, itoa(value, buf, 10));
+}
+
+Logger & Logger::nv(const __FlashStringHelper *name, unsigned int value) {
+	char buf[10];
+	return nv(name, utoa(value, buf, 10));
 }
 
 Logger & Logger::nv(const __FlashStringHelper *name, double number) {
@@ -171,9 +180,16 @@ Logger & Logger::nv(const __FlashStringHelper *name, float value) {
 	return nv(name, (double)value);
 }
 
-Logger & Logger::end(void) {
+Logger & Logger::endln(void) {
 	if (doLog(_nvLevel))
 		_buffer.enqueue('\n');
+	_nvLevel = LEVEL_NONE;
+	return *this;
+}
+
+Logger & Logger::end(void) {
+	if (doLog(_nvLevel))
+		_buffer.enqueue(';');
 	_nvLevel = LEVEL_NONE;
 	return *this;
 }

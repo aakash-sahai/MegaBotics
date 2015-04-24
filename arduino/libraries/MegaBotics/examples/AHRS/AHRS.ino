@@ -37,7 +37,7 @@
 #include <Servo.h>
 #include <MegaBotics.h>
 
-#define AHRS_TEST 	1
+#define AHRS_TEST 	0
 
 #if AHRS_TEST
 

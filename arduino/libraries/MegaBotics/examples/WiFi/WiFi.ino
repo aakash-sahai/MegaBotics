@@ -37,7 +37,7 @@
 #include <Servo.h>
 #include <MegaBotics.h>
 
-#define WIFI_TEST 	1
+#define WIFI_TEST 	0
 #define GOOGLE_TEST	0
 
 #if WIFI_TEST

@@ -38,8 +38,7 @@
 #include <Servo.h>
 #include <MegaBotics.h>
 
-#define ROVER_FIGURE_8	1
-#define USE_WIFI	0
+#define ROVER_FIGURE_8	0
 
 #if ROVER_FIGURE_8
 
@@ -49,38 +48,6 @@ AHRS ahrs;
 WheelEncoder &encoder = WheelEncoder::getReference();
 Logger & logger = Logger::getReference();
 Rover & rover = Rover::getReference();
-#if USE_WIFI
-WiFi & wifi = WiFi::getReference();
-byte openId = 255;
-
-void doConnect(byte connectionId)
-{
-	serial.print("Inbound Connection: ");
-	serial.println(wifi.connection(connectionId));
-	openId = connectionId;
-}
-
-void doDisconnect(byte connectionId) {
-	serial.print("Disconnecting from: ");
-	serial.println(wifi.connection(connectionId));
-	openId = 255;
-}
-
-void doReceive(byte connectionId, const char *data, int length, int remaining) {
-	serial.print("RX ");
-	serial.print(length);
-	serial.print(" bytes on ");
-	serial.print(connectionId);
-	serial.print(" remaining ");
-	serial.print(remaining);
-
-	serial.print(" <<<");
-	for (int i = 0; i < length; i++) {
-		serial.print(data[i]);
-	}
-	serial.println(">>>");
-}
-#endif
 
 void setup() {
 	Logger::Config config;
@@ -89,26 +56,15 @@ void setup() {
 	rover.setup();
 	ahrs.setup();
 	encoder.setup();
-#if USE_WIFI
-	wifi.setup();
-	config.bufsize = 256;
-	config.host = "192.168.4.2";
-	config.port = 8080;
-#else
-	config.bufsize = 256;
+	config.bufsize = 128;
 	config.host = "";
 	config.port = 0;
-#endif
 
 
 	logger.setup(config);
 	logger.autoFlush(true);
 	logger.enable(Logger::LOG_SERIAL);
 	logger.setLevel(Logger::LOG_SERIAL, Logger::LEVEL_DEBUG);
-#if USE_WIFI
-	logger.enable(Logger::LOG_UDP);
-	logger.setLevel(Logger::LOG_UDP, Logger::LEVEL_DEBUG);
-#endif
 
 	logger.start("Starting Rover log");
 	figure8();
@@ -122,8 +78,6 @@ void checkKeyPress(void) {
 			encoder.reset();
 			ahrs.resetYPR();
 			break;
-		case 'x': // Interact with WiFi
-			cross();
 		}
 	}
 }
@@ -133,9 +87,6 @@ void poll() {
 	checkKeyPress();
 	ahrs.poll();
 	encoder.poll();
-#if USE_WIFI
-	wifi.poll();
-#endif
 }
 
 void turnAndMove(int tDeg, int tRots) {
@@ -148,7 +99,7 @@ void turnAndMove(int tDeg, int tRots) {
 		log();
 		poll();
 		ypr = ahrs.getRelativeYPR();
-		rots = encoder.getRotations();
+		rots = encoder.getRevolutions();
 		if (tDeg)
 			steer = 100 - (int)(100.0 * ypr.yaw / tDeg);
 		else
@@ -179,11 +130,11 @@ void turnAndMove(int tDeg, int tRots) {
 void log() {
 	AHRS::YPR ypr = ahrs.getRelativeYPR();
 	logger.begin(Logger::LEVEL_DEBUG, F("ROVER")).
-		nv(F("REVS"), encoder.getRotations()).
+		nv(F("REVS"), encoder.getRevolutions()).
 		nv(F("AVG RPS"), encoder.getMeanRps()).
 		nv(F("RPS"), encoder.getRps()).
 		nv(F("REL YAW"), ypr.yaw).
-		end();
+		endln();
 }
 
 void loop() {
@@ -210,13 +161,5 @@ void figure8() {
 			delay(1000);
 		}
 	}
-}
-
-void cross(void) {
-#if USE_WIFI
-	wifi.getUPort().cross(uPort);
-	uPort.interact();
-	wifi.getUPort().uncross();
-#endif
 }
 #endif

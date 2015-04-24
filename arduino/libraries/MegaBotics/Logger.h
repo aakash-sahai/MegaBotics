@@ -125,10 +125,13 @@ public:
 	void critical(const __FlashStringHelper *type, const char *message) { log(LEVEL_CRITICAL, type, message); }
 
 	Logger & begin(Level level, const __FlashStringHelper *type);
+	Logger & nv(const __FlashStringHelper *name, const char *value);
 	Logger & nv(const __FlashStringHelper *name, char *value);
+	Logger & nv(const __FlashStringHelper *name, unsigned int value);
 	Logger & nv(const __FlashStringHelper *name, int value);
 	Logger & nv(const __FlashStringHelper *name, double value);
 	Logger & nv(const __FlashStringHelper *name, float value);
+	Logger & endln(void);
 	Logger & end(void);
 
 	void   flush(void);		// Blocking call to force flush the data to all destinations
