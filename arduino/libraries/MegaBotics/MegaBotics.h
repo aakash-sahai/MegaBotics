@@ -33,14 +33,20 @@
 
 #include <stddef.h>
 #include <inttypes.h>
+#include <math.h>
 #include <Arduino.h>
 #include <Servo.h>
 
 #define	RAD2DEG(_r)	(_r * RAD_TO_DEG)
 #define	DEG2RAD(_d)	(_d * DEG_TO_RAD)
 
-#define DBG_PRINT	Serial.print
-#define DBG_PRINTLN	Serial.println
+#ifdef DEBUG
+#define DBG_PRINT(x)	Serial.print(x)
+#define DBG_PRINTLN(x)	Serial.println(x)
+#else
+#define DBG_PRINT(x)
+#define DBG_PRINTLN(x)
+#endif
 
 #include "PushButton.h"
 #include "Port.h"
@@ -59,5 +65,7 @@
 #include "AHRS.h"
 #include "EepromStore.h"
 #include "WheelEncoder.h"
+#include "ConfigParser.h"
 #include "Display.h"
 #include "SDCard.h"
+#include "PID.h"
