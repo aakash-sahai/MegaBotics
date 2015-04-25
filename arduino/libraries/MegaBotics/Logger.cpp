@@ -187,9 +187,15 @@ Logger & Logger::endln(void) {
 	return *this;
 }
 
-Logger & Logger::end(void) {
+Logger & Logger::nv(const __FlashStringHelper *name, char value) {
 	if (doLog(_nvLevel))
-		_buffer.enqueue(';');
+		_buffer.enqueue(value);
+	return *this;
+}
+
+Logger & Logger::space(void) {
+	if (doLog(_nvLevel))
+		_buffer.enqueue(' ');
 	_nvLevel = LEVEL_NONE;
 	return *this;
 }

@@ -131,8 +131,9 @@ public:
 	Logger & nv(const __FlashStringHelper *name, int value);
 	Logger & nv(const __FlashStringHelper *name, double value);
 	Logger & nv(const __FlashStringHelper *name, float value);
+	Logger & nv(const __FlashStringHelper *name, char value);
 	Logger & endln(void);
-	Logger & end(void);
+	Logger & space(void);
 
 	void   flush(void);		// Blocking call to force flush the data to all destinations
 							// Should preferably be called periodically at low priority to flush the buffer

@@ -54,6 +54,8 @@ PwmIn::PwmIn(int channelNum) {
 	_thresBelowValue = 0;
 	_thresAboveValue = 0;
 	_initialized = false;
+	_config.emaAlpha = PWMIN_DEF_EMA_ALPHA;
+	_config.deadTime = PWMIN_DEF_DEAD_TIME;
 	_name = "CH" + String(channelNum);
 	reset();
 }
@@ -80,15 +82,16 @@ PwmIn & PwmIn::getReference(byte channelNum) {
 
 /*
  * This routine must be called periodically to check if the pulse interrupts are
- * being generated. If a RC Radio is connected to the PWM input, lack of interrupts
- * signify that the transmitter may have been turned off, or gone out of range. If
+ * being generated. If a RC Radio is connected to the PWM input, lack of interrupts for one
+ * full second signify that the transmitter may have been turned off, or gone out of range. If
  * a wheel encoder is connected to the PWM input then lack of interrupts signify that
  * the wheels have stopped rotating.
  */
 bool PwmIn::isAliveSince(void) {
-	 if (!_alive) {
-		 _prevTime = micros();
+	unsigned long _curTime = micros();
+	 if ((_curTime - _prevTime) / 1000 > _config.deadTime) {
 		 _period = 0;
+		 _periodEma = 0;
 		 _width = 0;
 		 return false;
 	 }
@@ -125,7 +128,6 @@ void PwmIn::reset(void) {
 	_pulseCount = 0;
 	_alive = false;
 	_prevTime = 0;
-	_elapsedTime = 0;
 }
 
 void PwmIn::pullup(void) {
@@ -156,8 +158,11 @@ void PwmIn::PinChangeInterrupt(uint8_t pcintNum, bool rising) {
 	if (rising) {
 		unsigned long ts = micros();
 		aPwm->_period = ts - aPwm->_prevTime;
-		aPwm->_elapsedTime += aPwm->_period;
 		aPwm->_prevTime = ts;
+
+		// higher precision integer arithmetic to avoid overflow
+		aPwm->_periodEma = (aPwm->_periodEma * (100 - aPwm->_config.emaAlpha) + aPwm->_period * aPwm->_config.emaAlpha) / 100;
+
 		unsigned long count = aPwm->_pulseCount++;
 		if (aPwm->_intrCallback) {
 			if (count % aPwm->_intrCallbackFreq == 0) {

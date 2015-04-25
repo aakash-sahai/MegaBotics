@@ -112,7 +112,7 @@ void turnAndMove(int tDeg, int tRots) {
 				nv(F("DEG"), tDeg).
 				nv(F("STEER"), steer).
 				nv(F("ROT"), tRots).
-				nv(F("THROTTLE"), throttle).end();
+				nv(F("THROTTLE"), throttle).endln();
 		rover.steer(steer);
 		rover.throttle(throttle);
 
@@ -131,8 +131,9 @@ void log() {
 	AHRS::YPR ypr = ahrs.getRelativeYPR();
 	logger.begin(Logger::LEVEL_DEBUG, F("ROVER")).
 		nv(F("REVS"), encoder.getRevolutions()).
-		nv(F("AVG RPS"), encoder.getMeanRps()).
 		nv(F("RPS"), encoder.getRps()).
+		nv(F("DISTANCE"), encoder.getDistance()).
+		nv(F("SPEED"), encoder.getSpeed()).
 		nv(F("REL YAW"), ypr.yaw).
 		endln();
 }

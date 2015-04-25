@@ -43,9 +43,16 @@
 #include <Arduino.h>
 
 #define MAX_PWMIN_CHANNELS	6
+#define PWMIN_DEF_EMA_ALPHA		80		// Default Exponential Moving Average Alpha
+#define PWMIN_DEF_DEAD_TIME		1000	// Default period (in millis) to declare the channel dead
 
 class PwmIn {
 public:
+	struct Config {
+		byte	emaAlpha;		// Exponential Moving Average Alpha (in %) for calculating avg pulse period
+		unsigned int deadTime;	// Time (in milliseconds) to declare a channel dead if no pulses received
+	};
+
 	typedef void (*IntrCallback)(unsigned long gePulseCount);
 	typedef void (*ThresCallback)(unsigned int uSec);
 
@@ -61,12 +68,12 @@ public:
 
 	String name() { return _name; }
 	void setName(String aName) { _name = aName; }
-	unsigned int getPulsePeriod() { return _period; }
+	unsigned int getPulsePeriod() { return _period; }		// Last pulse Period
+	unsigned int getPulsePeriodEma() { return _periodEma; }	// Exponential Moving Average of Pulse Period
 	unsigned int getPulseWidth() { return _width; }
 	unsigned int getMinPulseWidth() { return _minWidth; }
 	unsigned int getMaxPulseWidth() { return _maxWidth; }
 	unsigned long getPulseCount() { return _pulseCount; }
-	unsigned int getElapsedTime() { return _elapsedTime; }
 
 	void onInterrupt(int everySoMany, IntrCallback fn);
 	void onBelowThreshold(unsigned int value, ThresCallback fn);
@@ -81,6 +88,7 @@ public:
 
 
 private:
+	Config _config;
 	String _name;
 	byte _channel;
 	bool _alive;
@@ -88,9 +96,9 @@ private:
 	unsigned int _minWidth;
 	unsigned int _maxWidth;
 	unsigned int _width;
-	unsigned int _period;
+	unsigned long _period;
+	unsigned long _periodEma;
 	unsigned long _prevTime;
-	unsigned long _elapsedTime;
 	unsigned long _pulseCount;
 	IntrCallback _intrCallback;
 	unsigned int _intrCallbackFreq;

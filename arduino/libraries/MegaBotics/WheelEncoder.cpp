@@ -58,29 +58,11 @@ void WheelEncoder::setup(void) {
 	_pwmIn->pullup();
 }
 
-void WheelEncoder::setup(byte wheelEncoderChannel, byte pulsesPerFeet) {
-	_config.wheelEncoderChannel = wheelEncoderChannel;
-	_config.feetsPerRev = pulsesPerFeet;
-	setup();
-}
-
-float WheelEncoder::getMeanRps() {
-	unsigned long tm = _pwmIn->getElapsedTime();
-	if (tm) {
-		return (float)_pwmIn->getPulseCount() / _config.pulsesPerRev / (float)tm;
-	} else {
-		return 0;
-	}
-}
-
 float WheelEncoder::getRps() {
-	unsigned long tm = _pwmIn->getPulsePeriod() * _config.pulsesPerRev;
-	if (tm) {
-		return 1000000.0  / (float)tm;
-	} else {
-		return 0;
-	}
+	unsigned int pp = _pwmIn->getPulsePeriodEma();
+	return pp ? (1000000.0 / pp / _config.pulsesPerRev) : 0.0;
 }
+
 void WheelEncoder::setup(Config &aConfig)
 {
 	_config = aConfig;
@@ -93,10 +75,6 @@ void WheelEncoder::poll(void) {
 
 float WheelEncoder::getDistance() {
 	return getRevolutions() * _config.feetsPerRev;
-}
-
-float WheelEncoder::getMeanSpeed() {
-	return getMeanRps() * _config.feetsPerRev;
 }
 
 float WheelEncoder::getSpeed() {
