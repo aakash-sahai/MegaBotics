@@ -32,42 +32,84 @@
  */
 
 /*
- * PushButton.h
- *
- *  Created on: 14-Mar-2015
- *      Author: eashan
+ * The calibration routine for calibrating the Rover. The details of the setup
+ * and instructions can be found on the project Wiki.
  */
+#include <Servo.h>
+#include <MegaBotics.h>
 
-#include <Arduino.h>
+#define ROVER_CALIBRATE_OLD 0
 
-#ifndef PUSHBUTTON_H_
-#define PUSHBUTTON_H_
+#if ROVER_CALIBRATE_OLD
 
-#define DEFAULT_PUSHBUTTON_PIN	2
+UPort uPort(1);
+HardwareSerial &serial = uPort.serial();
 
-class PushButton {
-private:
-	bool _isPressed;
-	bool _wasClicked;
-	int _clickQty;
-	byte	_pin;
+int steerVal = 90;
+int throttleVal = 1400;
+bool calibrateSteer = true;
 
-	void init(void);
+const int BUTTON_UP_PIN = 2;
+const int BUTTON_DOWN_PIN = 3;
 
-public:
+PushButton up;
+PushButton down;
+Rover & rover = Rover::getReference();
 
-	PushButton();
-	PushButton(byte);
+void setup() {
+	up = PushButton(BUTTON_UP_PIN);
+	down = PushButton(BUTTON_DOWN_PIN);
 
-	virtual ~PushButton();
+	serial.begin(9600);
+	serial.println("Click UP button to calibrate steering or DOWN to throttle.");
+	rover.setup();
+	selectMode();
+	serial.println("Press UP/DOWN Button and note down the various values.");
+}
 
-	void waitForPush();
-	void check(void);
-	int timesClicked() { check(); return _clickQty; }
-	void clear() { this->_clickQty = 0; }
-	bool pressed(void) { check(); return _isPressed; }
-	bool clicked(void);
-	byte getPin() { return _pin; }
-};
+void selectMode() {
+	while (true) {
+		up.check();
+		down.check();
+		if (up.clicked()) {
+			calibrateSteer = true;
+			break;
+		}
+		if (down.clicked()) {
+			calibrateSteer = false;
+			break;
+		}
+	}
+	serial.print("Calibrating ");
+	serial.println(calibrateSteer ? "Steering" : "Throttle");
+}
 
-#endif /* PUSHBUTTON_H_ */
+void loop() {
+	up.check();
+	down.check();
+	if (up.pressed()) {
+		if (calibrateSteer)
+			steerVal += 1;
+		else
+			throttleVal += 1;
+		serial.print("Value: ");
+		serial.println(calibrateSteer ? steerVal : throttleVal);
+	}
+
+	if (down.pressed()) {
+		if (calibrateSteer)
+			steerVal -= 1;
+		else
+			throttleVal -= 1;
+		serial.print("Value: ");
+		serial.println(calibrateSteer ? steerVal : throttleVal);
+	}
+
+	if (calibrateSteer)
+		rover.steerRaw(steerVal);
+	else
+		rover.throttleRaw(throttleVal);
+
+	delay(100);
+}
+#endif

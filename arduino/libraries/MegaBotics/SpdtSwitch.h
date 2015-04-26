@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2015, Aakash Sahai and other contributors, a list of which is
  * maintained in the associated repository. All rights reserved.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,7 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *    + Redistributions of source code must retain the above copyright
  *      notice, this list of conditions and the following disclaimer.
  *    + Redistributions in binary form must reproduce the above copyright
@@ -32,42 +32,43 @@
  */
 
 /*
- * PushButton.h
+ * SpdtSwitch.h
  *
- *  Created on: 14-Mar-2015
- *      Author: eashan
+ *  Created on: 25-Apr-2015
+ *      Author: Eashan Sahai
  */
 
 #include <Arduino.h>
 
-#ifndef PUSHBUTTON_H_
-#define PUSHBUTTON_H_
+#ifndef SPDTSWITCH_H_
+#define SPDTSWITCH_H_
 
-#define DEFAULT_PUSHBUTTON_PIN	2
+#define DEFAULT_SPDT_PIN_UP		2
+#define DEFAULT_SPDT_PIN_DOWN	3
 
-class PushButton {
+class SpdtSwitch {
+public:
+
+	enum Position {
+		MID = 0,
+		UP = 1,
+		DOWN = 2
+	};
+
+	SpdtSwitch();
+	SpdtSwitch(byte pinUp, byte pinDown);
+	virtual ~SpdtSwitch();
+
+	Position getPosition(void);
+	byte getPinUp() { return _pinUp; }
+	byte getPinDown() { return _pinDown; }
+
 private:
-	bool _isPressed;
-	bool _wasClicked;
-	int _clickQty;
-	byte	_pin;
+	byte	_pinUp;
+	byte	_pinDown;
 
 	void init(void);
 
-public:
-
-	PushButton();
-	PushButton(byte);
-
-	virtual ~PushButton();
-
-	void waitForPush();
-	void check(void);
-	int timesClicked() { check(); return _clickQty; }
-	void clear() { this->_clickQty = 0; }
-	bool pressed(void) { check(); return _isPressed; }
-	bool clicked(void);
-	byte getPin() { return _pin; }
 };
 
-#endif /* PUSHBUTTON_H_ */
+#endif /* SPDTSWITCH_H_ */

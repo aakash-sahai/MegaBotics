@@ -55,29 +55,40 @@ PushButton::~PushButton() {
 }
 
 void PushButton::init(void) {
-	this->_clickQty = 0;
-	this->_isPressed = false;
-	this->_wasClicked = false;
-	pinMode(_pin, INPUT);
+	_clickQty = 0;
+	_isPressed = false;
+	_wasClicked = false;
+	pinMode(_pin, INPUT_PULLUP);
 }
 
 void PushButton::check(void) {
 	int state = digitalRead(_pin);
-	if (state == HIGH) {
-		this->_isPressed = true;
+	if (state == LOW) {
+		_isPressed = true;
 	} else {
-		if (this->_isPressed == true) {
-			this->_wasClicked = true;
-			this->_clickQty++;
-			this->_isPressed = false;
+		if (_isPressed == true) {
+			_wasClicked = true;
+			_clickQty++;
+			_isPressed = false;
 		}
 	}
 }
 
+void PushButton::waitForPush() {
+	while (true) {
+		if (digitalRead(_pin) == LOW) {
+			delay(200); // delay so that we don't read too fast
+			break;
+		}
+
+		delay(10);
+	}
+}
+
 bool PushButton::clicked(void) {
-	this->check();
-	if (this->_wasClicked) {
-		this->_wasClicked = false;
+	check();
+	if (_wasClicked) {
+		_wasClicked = false;
 		return true;
 	}
 	return false;

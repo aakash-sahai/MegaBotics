@@ -49,6 +49,7 @@
 #endif
 
 #include "PushButton.h"
+#include "SpdtSwitch.h"
 #include "Port.h"
 #include "UPort.h"
 #include "SPort.h"
@@ -69,3 +70,4 @@
 #include "Display.h"
 #include "SDCard.h"
 #include "PID.h"
+#include "InputPanel.h"
