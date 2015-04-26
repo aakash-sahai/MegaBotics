@@ -85,6 +85,14 @@ void Rover::setAuto(unsigned int val) {
 	_instance._autoManualMux->setMode(PwmMux::PROGRAM);
 }
 
+void Rover::setControlMode(ControlMode mode) {
+	if (mode == AUTO) {
+		setAuto(0);
+	} else {
+		setManual(0);
+	}
+}
+
 void Rover::setup(void) {
 	_steeringOut.setup(_config.steerChannel);
 	_throttleOut.setup(_config.throttleChannel);

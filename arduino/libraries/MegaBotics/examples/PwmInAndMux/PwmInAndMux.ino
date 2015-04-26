@@ -37,7 +37,7 @@
 #include <Servo.h>
 #include <MegaBotics.h>
 
-#define PWM_TEST				1
+#define PWM_TEST				0
 
 #define PWMIN_STEER_CHANNEL		1		// Channel used for Steering
 #define PWMIN_THROTTLE_CHANNEL	2		// Channel used for Throttle

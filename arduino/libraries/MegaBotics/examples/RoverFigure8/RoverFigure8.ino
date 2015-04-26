@@ -38,7 +38,7 @@
 #include <Servo.h>
 #include <MegaBotics.h>
 
-#define ROVER_FIGURE_8	0
+#define ROVER_FIGURE_8	1
 
 #if ROVER_FIGURE_8
 
@@ -67,6 +67,7 @@ void setup() {
 	logger.setLevel(Logger::LOG_SERIAL, Logger::LEVEL_DEBUG);
 
 	logger.start("Starting Rover log");
+	rover.setControlMode(Rover::AUTO);
 	figure8();
 }
 
