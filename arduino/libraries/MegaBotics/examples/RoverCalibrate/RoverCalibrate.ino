@@ -35,81 +35,109 @@
  * The calibration routine for calibrating the Rover. The details of the setup
  * and instructions can be found on the project Wiki.
  */
-#include <Servo.h>
+ 
 #include <MegaBotics.h>
 
-#define ROVER_CALIBRATE 0
+#define ROVER_CALIBRATE 1
 
 #if ROVER_CALIBRATE
 
+#define STEER_CHANNEL		1		// Channel used for Steering
+#define THROTTLE_CHANNEL	2		// Channel used for Throttle
+#define WHEEL_ENCODER_CHANNEL	6		// Channel used for wheel encoder
+
+#define SERVO_MAX_MICRO_SECS	2000
+#define SERVO_MIN_MICRO_SECS	1000
+
+PwmIn & steerIn = PwmIn::getReference(STEER_CHANNEL);
+PwmIn & throttleIn = PwmIn::getReference(THROTTLE_CHANNEL);
+
+WheelEncoder & encoder = WheelEncoder::getReference();
+PwmMux & pwmMux = PwmMux::getReference();
+Logger & logger = Logger::getReference();
+InputPanel inputPanel;
 UPort uPort(1);
-HardwareSerial &serial = uPort.serial();
 
-int steerVal = 90;
-int throttleVal = 1400;
-bool calibrateSteer = true;
+Rover::Config config;
 
-const int BUTTON_UP_PIN = 2;
-const int BUTTON_DOWN_PIN = 3;
-
-PushButton up;
-PushButton down;
-Rover & rover = Rover::getReference();
-
-void setup() {
-	up = PushButton(BUTTON_UP_PIN);
-	down = PushButton(BUTTON_DOWN_PIN);
-
-	serial.begin(9600);
-	serial.println("Click UP button to calibrate steering or DOWN to throttle.");
-	rover.setup();
-	selectMode();
-	serial.println("Press UP/DOWN Button and note down the various values.");
+void printConfig() {
+	logger.begin(Logger::LEVEL_DEBUG, F("CONFIG")).
+			nv(F("steerChannel"), config.steerChannel).
+			nv(F("throttleChannel"), config.throttleChannel).
+			nv(F("steerMin"), config.steerMin).
+			nv(F("steerMid"), config.steerMid).
+			nv(F("steerMax"), config.steerMax).
+			nv(F("idlePwm"), config.idlePwm).
+			nv(F("fwdPwmMin"), config.fwdPwmMin).
+			nv(F("fwdPwmMax"), config.fwdPwmMax).
+			nv(F("revPwmMin"), config.revPwmMin).
+			nv(F("revPwmMax"), config.revPwmMax);
+	logger.endln().flush();
 }
 
-void selectMode() {
-	while (true) {
-		up.check();
-		down.check();
-		if (up.clicked()) {
-			calibrateSteer = true;
-			break;
-		}
-		if (down.clicked()) {
-			calibrateSteer = false;
-			break;
-		}
+void configThrottle() {
+	uPort.serial().println("Turn OFF the remote and press the button");
+	inputPanel.waitForPush();
+	inputPanel.clear();
+
+	config.idlePwm = throttleIn.getPulseWidth();
+
+	uPort.serial().println("Turn ON the remote and press the button");
+	inputPanel.waitForPush();
+	inputPanel.clear();
+
+	config.fwdPwmMin = throttleIn.getPulseWidth();
+
+	uPort.serial().println("Press the throttle to go at max speed, 1st forward and then reverse, press the button when done");
+	throttleIn.reset();
+	inputPanel.clear();
+
+	while (!inputPanel.clicked()) {
+		delay(200);
 	}
-	serial.print("Calibrating ");
-	serial.println(calibrateSteer ? "Steering" : "Throttle");
+
+	config.fwdPwmMax = throttleIn.getMaxPulseWidth();
+	config.revPwmMax = throttleIn.getMinPulseWidth();
+	config.revPwmMin = config.idlePwm - 100;
+}
+
+void configSteer() {
+	config.steerMid = map(steerIn.getPulseWidth(), SERVO_MIN_MICRO_SECS, SERVO_MAX_MICRO_SECS, 0, 180);
+	config.steerMin = 0;
+	config.steerMax = 180;
+}
+
+void setup() {
+	uPort.serial().begin(115200);
+
+	throttleIn.setName("THROTTLE");
+	steerIn.setName("STEER");
+	encoder.setup();
+	loggerSetup();
+
+	pwmMux.setup();
+	pwmMux.setMode(PwmMux::PWMIN);
+
+	config.steerChannel = STEER_CHANNEL;
+	config.throttleChannel = THROTTLE_CHANNEL;
+
+	configThrottle();
+	configSteer();
+	printConfig();
 }
 
 void loop() {
-	up.check();
-	down.check();
-	if (up.pressed()) {
-		if (calibrateSteer)
-			steerVal += 1;
-		else
-			throttleVal += 1;
-		serial.print("Value: ");
-		serial.println(calibrateSteer ? steerVal : throttleVal);
-	}
-
-	if (down.pressed()) {
-		if (calibrateSteer)
-			steerVal -= 1;
-		else
-			throttleVal -= 1;
-		serial.print("Value: ");
-		serial.println(calibrateSteer ? steerVal : throttleVal);
-	}
-
-	if (calibrateSteer)
-		rover.steerRaw(steerVal);
-	else
-		rover.throttleRaw(throttleVal);
-
-	delay(100);
 }
+
+void loggerSetup(void) {
+	Logger::Config config;
+	config.bufsize = 128;
+	config.host = "";
+	config.port = 0;
+	logger.setup(config);
+	logger.autoFlush(true);
+	logger.enable(Logger::LOG_SERIAL);
+	logger.setLevel(Logger::LOG_SERIAL, Logger::LEVEL_DEBUG);
+}
+
 #endif

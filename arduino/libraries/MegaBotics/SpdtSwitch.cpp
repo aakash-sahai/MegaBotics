@@ -38,7 +38,6 @@
  *      Author: Eashan Sahai
  */
 
-
 #include <SpdtSwitch.h>
 
 SpdtSwitch::SpdtSwitch() {
@@ -51,13 +50,11 @@ SpdtSwitch::~SpdtSwitch() {
 	// TODO Auto-generated destructor stub
 }
 
-
 SpdtSwitch::SpdtSwitch(byte pinUp, byte pinDown) {
-		_pinUp = pinUp;
-		_pinDown = pinDown;
-		init();
+	_pinUp = pinUp;
+	_pinDown = pinDown;
+	init();
 }
-
 
 SpdtSwitch::Position SpdtSwitch::getPosition(void) {
 	byte upState = digitalRead(_pinUp);

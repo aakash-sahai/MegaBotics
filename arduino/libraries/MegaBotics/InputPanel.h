@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2015, Aakash Sahai and other contributors, a list of which is
  * maintained in the associated repository. All rights reserved.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,7 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *    + Redistributions of source code must retain the above copyright
  *      notice, this list of conditions and the following disclaimer.
  *    + Redistributions in binary form must reproduce the above copyright
@@ -32,42 +32,42 @@
  */
 
 /*
- * PushButton.h
+ * InputPanel.h
  *
- *  Created on: 14-Mar-2015
- *      Author: eashan
+ *  Created on: Apr 26, 2015
+ *      Author: Srinivas Raj
  */
 
-#include <Arduino.h>
+#include <Uport.h>
+#include <PushButton.h>
+#include <SpdtSwitch.h>
 
-#ifndef PUSHBUTTON_H_
-#define PUSHBUTTON_H_
+#define INPUT_PANEL_DEFAULT_UPORT		3
 
-#define DEFAULT_PUSHBUTTON_PIN	2
+#ifndef MEGABOTICS_INPUTPANEL_H_
+#define MEGABOTICS_INPUTPANEL_H_
 
-class PushButton {
-private:
-	bool _isPressed;
-	bool _wasClicked;
-	int _clickQty;
-	byte	_pin;
-
-	void init(void);
-
+class InputPanel {
 public:
+	InputPanel();
+	InputPanel(int port);
+	virtual ~InputPanel();
 
-	PushButton();
-	PushButton(byte);
+	void setup();
+	void waitForPush() {_pushButton.waitForPush();}
+	SpdtSwitch::Position getPosition() {return _spdtSwitch.getPosition();}
 
-	virtual ~PushButton();
+	void check(void) {_pushButton.check();}
+	int timesClicked() { return _pushButton.timesClicked(); }
+	void clear() { _pushButton.clear(); }
+	bool pressed(void) { return _pushButton.pressed(); }
+	bool clicked(void) { return _pushButton.clicked();}
 
-	void waitForPush();
-	void check(void);
-	int timesClicked() { check(); return _clickQty; }
-	void clear() { this->_clickQty = 0; }
-	bool pressed(void) { check(); return _isPressed; }
-	bool clicked(void);
-	byte getPin() { return _pin; }
+private:
+	UPort _uport;
+
+	PushButton _pushButton;
+	SpdtSwitch _spdtSwitch;
 };
 
-#endif /* PUSHBUTTON_H_ */
+#endif /* MEGABOTICS_INPUTPANEL_H_ */

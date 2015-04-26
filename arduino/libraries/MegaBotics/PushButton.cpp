@@ -58,12 +58,12 @@ void PushButton::init(void) {
 	_clickQty = 0;
 	_isPressed = false;
 	_wasClicked = false;
-	pinMode(_pin, INPUT);
+	pinMode(_pin, INPUT_PULLUP);
 }
 
 void PushButton::check(void) {
 	int state = digitalRead(_pin);
-	if (state == HIGH) {
+	if (state == LOW) {
 		_isPressed = true;
 	} else {
 		if (_isPressed == true) {
@@ -71,6 +71,17 @@ void PushButton::check(void) {
 			_clickQty++;
 			_isPressed = false;
 		}
+	}
+}
+
+void PushButton::waitForPush() {
+	while (true) {
+		if (digitalRead(_pin) == LOW) {
+			delay(200); // delay so that we don't read too fast
+			break;
+		}
+
+		delay(10);
 	}
 }
 
