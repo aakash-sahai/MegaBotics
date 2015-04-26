@@ -32,54 +32,55 @@
  */
 
 /*
- * PushButton.cpp
+ * SpdtSwitch.ino
  *
- *  Created on: 14-Mar-2015
- *      Author: eashan
+ * This is an example sketch to demonstrate the functionality of
+ * the LED and SpdtSwitch objects.
+ *
+ *  Created on: 25-Apr-2015
+ *      Author: Eashan Sahai
  */
+#include <MegaBotics.h>
 
-#include "PushButton.h"
+const int SWITCH_UP_PIN = 4;    // the switch up pin
+const int SWITCH_DOWN_PIN = 5;	// The switch down pin
+const int LED_RED =  10;     	// the RED LED pin - turned on when switch is in DOWN position
+const int LED_BLUE =  11;    	// the BLUE LED pin - turned on when switch is in MID position
+const int LED_GREEN = 12;		// the BLUE LED pin - turned on when switch is in UP position
 
-PushButton::PushButton() {
-	_pin = DEFAULT_PUSHBUTTON_PIN;
-	init();
+SpdtSwitch sw;
+LED ledRed;
+LED ledBlue;
+LED ledGreen;
+
+void setup() {
+  sw = SpdtSwitch(SWITCH_UP_PIN, SWITCH_DOWN_PIN);
+  ledRed = LED(LED_RED);
+  ledBlue = LED(LED_BLUE);
+  ledGreen = LED(LED_GREEN);
+
+
+  Serial.begin(9600);
+  Serial.println("LED1 remains on while you keep button pressed");
+  Serial.println("LED2 blinks when you click the button");
 }
 
-PushButton::PushButton(byte aPin) {
-	_pin = aPin;
-	init();
+void loop() {
+	SpdtSwitch::Position position;
+	position = sw.getPosition();
+  	if (position == SpdtSwitch::MID) {
+  		ledBlue.on();
+  		ledRed.off();
+  		ledGreen.off();
+  	}
+  	if (position == SpdtSwitch::UP) {
+  	  		ledBlue.off();
+  	  		ledRed.off();
+  	  		ledGreen.on();
+  	  	}
+  	if (position == SpdtSwitch::DOWN) {
+  	  		ledBlue.off();
+  	  		ledRed.on();
+  	  		ledGreen.off();
+  	  	}
 }
-
-PushButton::~PushButton() {
-	// Nothing to do
-}
-
-void PushButton::init(void) {
-	_clickQty = 0;
-	_isPressed = false;
-	_wasClicked = false;
-	pinMode(_pin, INPUT);
-}
-
-void PushButton::check(void) {
-	int state = digitalRead(_pin);
-	if (state == HIGH) {
-		_isPressed = true;
-	} else {
-		if (_isPressed == true) {
-			_wasClicked = true;
-			_clickQty++;
-			_isPressed = false;
-		}
-	}
-}
-
-bool PushButton::clicked(void) {
-	check();
-	if (_wasClicked) {
-		_wasClicked = false;
-		return true;
-	}
-	return false;
-}
-

@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2015, Aakash Sahai and other contributors, a list of which is
  * maintained in the associated repository. All rights reserved.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,7 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *    + Redistributions of source code must retain the above copyright
  *      notice, this list of conditions and the following disclaimer.
  *    + Redistributions in binary form must reproduce the above copyright
@@ -32,54 +32,43 @@
  */
 
 /*
- * PushButton.cpp
+ * SpdtSwitch.h
  *
- *  Created on: 14-Mar-2015
- *      Author: eashan
+ *  Created on: 25-Apr-2015
+ *      Author: Eashan Sahai
  */
 
-#include "PushButton.h"
+#include <Arduino.h>
 
-PushButton::PushButton() {
-	_pin = DEFAULT_PUSHBUTTON_PIN;
-	init();
-}
+#ifndef SPDTSWITCH_H_
+#define SPDTSWITCH_H_
 
-PushButton::PushButton(byte aPin) {
-	_pin = aPin;
-	init();
-}
+#define DEFAULT_SPDT_PIN_UP		2
+#define DEFAULT_SPDT_PIN_DOWN	3
 
-PushButton::~PushButton() {
-	// Nothing to do
-}
+class SpdtSwitch {
+public:
 
-void PushButton::init(void) {
-	_clickQty = 0;
-	_isPressed = false;
-	_wasClicked = false;
-	pinMode(_pin, INPUT);
-}
+	enum Position {
+		MID = 0,
+		UP = 1,
+		DOWN = 2
+	};
 
-void PushButton::check(void) {
-	int state = digitalRead(_pin);
-	if (state == HIGH) {
-		_isPressed = true;
-	} else {
-		if (_isPressed == true) {
-			_wasClicked = true;
-			_clickQty++;
-			_isPressed = false;
-		}
-	}
-}
+	SpdtSwitch();
+	SpdtSwitch(byte pinUp, byte pinDown);
+	virtual ~SpdtSwitch();
 
-bool PushButton::clicked(void) {
-	check();
-	if (_wasClicked) {
-		_wasClicked = false;
-		return true;
-	}
-	return false;
-}
+	Position getPosition(void);
+	byte getPinUp() { return _pinUp; }
+	byte getPinDown() { return _pinDown; }
 
+private:
+	byte	_pinUp;
+	byte	_pinDown;
+
+	void init(void);
+
+};
+
+#endif /* SPDTSWITCH_H_ */

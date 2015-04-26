@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2015, Aakash Sahai and other contributors, a list of which is
  * maintained in the associated repository. All rights reserved.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,7 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *    + Redistributions of source code must retain the above copyright
  *      notice, this list of conditions and the following disclaimer.
  *    + Redistributions in binary form must reproduce the above copyright
@@ -32,54 +32,46 @@
  */
 
 /*
- * PushButton.cpp
+ * SpdtSwitch.cpp
  *
- *  Created on: 14-Mar-2015
- *      Author: eashan
+ *  Created on: 25-Apr-2015
+ *      Author: Eashan Sahai
  */
 
-#include "PushButton.h"
 
-PushButton::PushButton() {
-	_pin = DEFAULT_PUSHBUTTON_PIN;
+#include <SpdtSwitch.h>
+
+SpdtSwitch::SpdtSwitch() {
+	_pinUp = DEFAULT_SPDT_PIN_UP;
+	_pinDown = DEFAULT_SPDT_PIN_DOWN;
 	init();
 }
 
-PushButton::PushButton(byte aPin) {
-	_pin = aPin;
-	init();
+SpdtSwitch::~SpdtSwitch() {
+	// TODO Auto-generated destructor stub
 }
 
-PushButton::~PushButton() {
-	// Nothing to do
+
+SpdtSwitch::SpdtSwitch(byte pinUp, byte pinDown) {
+		_pinUp = pinUp;
+		_pinDown = pinDown;
+		init();
 }
 
-void PushButton::init(void) {
-	_clickQty = 0;
-	_isPressed = false;
-	_wasClicked = false;
-	pinMode(_pin, INPUT);
-}
 
-void PushButton::check(void) {
-	int state = digitalRead(_pin);
-	if (state == HIGH) {
-		_isPressed = true;
-	} else {
-		if (_isPressed == true) {
-			_wasClicked = true;
-			_clickQty++;
-			_isPressed = false;
-		}
+SpdtSwitch::Position SpdtSwitch::getPosition(void) {
+	byte upState = digitalRead(_pinUp);
+	byte downState = digitalRead(_pinDown);
+	if (upState == LOW) {
+		return UP;
 	}
-}
-
-bool PushButton::clicked(void) {
-	check();
-	if (_wasClicked) {
-		_wasClicked = false;
-		return true;
+	if (downState == LOW) {
+		return DOWN;
 	}
-	return false;
+	return MID;
 }
 
+void SpdtSwitch::init(void) {
+	pinMode(_pinUp, INPUT_PULLUP);
+	pinMode(_pinDown, INPUT_PULLUP);
+}

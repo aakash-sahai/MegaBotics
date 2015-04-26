@@ -49,6 +49,7 @@
 #endif
 
 #include "PushButton.h"
+#include "SpdtSwitch.h"
 #include "Port.h"
 #include "UPort.h"
 #include "SPort.h"
