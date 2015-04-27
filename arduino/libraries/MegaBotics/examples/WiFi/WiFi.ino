@@ -131,7 +131,7 @@ void client(void) {
 	WiFiStatus status;
 	byte id;
 
-	status = wifi.connect(80, "216.58.217.46", id);		// Connect to Google
+	status = wifi.connect(TCP, "216.58.217.46", 80, id);		// Connect to Google
 	if (status == SUCCESS) {
 		terminal.print("Connected, ID = ");
 		terminal.println(id);
@@ -208,7 +208,7 @@ void log(void) {
 	logger.start("Starting the log");
 	logger.log(Logger::LEVEL_INFO, F("INFO"), "Hello, World!");
 	logger.flush();
-	logger.begin(Logger::LEVEL_DEBUG, F("DEBUG")).nv(F("ONE"), 1).nv(F("TWO"), (char *)"22").nv(F("THREE"), 3.3333).end();
+	logger.begin(Logger::LEVEL_DEBUG, F("DEBUG")).nv(F("ONE"), 1).nv(F("TWO"), (char *)"22").nv(F("THREE"), 3.3333).endln();
 	logger.flush();
 	logger.finish("Finishing the log");
 	logger.flush();
@@ -220,7 +220,7 @@ void setup() {
 
 	Logger::Config config;
 	config.bufsize = 128;
-	config.host = "192.168.4.2";
+	strcpy(config.ip, "192.168.4.2");
 	config.port = 8080;
 	logger.setup(config);
 	logger.enable(Logger::LOG_SERIAL);

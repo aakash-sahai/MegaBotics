@@ -40,9 +40,14 @@
 
 #include "LinkedList.h"
 
+LinkedList::~LinkedList() {
+
+}
+
 ListNode * LinkedList::insert(ListNode *node) {
 	  node->_next = NULL;
-	  _tail->_next = node;
+	  if (_tail)
+		  _tail->_next = node;
 	  _tail = node;
 	  if (isEmpty())
 	    _head = _tail;

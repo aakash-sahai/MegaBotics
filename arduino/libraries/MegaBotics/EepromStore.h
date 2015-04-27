@@ -84,28 +84,35 @@ public:
 	/*
 	 * Implemented as a Singleton object
 	 */
-	static EepromStore & getInstance() { static EepromStore _instance; return _instance; }
+	static EepromStore * getInstance() { return & _instance; }
+	static EepromStore & getReference() { return _instance; }
 
+	void setup(void);
 	Status loadSection(char *name, void *buf, int *length);
 	Status storeSection(char *name, void *buf, int length);
 	Status deleteSection(char *name);
+	void list(void);
+	void listFree(void);
 
 private:
-
+	static EepromStore _instance;
 	class SectionEntry : public ListNode {
 	public:
+		SectionEntry();
+		virtual ~SectionEntry();
 		SectionEntry *next() { return (SectionEntry *)_next; }
-		bool equals(ListNode *other);
 		SectionHeader header;				// The header info stored in EEPROM
 		int			  offset;				// The offset in EEPROM where data is stored
+		void print(void);
 	};
 
 	LinkedList	_occupied;					// The linked list of occupied sections
 	LinkedList  _free;						// The linked list of free sections
+	void list(LinkedList & aList);
+
 	EepromStore();
 	EepromStore(EepromStore const&);        // Don't Implement to disallow copy by assignment
     void operator=(EepromStore const&);		// Don't implement to disallow copy by assignment
-	void init(void);
 	SectionEntry *findSection(const char *name);
 };
 

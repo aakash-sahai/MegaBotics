@@ -44,9 +44,6 @@
 #include <stdlib.h>
 
 class ListNode {
-public:
-	virtual bool equals(ListNode *other) = 0;
-
 protected:
 	friend class LinkedList;
 	ListNode *	_next;

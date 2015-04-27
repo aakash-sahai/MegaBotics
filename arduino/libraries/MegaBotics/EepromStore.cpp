@@ -35,24 +35,33 @@
  * EepromStrore.cpp
  *
  *  Created on: Apr 20, 2015
- *      Author: aakash
+ *      Author: Aakash Sahai
  */
+#define DEBUG	0
 
-#include "EepromStore.h"
+#include "MegaBotics.h"
 #include <string.h>
+#include <Arduino.h>
 
-const char signature[EepromStore::signatureLength] = { 'E', 'S', 'T', 'O', 'R', 'E' };
+EepromStore EepromStore::_instance;
+
+const char EepromStore::signature[EepromStore::signatureLength] = { 'E', 'S', 'T', 'O', 'R', 'E' };
+
 #define FREE_SECTION_NAME	"FREE"
 #define MIN_FREE_BYTES		8
 
+EepromStore::SectionEntry::SectionEntry() { offset = 0; }
+EepromStore::SectionEntry::~SectionEntry() { }
+
 EepromStore::EepromStore() {
+	//  Nothing to do
 }
 
 EepromStore::~EepromStore() {
 	//  Nothing to do
 }
 
-void EepromStore::init(void) {
+void EepromStore::setup(void) {
 	char sig[signatureLength];
 	int i;
 	eeprom_read_block(sig, 0, signatureLength);
@@ -61,6 +70,7 @@ void EepromStore::init(void) {
 			break;
 	}
 	if (i != EepromStore::signatureLength) {
+		DBG_PRINTLN(F("Did not find Signature"));
 		// We didn't find Signatures in EEPROM; Write Signature and the FREE Section Header
 		eeprom_update_block(signature, 0, EepromStore::signatureLength);
 		SectionEntry *sptr = new SectionEntry;
@@ -74,9 +84,11 @@ void EepromStore::init(void) {
 	}
 	// Signatures are valid; read and cache the _occupied and _free block list
 	int offset = signatureLength;			// Skip past the signatures
+	DBG_PRINTLN(F("Found Signature"));
 	while (offset < eepromSize) {
 		SectionEntry *sptr = new SectionEntry;
 		eeprom_read_block(&sptr->header, (void *)offset, sizeof(SectionHeader));
+		DBG_PRINTLN("Read Block");
 		offset += sizeof(SectionHeader);	// Skip to the beginning of section
 		sptr->offset = offset;
 		if (sptr->header.isFree()) {
@@ -86,6 +98,7 @@ void EepromStore::init(void) {
 		}
 		offset += sptr->header.sectionLen;	// Skip to the next section header
 	}
+	DBG_PRINTLN(F("EEPROM Store Cache primed"));
 }
 
 EepromStore::Status EepromStore::loadSection(char *name, void *buf, int *length) {
@@ -106,11 +119,11 @@ EepromStore::Status EepromStore::loadSection(char *name, void *buf, int *length)
 EepromStore::Status EepromStore::storeSection(char *name, void *buf, int length) {
 	SectionEntry *sptr = findSection(name);
 	if (sptr == 0) {	// Not found. Allocate a free block
-		for (sptr = (SectionEntry *)_free.first(); sptr != NULL; sptr = sptr->next()) {
+		for (sptr = (SectionEntry *)_free.first(); sptr != (SectionEntry *)NULL; sptr = sptr->next()) {
 			if (sptr->header.sectionLen >= length)
 				break;
 		}
-		if (sptr == NULL) {
+		if (sptr == (SectionEntry *)NULL) {
 			return NO_SPACE;
 		}
 
@@ -159,7 +172,7 @@ EepromStore::Status EepromStore::storeSection(char *name, void *buf, int length)
 
 EepromStore::SectionEntry * EepromStore::findSection(const char *name) {
 	SectionEntry *sptr;
-	for (sptr = (SectionEntry *)_occupied.first(); sptr != NULL; sptr = sptr->next()) {
+	for (sptr = (SectionEntry *)_occupied.first(); sptr != (SectionEntry *)NULL; sptr = sptr->next()) {
 		if (strncmp(sptr->header.name, name, sectionNameLength) == 0) {
 			return sptr;
 		}
@@ -167,6 +180,29 @@ EepromStore::SectionEntry * EepromStore::findSection(const char *name) {
 	return NULL;
 }
 
+void EepromStore::list(void) {
+	list(_occupied);
+}
+
+void EepromStore::listFree(void) {
+	list(_free);
+}
+
+void EepromStore::list(LinkedList &aList) {
+	SectionEntry *sptr;
+	for (sptr = (SectionEntry *)aList.first(); sptr != (SectionEntry *)NULL; sptr = sptr->next()) {
+		sptr->print();
+	}
+}
+
+void EepromStore::SectionEntry::print(void) {
+	char buf[80];
+	strncpy(buf, header.name, 4);
+	sprintf(buf+4, " - SLEN: %d DLEN: %d OFFSET: %d\n",
+			header.sectionLen,
+			header.dataLen, offset);
+	Serial.print(buf);
+}
 
 EepromStore::Status EepromStore::deleteSection(char *name) {
 	SectionEntry *sptr = findSection(name);

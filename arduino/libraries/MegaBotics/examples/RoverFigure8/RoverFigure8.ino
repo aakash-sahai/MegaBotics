@@ -38,7 +38,7 @@
 #include <Servo.h>
 #include <MegaBotics.h>
 
-#define ROVER_FIGURE_8	1
+#define ROVER_FIGURE_8	0
 
 #if ROVER_FIGURE_8
 
@@ -50,18 +50,11 @@ Logger & logger = Logger::getReference();
 Rover & rover = Rover::getReference();
 
 void setup() {
-	Logger::Config config;
-
 	serial.begin(115200);
 	rover.setup();
 	ahrs.setup();
 	encoder.setup();
-	config.bufsize = 128;
-	config.host = "";
-	config.port = 0;
-
-
-	logger.setup(config);
+	logger.setup();
 	logger.autoFlush(true);
 	logger.enable(Logger::LOG_SERIAL);
 	logger.setLevel(Logger::LOG_SERIAL, Logger::LEVEL_DEBUG);

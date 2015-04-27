@@ -40,7 +40,11 @@
 #define	RAD2DEG(_r)	(_r * RAD_TO_DEG)
 #define	DEG2RAD(_d)	(_d * DEG_TO_RAD)
 
-#ifdef DEBUG
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
+#if DEBUG
 #define DBG_PRINT(x)	Serial.print(x)
 #define DBG_PRINTLN(x)	Serial.println(x)
 #else

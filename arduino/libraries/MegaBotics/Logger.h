@@ -70,6 +70,8 @@ char * dtostrf(double value, int x, int y, char * buf);
 #define LOGGER_DEFAULT_BUFSIZE	64
 #define LOGGER_MAX_DESTINATIONS	3
 
+#define MAX_IPADDR_LEN	15
+
 class Logger {
 public:
 
@@ -90,15 +92,16 @@ public:
 	};
 
 	struct Config {
-		int	bufsize;		// Buffer size: should preferably be a power of 2
-		String host;		// UDP host to send the log to
-		unsigned int port;	// UDP port to send the log to
+		int	bufsize;			// Buffer size: should preferably be a power of 2
+		char ip[MAX_IPADDR_LEN+1];	// IP Address to send the log to
+		unsigned int port;		// UDP port to send the log to
 	};
 
 	static Logger * getInstance() { return & _instance; }
 	static Logger & getReference() { return _instance; }
 
 	virtual ~Logger();
+	void setup(void);
 	void setup(Config &config);
 
 	void enable(Destination dest) { _destMask |= ( 1 << dest); }		// Enable logging to a destination

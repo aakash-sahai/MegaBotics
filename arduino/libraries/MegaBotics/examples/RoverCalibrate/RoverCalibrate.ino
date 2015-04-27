@@ -38,7 +38,7 @@
  
 #include <MegaBotics.h>
 
-#define ROVER_CALIBRATE 1
+#define ROVER_CALIBRATE 0
 
 #if ROVER_CALIBRATE
 
@@ -48,6 +48,7 @@
 
 #define SERVO_MAX_MICRO_SECS	2000
 #define SERVO_MIN_MICRO_SECS	1000
+
 
 PwmIn & steerIn = PwmIn::getReference(STEER_CHANNEL);
 PwmIn & throttleIn = PwmIn::getReference(THROTTLE_CHANNEL);
@@ -130,11 +131,7 @@ void loop() {
 }
 
 void loggerSetup(void) {
-	Logger::Config config;
-	config.bufsize = 128;
-	config.host = "";
-	config.port = 0;
-	logger.setup(config);
+	logger.setup();
 	logger.autoFlush(true);
 	logger.enable(Logger::LOG_SERIAL);
 	logger.setLevel(Logger::LOG_SERIAL, Logger::LEVEL_DEBUG);

@@ -46,7 +46,9 @@ Logger::Logger() {
 	_destMask = 0;
 	_nvLevel = _logLevel = LEVEL_NONE;
 	_firstValue = false;
-	_config.bufsize = 0;
+	_config.bufsize = 128;
+	strcpy(_config.ip, "");
+	_config.port = 0;
 	_wifiConnectionId = -1;
 	_wifi = WiFi::getInstance();
 }
@@ -55,12 +57,17 @@ Logger::Logger() {
 Logger::~Logger() {
 }
 
+void Logger::setup(void) {
+	_buffer.setup(_config.bufsize);
+}
+
 void Logger::setup(Config &aConfig) {
 	_config.bufsize = aConfig.bufsize;
-	_config.host = aConfig.host;
+	strncpy(_config.ip, aConfig.ip, MAX_IPADDR_LEN);
+	_config.ip[MAX_IPADDR_LEN] = 0;
 	_config.port = aConfig.port;
 	if (aConfig.port != 0) {
-		_wifi->connect(UDP, aConfig.host, aConfig.port, _wifiConnectionId);
+		_wifi->connect(UDP, aConfig.ip, aConfig.port, _wifiConnectionId);
 	}
 	_buffer.setup(_config.bufsize);
 }
