@@ -58,13 +58,13 @@ void setup() {
 	EepromStore::Status status = estore.loadSection("LOGR", &config, &len);
 
 	if (status != EepromStore::SUCCESS) {
-		serial.print("Could not load Logger config; Status = ");
+		serial.print(F("Could not load Logger config; Status = "));
 		serial.println((int)status);
 		doStore = true;
 	}
 
 	if (len != sizeof(config)) {
-		serial.print("Configuration size mismatch for LOGR: Got ");
+		serial.print(F("Configuration size mismatch for LOGR: Got "));
 		serial.print(len);
 		serial.print(" vs Expected ");
 		serial.println(sizeof(config));
@@ -77,7 +77,7 @@ void setup() {
 		config.port = 0;
 		status = estore.storeSection("LOGR", &config, sizeof(config));
 		if (status != EepromStore::SUCCESS) {
-			serial.println("Could not store Logger config; Status = ");
+			serial.println(F("Could not store Logger config; Status = "));
 			serial.println((int)status);
 		}
 	}
@@ -93,9 +93,9 @@ void setup() {
 			endln().flush();
 
 
-	serial.println("Free Blocks in EEPROM: ");
+	serial.println(F("Free Blocks in EEPROM: "));
 	estore.listFree();
-	serial.println("Occupied Blocks in EEPROM: ");
+	serial.println(F("Occupied Blocks in EEPROM: "));
 	estore.list();
 }
 
