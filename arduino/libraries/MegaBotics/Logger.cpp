@@ -51,6 +51,7 @@ Logger::Logger() {
 	_config.port = 0;
 	_wifiConnectionId = -1;
 	_wifi = WiFi::getInstance();
+	_autoFlush = false;
 }
 
 
@@ -70,6 +71,9 @@ void Logger::setup(Config &aConfig) {
 		_wifi->connect(UDP, aConfig.ip, aConfig.port, _wifiConnectionId);
 	}
 	_buffer.setup(_config.bufsize);
+	if (aConfig.fileName != NULL) {
+		_file = SDCard::getInstance()->open(aConfig.fileName, FILE_WRITE);
+	}
 }
 
 bool Logger::start(const char *message) {
@@ -224,5 +228,12 @@ void   Logger::flush(void) {
 		if (_wifiConnectionId != -1 && (_destMask & (1 << LOG_UDP)) && level <= _level[LOG_UDP])	{
 			_wifi->write(_wifiConnectionId, ch);
 		}
+		if (_file && (_destMask & (1 << LOG_SD)) && level <= _level[LOG_SD])	{
+			_file.write(ch);
+		}
+	}
+
+	if (_file) {
+		_file.flush();
 	}
 }

@@ -95,6 +95,7 @@ public:
 		int	bufsize;			// Buffer size: should preferably be a power of 2
 		char ip[MAX_IPADDR_LEN+1];	// IP Address to send the log to
 		unsigned int port;		// UDP port to send the log to
+		char* fileName;		// Name of the file to write the logs on the SD card
 	};
 
 	static Logger * getInstance() { return & _instance; }
@@ -144,6 +145,7 @@ public:
 private:
 	static Logger _instance;
 	WiFi *_wifi;
+	File _file;
 	byte _wifiConnectionId;
 	bool _autoFlush;
 	char _destMask;		// Bit-field of destinations to send the log to

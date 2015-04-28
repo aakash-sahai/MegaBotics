@@ -52,6 +52,9 @@ public:
 		FAILURE = 1
 	};
 
+	static SDCard * getInstance() { return & _instance; }
+	static SDCard & getReference() { return _instance; }
+
 	SDCard();
 	SDCard(int port);
 	virtual ~SDCard();
@@ -59,6 +62,7 @@ public:
 	File open(const char *filepath, uint8_t mode) {return SD.open(filepath, mode);}
 
 private:
+	static SDCard _instance;
 	SPort _sport;
 };
 
