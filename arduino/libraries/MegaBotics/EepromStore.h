@@ -88,9 +88,9 @@ public:
 	static EepromStore & getReference() { return _instance; }
 
 	void setup(void);
-	Status loadSection(char *name, void *buf, int *length);
-	Status storeSection(char *name, void *buf, int length);
-	Status deleteSection(char *name);
+	Status loadSection(const char *name, void *buf, int *length);
+	Status storeSection(const char *name, void *buf, int length);
+	Status deleteSection(const char *name);
 	void list(void);
 	void listFree(void);
 

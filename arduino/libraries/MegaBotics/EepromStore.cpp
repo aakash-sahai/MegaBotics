@@ -101,7 +101,7 @@ void EepromStore::setup(void) {
 	DBG_PRINTLN(F("EEPROM Store Cache primed"));
 }
 
-EepromStore::Status EepromStore::loadSection(char *name, void *buf, int *length) {
+EepromStore::Status EepromStore::loadSection(const char *name, void *buf, int *length) {
 	SectionEntry *sptr = findSection(name);
 	if (sptr == 0)
 		return NOT_FOUND;
@@ -116,7 +116,7 @@ EepromStore::Status EepromStore::loadSection(char *name, void *buf, int *length)
 	return status;
 }
 
-EepromStore::Status EepromStore::storeSection(char *name, void *buf, int length) {
+EepromStore::Status EepromStore::storeSection(const char *name, void *buf, int length) {
 	SectionEntry *sptr = findSection(name);
 	if (sptr == 0) {	// Not found. Allocate a free block
 		for (sptr = (SectionEntry *)_free.first(); sptr != (SectionEntry *)NULL; sptr = sptr->next()) {
@@ -204,7 +204,7 @@ void EepromStore::SectionEntry::print(void) {
 	Serial.print(buf);
 }
 
-EepromStore::Status EepromStore::deleteSection(char *name) {
+EepromStore::Status EepromStore::deleteSection(const char *name) {
 	SectionEntry *sptr = findSection(name);
 	if (sptr == 0) {
 		return NOT_FOUND;
