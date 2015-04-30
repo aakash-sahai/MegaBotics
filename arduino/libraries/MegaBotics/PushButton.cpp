@@ -75,12 +75,16 @@ void PushButton::check(void) {
 }
 
 void PushButton::waitForPush() {
+	int prevState = HIGH;
 	while (true) {
-		if (digitalRead(_pin) == LOW) {
+		int currentState = digitalRead(_pin);
+
+		if (prevState == LOW && currentState == HIGH) {
 			delay(200); // delay so that we don't read too fast
 			break;
 		}
 
+		prevState = currentState;
 		delay(10);
 	}
 }
