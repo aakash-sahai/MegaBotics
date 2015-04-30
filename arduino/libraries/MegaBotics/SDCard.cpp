@@ -7,6 +7,8 @@
 
 #include <SDCard.h>
 
+SDCard SDCard::_instance;
+
 SDCard::SDCard() : _sport(SDCARD_DEFAULT_SPORT) {
 }
 

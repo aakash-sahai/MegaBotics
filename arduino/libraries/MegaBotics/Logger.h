@@ -92,10 +92,10 @@ public:
 	};
 
 	struct Config {
-		int	bufsize;			// Buffer size: should preferably be a power of 2
+		int	bufsize;				// Buffer size: should preferably be a power of 2
 		char ip[MAX_IPADDR_LEN+1];	// IP Address to send the log to
-		unsigned int port;		// UDP port to send the log to
-		char* fileName;		// Name of the file to write the logs on the SD card
+		unsigned int port;			// UDP port to send the log to
+		const char * fileName;		// Name of the file to write the logs on the SD card
 	};
 
 	static Logger * getInstance() { return & _instance; }

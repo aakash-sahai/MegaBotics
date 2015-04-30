@@ -72,7 +72,7 @@ void Logger::setup(Config &aConfig) {
 	}
 	_buffer.setup(_config.bufsize);
 	if (aConfig.fileName != NULL) {
-		_file = SDCard::getInstance()->open(aConfig.fileName, FILE_WRITE);
+		_file = SDCard::getReference().open(aConfig.fileName, FILE_WRITE);
 	}
 }
 
