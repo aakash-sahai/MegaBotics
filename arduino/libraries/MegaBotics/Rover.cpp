@@ -128,15 +128,15 @@ void Rover::throttle(int8_t percent) {
 	int usec;
 
 	percent = clipPercent(percent);
-	Direction direc = throtleToDirection(percent);
+	Direction requestedDirection = throtleToDirection(percent);
 
-	if (_currentDirection == FORWARD && direc == REVERSE) {
+	if ((_currentDirection == FORWARD && requestedDirection == REVERSE) || (_currentDirection == REVERSE && requestedDirection == FORWARD)) {
 		stop();
 	}
 
 	if (percent == 0) {
 		usec = _config.idlePwm;
-	} else if (direc == FORWARD) {
+	} else if (requestedDirection == FORWARD) {
 		// forward
 		usec = map(percent, 0, 100, _config.fwdPwmMin, _config.fwdPwmMax);
 	} else {
@@ -145,7 +145,7 @@ void Rover::throttle(int8_t percent) {
 	}
 
 	rampTo(usec);
-	_currentDirection = direc;
+	_currentDirection = requestedDirection;
 }
 
 Rover::Direction Rover::throtleToDirection(int8_t percent) {
@@ -176,7 +176,7 @@ void Rover::rampTo(int usec) {
 
 void Rover::stop() {
 	rampTo(_config.revPwmMax);
-	delay(100);
+	delay(500);
 	rampTo(_config.idlePwm);
 	delay(100);
 }

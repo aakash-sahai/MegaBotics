@@ -55,8 +55,6 @@ public:
 	static SDCard * getInstance() { return & _instance; }
 	static SDCard & getReference() { return _instance; }
 
-	SDCard();
-	SDCard(int port);
 	virtual ~SDCard();
 	Status setup(void);
 	File open(const char *filepath, uint8_t mode) {return SD.open(filepath, mode);}
@@ -64,6 +62,11 @@ public:
 private:
 	static SDCard _instance;
 	SPort _sport;
+
+	SDCard();
+	SDCard(int port);
+	SDCard(SDCard const&);              // Don't Implement to disallow copy by assignment
+    void operator=(SDCard const&);		// Don't implement to disallow copy by assignment
 };
 
 #endif /* MEGABOTICS_SDCARD_H_ */
