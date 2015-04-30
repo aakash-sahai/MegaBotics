@@ -58,10 +58,12 @@ public:
 	void setTextSize(uint8_t size) {_tft.setTextSize(size);}
 
 	size_t print(const String &s) {return _tft.print(s);}
-	size_t println(const String &s) {return _tft.println(s);}
-
 	size_t print(const __FlashStringHelper *ifsh) {return _tft.print(ifsh);}
+	size_t print(float f) {return _tft.print(f);}
+
+	size_t println(const String &s) {return _tft.println(s);}
 	size_t println(const __FlashStringHelper *ifsh) {return _tft.println(ifsh);}
+	size_t println(float f) {return _tft.println(f);}
 
 private:
 	SPort _sport;
