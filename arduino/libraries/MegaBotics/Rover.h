@@ -43,6 +43,8 @@
 
 #include <MegaBotics.h>
 
+#define ROVER_CONFIG_NAME "ROVR"
+
 class Rover {
 public:
 	enum Direction {
@@ -139,6 +141,9 @@ private:
 	void rampTo(int usec);
 	static void setManual(unsigned int val);
 	static void setAuto(unsigned int val);
+	void setDefaultConfig();
+	void loadConfig();
+	void setupConfig();
 
 	Rover();
 	Rover(Rover const&);          	// Don't Implement to disallow copy by assignment

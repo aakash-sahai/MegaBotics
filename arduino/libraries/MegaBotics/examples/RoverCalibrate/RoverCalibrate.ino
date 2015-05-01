@@ -58,6 +58,7 @@ PwmMux & pwmMux = PwmMux::getReference();
 Logger & logger = Logger::getReference();
 InputPanel inputPanel;
 UPort uPort(1);
+EepromStore & estore = EepromStore::getReference();
 
 Rover::Config config;
 
@@ -76,36 +77,63 @@ void printConfig() {
 	logger.endln().flush();
 }
 
-void configThrottle() {
+void storeConfig() {
+	EepromStore::Status status = estore.storeSection(ROVER_CONFIG_NAME, &config, sizeof(config));
+	if (status != EepromStore::SUCCESS) {
+		uPort.serial().println(F("Could not store Rover Config; Status = "));
+		uPort.serial().println((int)status);
+	} else {
+		uPort.serial().println(F("Configuration stored to Eeprom Store"));
+	}
+}
+
+void captureConfigValues() {
 	uPort.serial().println("Turn OFF the remote and press the button");
 	inputPanel.waitForPush();
-	inputPanel.clear();
-
 	config.idlePwm = throttleIn.getPulseWidth();
+	uPort.serial().print("idlePwm = "); uPort.serial().println(config.idlePwm);
 
 	uPort.serial().println("Turn ON the remote and press the button");
 	inputPanel.waitForPush();
-	inputPanel.clear();
 
-	config.fwdPwmMin = throttleIn.getPulseWidth();
-
-	uPort.serial().println("Press the throttle to go at max speed, 1st forward and then reverse, press the button when done");
-	throttleIn.reset();
-	inputPanel.clear();
-
-	while (!inputPanel.clicked()) {
-		delay(200);
-	}
-
-	config.fwdPwmMax = throttleIn.getMaxPulseWidth();
-	config.revPwmMax = throttleIn.getMinPulseWidth();
-	config.revPwmMin = config.idlePwm - 100;
-}
-
-void configSteer() {
 	config.steerMid = map(steerIn.getPulseWidth(), SERVO_MIN_MICRO_SECS, SERVO_MAX_MICRO_SECS, 0, 180);
 	config.steerMin = 0;
 	config.steerMax = 180;
+	uPort.serial().print("steerMid = "); uPort.serial().println(config.steerMid);
+
+	uPort.serial().println("Press the throttle to go at max speed, 1st forward and then reverse, press the button when done");
+	throttleIn.reset();
+	steerIn.reset();
+	inputPanel.waitForPush();
+
+	// configure the max values
+	config.fwdPwmMax = throttleIn.getMaxPulseWidth();
+	uPort.serial().print("fwdPwmMax = "); uPort.serial().println(config.fwdPwmMax);
+
+	config.revPwmMax = throttleIn.getMinPulseWidth();
+	uPort.serial().print("revPwmMax = "); uPort.serial().println(config.revPwmMax);
+
+	// configure the min values
+	uPort.serial().println("Go forward at min speed using the remote, press the button while still keeping the throttle at min. speed");
+	throttleIn.reset();
+	steerIn.reset();
+	inputPanel.waitForPush();
+	config.fwdPwmMin = throttleIn.getPulseWidth();
+	uPort.serial().print("fwdPwmMin = "); uPort.serial().println(config.fwdPwmMin);
+
+	uPort.serial().println("Go reverse at min speed using the remote, press the button while still keeping the throttle at min. speed");
+	throttleIn.reset();
+	steerIn.reset();
+	inputPanel.waitForPush();
+	config.revPwmMin = min(throttleIn.getPulseWidth(), config.idlePwm - 50);
+	uPort.serial().print("revPwmMin = "); uPort.serial().println(config.revPwmMin);
+}
+
+void loggerSetup(void) {
+	logger.setup();
+	logger.autoFlush(true);
+	logger.enable(Logger::LOG_SERIAL);
+	logger.setLevel(Logger::LOG_SERIAL, Logger::LEVEL_DEBUG);
 }
 
 void setup() {
@@ -114,6 +142,8 @@ void setup() {
 	throttleIn.setName("THROTTLE");
 	steerIn.setName("STEER");
 	encoder.setup();
+	estore.setup();
+
 	loggerSetup();
 
 	pwmMux.setup();
@@ -122,19 +152,15 @@ void setup() {
 	config.steerChannel = STEER_CHANNEL;
 	config.throttleChannel = THROTTLE_CHANNEL;
 
-	configThrottle();
-	configSteer();
+	captureConfigValues();
 	printConfig();
+
+	uPort.serial().println("Press the button to store the config");
+	inputPanel.waitForPush();
+	storeConfig();
 }
 
 void loop() {
-}
-
-void loggerSetup(void) {
-	logger.setup();
-	logger.autoFlush(true);
-	logger.enable(Logger::LOG_SERIAL);
-	logger.setLevel(Logger::LOG_SERIAL, Logger::LEVEL_DEBUG);
 }
 
 #endif

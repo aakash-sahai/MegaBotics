@@ -43,17 +43,6 @@
 Rover Rover::_instance;
 
 Rover::Rover() {
-	_config.throttleChannel = DEF_THROTTLE_CHANNEL;
-	_config.steerChannel = DEF_STEER_CHANNEL;
-	_config.controlChannel = DEF_CONTROL_CHANNEL;
-	_config.idlePwm = DEF_IDLE_PWM;
-	_config.fwdPwmMin = DEF_FWD_PWM_MIN;
-	_config.fwdPwmMax = DEF_FWD_PWM_MAX;
-	_config.revPwmMin = DEF_REV_PWM_MIN;
-	_config.revPwmMax = DEF_REV_PWM_MAX;
-	_config.steerMin = DEF_STEER_MIN;
-	_config.steerMid = DEF_STEER_MID;
-	_config.steerMax = DEF_STEER_MAX;
 	_currentDirection = FORWARD;
 	_runMode = IDLE;
 	_controlMode = MANUAL;
@@ -69,10 +58,18 @@ Rover::~Rover() {
 	idle();
 }
 
-void Rover::setup(Config &aConfig)
-{
-	_config = aConfig;
-	setup();
+void Rover::setDefaultConfig() {
+	_config.throttleChannel = DEF_THROTTLE_CHANNEL;
+	_config.steerChannel = DEF_STEER_CHANNEL;
+	_config.controlChannel = DEF_CONTROL_CHANNEL;
+	_config.idlePwm = DEF_IDLE_PWM;
+	_config.fwdPwmMin = DEF_FWD_PWM_MIN;
+	_config.fwdPwmMax = DEF_FWD_PWM_MAX;
+	_config.revPwmMin = DEF_REV_PWM_MIN;
+	_config.revPwmMax = DEF_REV_PWM_MAX;
+	_config.steerMin = DEF_STEER_MIN;
+	_config.steerMid = DEF_STEER_MID;
+	_config.steerMax = DEF_STEER_MAX;
 }
 
 void Rover::setManual(unsigned int val) {
@@ -93,7 +90,26 @@ void Rover::setControlMode(ControlMode mode) {
 	}
 }
 
+void Rover::setup(Config &aConfig) {
+	_config = aConfig;
+	setupConfig();
+}
+
 void Rover::setup(void) {
+	loadConfig();
+	setupConfig();
+}
+
+void Rover::loadConfig() {
+	int len = sizeof(_config);
+	EepromStore::Status status = EepromStore::getInstance()->loadSection(ROVER_CONFIG_NAME, &_config, &len);
+
+	if (status != EepromStore::SUCCESS || len != sizeof(_config)) {
+		setDefaultConfig();
+	}
+}
+
+void Rover::setupConfig() {
 	_steeringOut.setup(_config.steerChannel);
 	_throttleOut.setup(_config.throttleChannel);
 	_throttleIn = PwmIn::getInstance(_config.steerChannel);
@@ -103,6 +119,7 @@ void Rover::setup(void) {
 	_throttleOut.attachServo();
 	_controlIn->onBelowThreshold(1200, Rover::setManual);
 	_controlIn->onAboveThreshold(1600, Rover::setAuto);
+
 	delay(2000);
 	straight();
 	idle();
