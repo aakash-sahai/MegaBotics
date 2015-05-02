@@ -8,13 +8,13 @@
 #include <InputPanel.h>
 
 InputPanel::InputPanel() :
-		_uport(INPUT_PANEL_DEFAULT_UPORT), _pushButton(_uport.getAnalogPin()), _spdtSwitch(
-				_uport.getDigitalPin(1), _uport.getDigitalPin(2)) {
+		UPort(INPUT_PANEL_DEFAULT_UPORT), PushButton(getAnalogPin()), SpdtSwitch(
+				getDigitalPin(1), getDigitalPin(2)) {
 }
 
 InputPanel::InputPanel(int port) :
-		_uport(port), _pushButton(_uport.getAnalogPin()), _spdtSwitch(
-				_uport.getDigitalPin(1), _uport.getDigitalPin(2)) {
+		UPort(port), PushButton(getAnalogPin()), SpdtSwitch(
+						getDigitalPin(1), getDigitalPin(2)) {
 }
 
 InputPanel::~InputPanel() {

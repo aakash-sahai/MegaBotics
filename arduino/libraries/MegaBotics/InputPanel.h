@@ -47,27 +47,13 @@
 #ifndef MEGABOTICS_INPUTPANEL_H_
 #define MEGABOTICS_INPUTPANEL_H_
 
-class InputPanel {
+class InputPanel : public UPort, public PushButton, public SpdtSwitch {
 public:
 	InputPanel();
 	InputPanel(int port);
 	virtual ~InputPanel();
 
 	void setup();
-	void waitForPush() {_pushButton.waitForPush();}
-	SpdtSwitch::Position getPosition() {return _spdtSwitch.getPosition();}
-
-	void check(void) {_pushButton.check();}
-	int timesClicked() { return _pushButton.timesClicked(); }
-	void clear() { _pushButton.clear(); }
-	bool pressed(void) { return _pushButton.pressed(); }
-	bool clicked(void) { return _pushButton.clicked();}
-
-private:
-	UPort _uport;
-
-	PushButton _pushButton;
-	SpdtSwitch _spdtSwitch;
 };
 
 #endif /* MEGABOTICS_INPUTPANEL_H_ */
