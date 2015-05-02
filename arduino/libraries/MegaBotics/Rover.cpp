@@ -117,8 +117,8 @@ void Rover::setupConfig() {
 	_controlIn = PwmIn::getInstance(_config.controlChannel);
 	_steeringOut.attachServo();
 	_throttleOut.attachServo();
-	_controlIn->onBelowThreshold(1200, Rover::setManual);
-	_controlIn->onAboveThreshold(1600, Rover::setAuto);
+/*	_controlIn->onBelowThreshold(1200, Rover::setManual);
+	_controlIn->onAboveThreshold(1600, Rover::setAuto);*/
 
 	delay(2000);
 	straight();
