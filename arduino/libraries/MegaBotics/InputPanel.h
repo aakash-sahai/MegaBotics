@@ -53,7 +53,7 @@ public:
 	InputPanel(int port);
 	virtual ~InputPanel();
 
-	void setup();
+	void setup() {;}
 };
 
 #endif /* MEGABOTICS_INPUTPANEL_H_ */

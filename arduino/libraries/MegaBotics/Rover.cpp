@@ -67,6 +67,8 @@ void Rover::setDefaultConfig() {
 	_config.fwdPwmMax = DEF_FWD_PWM_MAX;
 	_config.revPwmMin = DEF_REV_PWM_MIN;
 	_config.revPwmMax = DEF_REV_PWM_MAX;
+	_config.steerPwmMax = DEF_STEER_PWM_MAX;
+	_config.steerPwmMin = DEF_STEER_PWM_MIN;
 	_config.steerMin = DEF_STEER_MIN;
 	_config.steerMid = DEF_STEER_MID;
 	_config.steerMax = DEF_STEER_MAX;
@@ -115,14 +117,17 @@ void Rover::setupConfig() {
 	_throttleIn = PwmIn::getInstance(_config.steerChannel);
 	_steeringIn = PwmIn::getInstance(_config.throttleChannel);
 	_controlIn = PwmIn::getInstance(_config.controlChannel);
-	_steeringOut.attachServo();
-	_throttleOut.attachServo();
-/*	_controlIn->onBelowThreshold(1200, Rover::setManual);
-	_controlIn->onAboveThreshold(1600, Rover::setAuto);*/
+	_steeringOut.attachServo(_config.steerPwmMax, _config.steerPwmMin);
+	_throttleOut.attachServo(_config.revPwmMax, _config.fwdPwmMax);
 
+	_controlIn->onBelowThreshold(1200, Rover::setManual);
+	_controlIn->onAboveThreshold(1600, Rover::setManual);
+
+	setControlMode(AUTO);
 	delay(2000);
 	straight();
 	idle();
+	setControlMode(MANUAL);
 }
 
 void Rover::steer(int8_t percent) {

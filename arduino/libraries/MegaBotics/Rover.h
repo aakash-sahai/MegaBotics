@@ -73,6 +73,9 @@ public:
 		uint16_t	fwdPwmMax;
 		uint16_t	revPwmMin;
 		uint16_t	revPwmMax;
+		uint16_t	steerPwmMin;
+		uint16_t	steerPwmMax;
+		uint16_t	steerPwmMid;
 
 		int			steerMin;
 		int			steerMid;
@@ -87,6 +90,8 @@ public:
 	static const uint16_t DEF_FWD_PWM_MIN = 1410;		// default PWM value to start moving forward
 	static const uint16_t DEF_REV_PWM_MIN = 1220;		// default PWM value to start moving reverse
 	static const uint16_t DEF_REV_PWM_MAX = 770;		// default PWM value to move reverse at full speed
+	static const uint16_t DEF_STEER_PWM_MIN = 1000;		// default PWM value to steer 100% right
+	static const uint16_t DEF_STEER_PWM_MAX = 2000;		// default PWM value to steer 100% left
 
 	static const int DEF_STEER_MIN = 53;				// default trim to steer right
 	static const int DEF_STEER_MID = 90;				// default trim to steer straight

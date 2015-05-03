@@ -38,17 +38,14 @@
  
 #include <MegaBotics.h>
 
-#define ROVER_CALIBRATE 0
+#define ROVER_CALIBRATE 1
 
 #if ROVER_CALIBRATE
 
 #define STEER_CHANNEL		1		// Channel used for Steering
+#define CONTROL_CHANNEL		1		// Channel used to switch to manual mode
 #define THROTTLE_CHANNEL	2		// Channel used for Throttle
 #define WHEEL_ENCODER_CHANNEL	6		// Channel used for wheel encoder
-
-#define SERVO_MAX_MICRO_SECS	2000
-#define SERVO_MIN_MICRO_SECS	1000
-
 
 PwmIn & steerIn = PwmIn::getReference(STEER_CHANNEL);
 PwmIn & throttleIn = PwmIn::getReference(THROTTLE_CHANNEL);
@@ -66,6 +63,7 @@ void printConfig() {
 	logger.begin(Logger::LEVEL_DEBUG, F("CONFIG")).
 			nv(F("steerChannel"), config.steerChannel).
 			nv(F("throttleChannel"), config.throttleChannel).
+			nv(F("controlChannel"), config.controlChannel).
 			nv(F("steerMin"), config.steerMin).
 			nv(F("steerMid"), config.steerMid).
 			nv(F("steerMax"), config.steerMax).
@@ -94,38 +92,44 @@ void captureConfigValues() {
 	uPort.serial().print("idlePwm = "); uPort.serial().println(config.idlePwm);
 
 	uPort.serial().println("Turn ON the remote and press the button");
+	steerIn.reset();
 	inputPanel.waitForPush();
+	config.steerPwmMid = steerIn.getPulseWidth();
+	uPort.serial().print("steerPwmMid = "); uPort.serial().println(config.steerPwmMid);
 
-	config.steerMid = map(steerIn.getPulseWidth(), SERVO_MIN_MICRO_SECS, SERVO_MAX_MICRO_SECS, 0, 180);
+	uPort.serial().println("Steer left and right, press the button when done");
+	steerIn.reset();
+	inputPanel.waitForPush();
+	config.steerPwmMin = steerIn.getMinPulseWidth();
+	config.steerPwmMax = steerIn.getMaxPulseWidth();
+	uPort.serial().print("steerPwmMin = "); uPort.serial().println(config.steerPwmMin);
+	uPort.serial().print("steerPwmMax = "); uPort.serial().println(config.steerPwmMax);
+
+	config.steerMid = map(steerIn.getPulseWidth(), config.steerPwmMin, config.steerPwmMax, 0, 180);
 	config.steerMin = 0;
 	config.steerMax = 180;
 	uPort.serial().print("steerMid = "); uPort.serial().println(config.steerMid);
 
 	uPort.serial().println("Press the throttle to go at max speed, 1st forward and then reverse, press the button when done");
 	throttleIn.reset();
-	steerIn.reset();
 	inputPanel.waitForPush();
 
-	// configure the max values
 	config.fwdPwmMax = throttleIn.getMaxPulseWidth();
-	uPort.serial().print("fwdPwmMax = "); uPort.serial().println(config.fwdPwmMax);
-
 	config.revPwmMax = throttleIn.getMinPulseWidth();
+	uPort.serial().print("fwdPwmMax = "); uPort.serial().println(config.fwdPwmMax);
 	uPort.serial().print("revPwmMax = "); uPort.serial().println(config.revPwmMax);
 
 	// configure the min values
 	uPort.serial().println("Go forward at min speed using the remote, press the button while still keeping the throttle at min. speed");
 	throttleIn.reset();
-	steerIn.reset();
 	inputPanel.waitForPush();
 	config.fwdPwmMin = throttleIn.getPulseWidth();
 	uPort.serial().print("fwdPwmMin = "); uPort.serial().println(config.fwdPwmMin);
 
 	uPort.serial().println("Go reverse at min speed using the remote, press the button while still keeping the throttle at min. speed");
 	throttleIn.reset();
-	steerIn.reset();
 	inputPanel.waitForPush();
-	config.revPwmMin = min(throttleIn.getPulseWidth(), config.idlePwm - 50);
+	config.revPwmMin = min(throttleIn.getPulseWidth(), config.idlePwm - 100);
 	uPort.serial().print("revPwmMin = "); uPort.serial().println(config.revPwmMin);
 }
 
@@ -151,6 +155,7 @@ void setup() {
 
 	config.steerChannel = STEER_CHANNEL;
 	config.throttleChannel = THROTTLE_CHANNEL;
+	config.controlChannel = CONTROL_CHANNEL;
 
 	captureConfigValues();
 	printConfig();
