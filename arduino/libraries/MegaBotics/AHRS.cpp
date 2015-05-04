@@ -90,8 +90,8 @@ AHRS::AMG & AHRS::getCalibratedAMG(void) {
 
 void	AHRS::poll(void) {
 	fetchYPR();
-	fetchRawSensor();
-	fetchCalibratedSensor();
+	//fetchRawSensor();
+	//fetchCalibratedSensor();
 }
 
 void	AHRS::resetYPR(void) {
@@ -106,6 +106,7 @@ float AHRS::normalize(float val) {
 	else if (val > 180.0) {
 		val -= 360.0;
 	}
+
 	return val;
 }
 
