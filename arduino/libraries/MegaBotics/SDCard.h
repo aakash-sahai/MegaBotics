@@ -56,12 +56,13 @@ public:
 	static SDCard & getReference() { return _instance; }
 
 	virtual ~SDCard();
-	Status setup(void);
 	File open(const char *filepath, uint8_t mode) {return SD.open(filepath, mode);}
+	Status getStatus() {return _status;}
 
 private:
 	static SDCard _instance;
 	SPort _sport;
+	Status _status;
 
 	SDCard();
 	SDCard(int port);

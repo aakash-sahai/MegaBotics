@@ -67,7 +67,7 @@ char * dtostrf(double value, int x, int y, char * buf);
  * periodically by calling the private _flush routine.
  */
 
-#define LOGGER_DEFAULT_BUFSIZE	64
+#define LOGGER_DEFAULT_BUFSIZE	128
 #define LOGGER_MAX_DESTINATIONS	3
 
 #define MAX_IPADDR_LEN	15
@@ -96,6 +96,12 @@ public:
 		char ip[MAX_IPADDR_LEN+1];	// IP Address to send the log to
 		unsigned int port;			// UDP port to send the log to
 		const char * fileName;		// Name of the file to write the logs on the SD card
+
+		Config() {
+			bufsize = LOGGER_DEFAULT_BUFSIZE;
+			port = -1;
+			fileName = NULL;
+		}
 	};
 
 	static Logger * getInstance() { return & _instance; }

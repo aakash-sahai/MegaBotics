@@ -46,7 +46,7 @@ Logger::Logger() {
 	_destMask = 0;
 	_nvLevel = _logLevel = LEVEL_NONE;
 	_firstValue = false;
-	_config.bufsize = 128;
+	_config.bufsize = LOGGER_DEFAULT_BUFSIZE;
 	strcpy(_config.ip, "");
 	_config.port = 0;
 	_wifiConnectionId = -1;
@@ -192,8 +192,10 @@ Logger & Logger::nv(const __FlashStringHelper *name, float value) {
 }
 
 Logger & Logger::endln(void) {
-	if (doLog(_nvLevel))
+	if (doLog(_nvLevel)) {
+		_buffer.enqueue('\r');
 		_buffer.enqueue('\n');
+	}
 	_nvLevel = LEVEL_NONE;
 	return *this;
 }
@@ -213,6 +215,7 @@ Logger & Logger::space(void) {
 
 void   Logger::flush(void) {
 	char ch, level = -1;
+
 	while (_buffer.dequeue(&ch)) {
 		if (ch <= LEVEL_MAX) {		// This must be the level
 			level = ch;
