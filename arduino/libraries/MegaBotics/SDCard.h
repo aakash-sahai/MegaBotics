@@ -49,7 +49,8 @@ class SDCard {
 public:
 	enum Status {
 		SUCCESS = 0,
-		FAILURE = 1
+		FAILURE = 1,
+		NOT_INITIALIZED = 2,
 	};
 
 	static SDCard * getInstance() { return & _instance; }
@@ -58,6 +59,7 @@ public:
 	virtual ~SDCard();
 	File open(const char *filepath, uint8_t mode) {return SD.open(filepath, mode);}
 	Status getStatus() {return _status;}
+	void setup();
 
 private:
 	static SDCard _instance;

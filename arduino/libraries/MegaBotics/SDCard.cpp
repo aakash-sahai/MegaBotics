@@ -10,18 +10,20 @@
 SDCard SDCard::_instance;
 
 SDCard::SDCard() : _sport(SDCARD_DEFAULT_SPORT) {
-	if (!SD.begin(_sport.getSlaveSelectPin())) {
-		_status = FAILURE;
-	} else {
-		_status = SUCCESS;
-	}
+	_status = NOT_INITIALIZED;
 }
 
 SDCard::SDCard(int port) : _sport(port) {
-	if (!SD.begin(_sport.getSlaveSelectPin())) {
-		_status = FAILURE;
-	} else {
-		_status = SUCCESS;
+	_status = NOT_INITIALIZED;
+}
+
+void SDCard::setup() {
+	if (_status == NOT_INITIALIZED) {
+		if (!SD.begin(_sport.getSlaveSelectPin())) {
+			_status = FAILURE;
+		} else {
+			_status = SUCCESS;
+		}
 	}
 }
 
