@@ -78,6 +78,22 @@ void read_sensors() {
 	sixDOF.getEuler(angles);
 }
 
+void output_angles() {
+	float ypr[3];
+	ypr[0] = angles[0];
+	ypr[1] = angles[1];
+	ypr[2] = angles[2];
+	Serial.write((byte*) ypr, 12);  // No new-line
+
+	/*
+	  Serial.print(angles[0]);
+	  Serial.print(" | ");
+	  Serial.print(angles[1]);
+	  Serial.print(" | ");
+	  Serial.println(angles[2]);
+*/
+}
+
 void setup() {
 	Serial.begin(57600);
 	Wire.begin();
@@ -87,15 +103,19 @@ void setup() {
 	delay(5);
 }
 
+void (*softReset)(void) = 0;
+
 void loop() {
 // Read incoming control messages
 	if (Serial.available() >= 2) {
 		if (Serial.read() == '#') // Start of new control message
 				{
 			int command = Serial.read(); // Commands
-			if (command == 'f') // request one output _f_rame
+			if (command == 'r') {		 // RESET
+				softReset();
+			} else if (command == 'f') {
 				output_single_on = true;
-			else if (command == 's') // _s_ynch request
+			} else if (command == 's') // _s_ynch request
 					{
 				// Read ID
 				byte id[2];
@@ -214,20 +234,4 @@ void loop() {
 		Serial.println("waiting...");
 	}
 #endif
-}
-
-void output_angles() {
-	float ypr[3];
-	ypr[0] = angles[0];
-	ypr[1] = angles[1];
-	ypr[2] = angles[2];
-	Serial.write((byte*) ypr, 12);  // No new-line
-
-	/*
-	  Serial.print(angles[0]);
-	  Serial.print(" | ");
-	  Serial.print(angles[1]);
-	  Serial.print(" | ");
-	  Serial.println(angles[2]);
-*/
 }
