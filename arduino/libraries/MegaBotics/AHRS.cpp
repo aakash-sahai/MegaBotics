@@ -118,10 +118,9 @@ AHRS::YPR & AHRS::getRelativeYPR(void) {
 	return _relativeYpr;
 }
 
-
 float	AHRS::getOrientation(void) {
 	fetchYPR();
-	return normalize(_ypr.yaw - _zeroYpr.yaw);
+	return _ypr.yaw - _zeroYpr.yaw;
 }
 
 void AHRS::readFloats(char *buf, int n) {
