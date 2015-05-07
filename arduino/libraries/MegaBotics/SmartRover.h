@@ -94,8 +94,7 @@ public:
 
 	void setup();
 	void setup(Config& config);
-	void navigate();
-
+	void autoRun();
 	void addWaypoint(float distance, float hdg);
 
 private:
@@ -116,7 +115,6 @@ private:
 	float _steer;
 	float _throttle;
 
-	void autoRun();
 	void nextWaypoint();
 	void doNavigate();
 	float clampThrottle(float throttle);

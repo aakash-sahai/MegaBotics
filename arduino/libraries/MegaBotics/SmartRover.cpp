@@ -42,7 +42,6 @@ void SmartRover::setup(SmartRover::Config& config) {
 	_rover->setup();
 	_rover->setControlMode(Rover::MANUAL);
 
-	_config = config;
 	_steeringPid = new PID(_config.steerKp, _config.steerKi, _config.steerKd, _config.steerClamp);
 }
 
@@ -54,8 +53,6 @@ void SmartRover::addWaypoint(float distance, float hdg) {
 
 void SmartRover::autoRun() {
 	while(_currentWaypoint < _waypointQty) {
-		serialEventRun();
-
 		if (_distance < _config.wpProximRadius) {
 			_currentWaypoint++;
 
@@ -78,8 +75,8 @@ void SmartRover::autoRun() {
 
 void SmartRover::doNavigate() {
 	float d = _encoder->getDistance();
-	_distanceTraveled += d;
 	_encoder->reset();
+	_distanceTraveled += d;
 
 	float currentHdg = DEG2RAD(_ahrs->getOrientation());
 	float theta = currentHdg - _hdg;
