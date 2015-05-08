@@ -41,7 +41,7 @@
 #ifndef MEGABOTICS_WHEELENCODER_H_
 #define MEGABOTICS_WHEELENCODER_H_
 
-#include <MegaBotics.h>
+#include <PwmIn.h>
 
 class WheelEncoder {
 public:

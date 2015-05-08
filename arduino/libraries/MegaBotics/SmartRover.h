@@ -42,6 +42,7 @@
 #define MEGABOTICS_SMARTROVER_H_
 
 #include <MegaBotics.h>
+#include <WheelEncoder.h>
 
 #define DEF_STEER_KP				2.0
 #define DEF_STEER_KI				0.1
@@ -97,7 +98,12 @@ public:
 	void autoRun();
 	void addWaypoint(float distance, float hdg);
 
+	static SmartRover * getInstance() { return &_instance; }
+	static SmartRover & getReference() { return _instance; }
+
 private:
+	static SmartRover _instance;
+
 	AHRS* _ahrs;
 	WheelEncoder* _encoder;
 	Rover* _rover;

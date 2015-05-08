@@ -2,10 +2,13 @@
  * SmartRover.cpp
  *
  *  Created on: May 6, 2015
- *      Author: sraj
+ *      Author: Srinivas Raj
  */
 
-#include <SmartRover.h>
+#include "SmartRover.h"
+#include <Arduino.h>
+
+SmartRover SmartRover::_instance;
 
 SmartRover::SmartRover() {
 	_estore = EepromStore::getInstance();
@@ -52,12 +55,15 @@ void SmartRover::addWaypoint(float distance, float hdg) {
 }
 
 void SmartRover::autoRun() {
-	while(_currentWaypoint < _waypointQty) {
+	_rover->setControlMode(Rover::AUTO);
+
+	while(_currentWaypoint <= _waypointQty) {
 		if (_distance < _config.wpProximRadius) {
 			_currentWaypoint++;
 
 			if (_currentWaypoint > _waypointQty) {
 				_rover->stop();
+				_rover->setControlMode(Rover::MANUAL);
 				break;
 			}
 

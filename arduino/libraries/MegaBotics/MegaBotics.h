@@ -61,6 +61,7 @@
 #include "LED.h"
 #include "Coord.h"
 #include "Sonar.h"
+#include "SmartRover.h"
 #include "Rover.h"
 #include "WiFi.h"
 #include "PwmIn.h"
