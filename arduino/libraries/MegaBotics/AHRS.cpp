@@ -99,6 +99,14 @@ void	AHRS::resetYPR(void) {
 	_zeroYpr = _ypr;
 }
 
+void AHRS::resetIMU(void) {
+	HardwareSerial & serial = _uport.serial();
+	serial.print("#r");
+	delay(1000);
+	serial.print("#s00");
+	serial.find("#SYNCH00\r\n");
+}
+
 float AHRS::normalize(float val) {
 	if (val < -180.0) {
 		val += 360.0;

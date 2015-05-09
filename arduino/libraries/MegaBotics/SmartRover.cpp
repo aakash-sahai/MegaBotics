@@ -62,6 +62,7 @@ void SmartRover::addWaypoint(float distance, float hdg, int8_t maxThrottle) {
 
 void SmartRover::autoRun() {
 	_rover->setControlMode(Rover::AUTO);
+	_ahrs->resetIMU();
 	_ahrs->resetYPR();
 
 	while(nextWaypoint()) {
@@ -86,8 +87,8 @@ void SmartRover::doNavigate() {
 	float currentHdg = DEG2RAD(_ahrs->getOrientation());
 	float theta = currentHdg - _hdg;
 
-	float dsin = fabs(d * sin (theta));
-	float dcos = fabs(d * cos (theta));
+	float dsin = (d * sin (theta));
+	float dcos = (d * cos (theta));
 	float phi = atan2(dsin, (_distance - dcos));
 	float sinphi = sin(phi);
 
@@ -104,12 +105,14 @@ void SmartRover::doNavigate() {
 	_throttle = clampThrottle();
 
 	_logger->begin(Logger::LEVEL_DEBUG, F("RUN")).
-					nv(F(" TOTALDIST"), _distanceTraveled).
-					nv(F("DIST"), _distance).
-					nv(F(" CURHDG "), currentHdg).
-					nv(F(" HDG "), _hdg).
-					nv(F(" ERROR "), error).
-					nv(F(" STEER "), (int)_steer).endln();
+					nv(F("  TOTALDIST"), _distanceTraveled).
+					nv(F("  DIST"), _distance).
+					nv(F("  DCOS"), dcos).
+					nv(F("  DSIN"), dsin).
+					nv(F("  CURHDG "), RAD2DEG(currentHdg)).
+					nv(F("  HDG "), RAD2DEG(_hdg)).
+					nv(F("  ERROR "), RAD2DEG(error)).
+					nv(F("  STEER "), (int)_steer).endln();
 }
 
 float SmartRover::clampThrottle() {

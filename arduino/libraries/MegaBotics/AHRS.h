@@ -106,6 +106,7 @@ public:
 
 	void poll(void);
 	void resetYPR(void);
+	void resetIMU(void);
 	float getOrientation(void);
 	static float normalize(float val);
 
