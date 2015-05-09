@@ -97,6 +97,7 @@ public:
 	void setup(Config& config);
 	void autoRun();
 	void addWaypoint(float distance, float hdg);
+	void clearWaypoints(void) { _waypointQty = 0; _currentWaypoint = 0; }
 
 	static SmartRover * getInstance() { return &_instance; }
 	static SmartRover & getReference() { return _instance; }
