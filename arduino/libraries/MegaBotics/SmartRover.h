@@ -47,7 +47,7 @@
 #define DEF_STEER_KP				2.0
 #define DEF_STEER_KI				0.1
 #define DEF_STEER_KD				0.01
-#define DEF_STEER_SCALE				(RAD_TO_DEG * 20 / 36)
+#define DEF_STEER_SCALE				(RAD_TO_DEG * 10 / 36)
 #define DEF_STEER_ICLAMP			(PI / 8)		// Clamp Steering integral correction to PI / 8
 #define DEF_THROTTLE_MIN			5.0
 #define DEF_THROTTLE_MAX			30.0
@@ -88,6 +88,7 @@ public:
 	struct Waypoint {
 		float distance;
 		float hdg;
+		int8_t maxThrottle;
 	};
 
 	SmartRover();
@@ -97,7 +98,8 @@ public:
 	void setup(Config& config);
 	void autoRun();
 	void addWaypoint(float distance, float hdg);
-	void clearWaypoints(void) { _waypointQty = 0; _currentWaypoint = 0; }
+	void addWaypoint(float distance, float hdg, int8_t maxThrottle);
+	void clearWaypoints(void) { _waypointQty = 0; _currentWaypoint = -1; }
 
 	static SmartRover * getInstance() { return &_instance; }
 	static SmartRover & getReference() { return _instance; }
@@ -110,6 +112,7 @@ private:
 	Rover* _rover;
 	EepromStore* _estore;
 	PID* _steeringPid;
+	Logger* _logger;
 	Config _config;
 	Waypoint _waypoints[MAX_WAYPOINTS];
 
@@ -122,9 +125,9 @@ private:
 	float _steer;
 	float _throttle;
 
-	void nextWaypoint();
+	bool nextWaypoint();
 	void doNavigate();
-	float clampThrottle(float throttle);
+	float clampThrottle();
 };
 
 #endif /* MEGABOTICS_SMARTROVER_H_ */

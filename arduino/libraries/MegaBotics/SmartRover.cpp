@@ -14,11 +14,12 @@ SmartRover::SmartRover() {
 	_estore = EepromStore::getInstance();
 	_encoder = WheelEncoder::getInstance();
 	_rover = Rover::getInstance();
+	_logger = Logger::getInstance();
 	_ahrs = new AHRS(); //TODO: implement getInstance() in AHRS
 	_steeringPid = NULL;
 
 	_waypointQty = 0;
-	_currentWaypoint = 0;
+	_currentWaypoint = -1;
 	_distanceTraveled = 0.0f;
 	_steer = 0.0f;
 	_throttle = 0.0f;
@@ -49,34 +50,32 @@ void SmartRover::setup(SmartRover::Config& config) {
 }
 
 void SmartRover::addWaypoint(float distance, float hdg) {
+	addWaypoint(distance, hdg, _config.throttleMax);
+}
+
+void SmartRover::addWaypoint(float distance, float hdg, int8_t maxThrottle) {
 	_waypoints[_waypointQty].distance = distance;
 	_waypoints[_waypointQty].hdg = hdg;
+	_waypoints[_waypointQty].maxThrottle = maxThrottle;
 	_waypointQty++;
 }
 
 void SmartRover::autoRun() {
 	_rover->setControlMode(Rover::AUTO);
+	_ahrs->resetYPR();
 
-	while(_currentWaypoint <= _waypointQty) {
-		if (_distance < _config.wpProximRadius) {
-			_currentWaypoint++;
-
-			if (_currentWaypoint > _waypointQty) {
-				_rover->stop();
-				_rover->setControlMode(Rover::MANUAL);
-				break;
-			}
-
-			nextWaypoint();
+	while(nextWaypoint()) {
+		while (_distance > _config.wpProximRadius) {
+			doNavigate();
+			_rover->steer((int8_t)_steer);
+			_rover->throttle((int8_t)_throttle);
+			delay(_config.navLoopDelay);
 		}
-
-		doNavigate();
-
-		_rover->steer(_steer);
-		_rover->throttle(_throttle);
-
-		delay(_config.navLoopDelay);
+		_steeringPid->resetIntegrator();
 	}
+	_rover->stop();
+	_rover->straight();
+	_rover->setControlMode(Rover::MANUAL);
 }
 
 void SmartRover::doNavigate() {
@@ -101,13 +100,25 @@ void SmartRover::doNavigate() {
 	float error = -(theta + phi);
 	_hdg = currentHdg + error;
 
-	_steer = (int8_t)_steeringPid->getPid(error, _config.steerScale);
-	_throttle = clampThrottle(_distance * _config.throttleMax / _config.curiseDistThres);
+	_steer = _steeringPid->getPid(error, _config.steerScale);
+	_throttle = clampThrottle();
+
+	_logger->begin(Logger::LEVEL_DEBUG, F("RUN")).
+					nv(F(" TOTALDIST"), _distanceTraveled).
+					nv(F("DIST"), _distance).
+					nv(F(" CURHDG "), currentHdg).
+					nv(F(" HDG "), _hdg).
+					nv(F(" ERROR "), error).
+					nv(F(" STEER "), (int)_steer).endln();
 }
 
-float SmartRover::clampThrottle(float throttle) {
-	if (throttle > _config.throttleMax) {
-		throttle = _config.throttleMax;
+float SmartRover::clampThrottle() {
+
+	int8_t maxThrottle = _waypoints[_currentWaypoint].maxThrottle;
+	float throttle = _distance * maxThrottle / _config.curiseDistThres;
+
+	if (throttle > maxThrottle) {
+		throttle = maxThrottle;
 	}
 
 	if (throttle < _config.throttleMin) {
@@ -117,11 +128,15 @@ float SmartRover::clampThrottle(float throttle) {
 	return throttle;
 }
 
-void SmartRover::nextWaypoint() {
-	_encoder->reset();
-	_ahrs->resetYPR();
-	_steeringPid->resetIntegrator();
-
-	_distance = _waypoints[_currentWaypoint-1].distance;
-	_hdg = DEG2RAD(_waypoints[_currentWaypoint-1].hdg);
+bool SmartRover::nextWaypoint() {
+	_currentWaypoint++;
+	if (_currentWaypoint >= _waypointQty) {
+		_distance = 0;
+		_hdg = 0;
+		return false;
+	} else {
+		_distance = _waypoints[_currentWaypoint].distance;
+		_hdg = DEG2RAD(_waypoints[_currentWaypoint].hdg);
+		return true;
+	}
 }
