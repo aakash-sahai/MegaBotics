@@ -5,6 +5,8 @@
  *      Author: aakash
  */
 
+#if 0
+
 #include <RFXCVR.h>
 
 RFXCVR RFXCVR::_instance;
@@ -127,3 +129,5 @@ void RFXCVR::poll(void) {
 		}
 	}
 }
+
+#endif
