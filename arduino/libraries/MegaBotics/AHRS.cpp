@@ -107,22 +107,11 @@ void AHRS::resetIMU(void) {
 	serial.find("#SYNCH00\r\n");
 }
 
-float AHRS::normalize(float val) {
-	if (val < -180.0) {
-		val += 360.0;
-	}
-	else if (val > 180.0) {
-		val -= 360.0;
-	}
-
-	return val;
-}
-
 AHRS::YPR & AHRS::getRelativeYPR(void) {
 	fetchYPR();
-	_relativeYpr.yaw =  normalize(_ypr.yaw -_zeroYpr.yaw);
-	_relativeYpr.pitch =  normalize(_ypr.pitch -_zeroYpr.pitch);
-	_relativeYpr.roll =  normalize(_ypr.roll -_zeroYpr.roll);
+	_relativeYpr.yaw =  _ypr.yaw -_zeroYpr.yaw;
+	_relativeYpr.pitch =  _ypr.pitch -_zeroYpr.pitch;
+	_relativeYpr.roll =  _ypr.roll -_zeroYpr.roll;
 	return _relativeYpr;
 }
 

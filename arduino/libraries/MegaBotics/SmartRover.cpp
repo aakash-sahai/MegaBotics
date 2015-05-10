@@ -62,6 +62,7 @@ void SmartRover::addWaypoint(float distance, float hdg, int8_t maxThrottle) {
 
 void SmartRover::autoRun() {
 	_rover->setControlMode(Rover::AUTO);
+	_encoder->reset();
 	_ahrs->resetIMU();
 	_ahrs->resetYPR();
 
@@ -98,7 +99,7 @@ void SmartRover::doNavigate() {
 		_distance -= d;
 	}
 
-	float error = -(theta + phi);
+	float error = normalizeAngle(-(theta + phi));
 	_hdg = currentHdg + error;
 
 	_steer = _steeringPid->getPid(error, _config.steerScale);
@@ -142,4 +143,14 @@ bool SmartRover::nextWaypoint() {
 		_hdg = DEG2RAD(_waypoints[_currentWaypoint].hdg);
 		return true;
 	}
+}
+
+float SmartRover::normalizeAngle(float angle)
+{
+	if (angle < (-1 * PI)) {
+		angle += (2 * PI);
+	} else if (angle > PI) {
+		angle -= (2 * PI);
+	}
+	return angle;
 }

@@ -128,6 +128,7 @@ private:
 	bool nextWaypoint();
 	void doNavigate();
 	float clampThrottle();
+	float normalizeAngle(float angle);
 };
 
 #endif /* MEGABOTICS_SMARTROVER_H_ */

@@ -108,7 +108,6 @@ public:
 	void resetYPR(void);
 	void resetIMU(void);
 	float getOrientation(void);
-	static float normalize(float val);
 
 private:
 	UPort _uport;
