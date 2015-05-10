@@ -88,6 +88,7 @@ public:
 	struct Waypoint {
 		float distance;
 		float hdg;
+		float proximRadius;
 		int8_t maxThrottle;
 	};
 
@@ -99,6 +100,7 @@ public:
 	void autoRun();
 	void addWaypoint(float distance, float hdg);
 	void addWaypoint(float distance, float hdg, int8_t maxThrottle);
+	void addWaypoint(float distance, float hdg, int8_t maxThrottle, float proximRadius);
 	void clearWaypoints(void) { _waypointQty = 0; _currentWaypoint = -1; }
 
 	static SmartRover * getInstance() { return &_instance; }

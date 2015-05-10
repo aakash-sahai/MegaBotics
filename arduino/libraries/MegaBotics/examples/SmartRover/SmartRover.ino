@@ -16,8 +16,8 @@ SmartRover smartRover = SmartRover::getReference();
 #define LITTLE_TURN_LENGTH 5.5
 #define BIG_TURN_LENGTH 17.0
 
-#define TURN_THROTTLE 2
-#define STRAIGHT_THROTTLE 5
+#define TURN_THROTTLE 5
+#define STRAIGHT_THROTTLE 20
 #define TO_PIN_THROTTLE 20
 
 void setup() {
@@ -54,11 +54,13 @@ void loop() {
 }
 
 void figure8() {
-  smartRover.addWaypoint(15,-100, STRAIGHT_THROTTLE);
+  smartRover.addWaypoint(3, 0, TURN_THROTTLE, 2.0);
+  smartRover.addWaypoint(15,-100, TURN_THROTTLE);
   smartRover.addWaypoint(10, -100, STRAIGHT_THROTTLE);
-  smartRover.addWaypoint(10, 0, TURN_THROTTLE);
+  smartRover.addWaypoint(10, 0, TURN_THROTTLE, 2.0);
   smartRover.addWaypoint(10, 120, STRAIGHT_THROTTLE);
   smartRover.addWaypoint(15, 120, STRAIGHT_THROTTLE);
+  smartRover.addWaypoint(10, 0, STRAIGHT_THROTTLE, 3.0);
   smartRover.autoRun();
   smartRover.clearWaypoints();
 }

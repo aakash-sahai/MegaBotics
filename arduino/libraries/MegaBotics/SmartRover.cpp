@@ -50,13 +50,18 @@ void SmartRover::setup(SmartRover::Config& config) {
 }
 
 void SmartRover::addWaypoint(float distance, float hdg) {
-	addWaypoint(distance, hdg, _config.throttleMax);
+	addWaypoint(distance, hdg, _config.throttleMax, _config.wpProximRadius);
 }
 
 void SmartRover::addWaypoint(float distance, float hdg, int8_t maxThrottle) {
+	addWaypoint(distance, hdg, maxThrottle, _config.wpProximRadius);
+}
+
+void SmartRover::addWaypoint(float distance, float hdg, int8_t maxThrottle, float proximRadius) {
 	_waypoints[_waypointQty].distance = distance;
 	_waypoints[_waypointQty].hdg = hdg;
 	_waypoints[_waypointQty].maxThrottle = maxThrottle;
+	_waypoints[_waypointQty].proximRadius = proximRadius;
 	_waypointQty++;
 }
 
@@ -67,7 +72,8 @@ void SmartRover::autoRun() {
 	_ahrs->resetYPR();
 
 	while(nextWaypoint()) {
-		while (_distance > _config.wpProximRadius) {
+		float pr = _waypoints[_currentWaypoint].proximRadius;
+		while (_distance > pr) {
 			doNavigate();
 			_rover->steer((int8_t)_steer);
 			_rover->throttle((int8_t)_throttle);
