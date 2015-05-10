@@ -108,7 +108,7 @@ void SmartRover::doNavigate() {
 	float error = normalizeAngle(-(theta + phi));
 	_hdg = currentHdg + error;
 
-	_steer = _steeringPid->getPid(error, _config.steerScale);
+	_steer = clampSteering(_steeringPid->getPid(error, _config.steerScale));
 	_throttle = clampThrottle();
 
 	_logger->begin(Logger::LEVEL_DEBUG, F("RUN")).
@@ -122,6 +122,13 @@ void SmartRover::doNavigate() {
 					nv(F("  STEER "), (int)_steer).endln();
 }
 
+float SmartRover::clampSteering(float val) {
+	if (val > 100.0)
+		return 100.0;
+	if (val < -100.0)
+		return -100.0;
+	return val;
+}
 float SmartRover::clampThrottle() {
 
 	int8_t maxThrottle = _waypoints[_currentWaypoint].maxThrottle;

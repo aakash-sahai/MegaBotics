@@ -130,6 +130,7 @@ private:
 	bool nextWaypoint();
 	void doNavigate();
 	float clampThrottle();
+	float clampSteering(float value);
 	float normalizeAngle(float angle);
 };
 

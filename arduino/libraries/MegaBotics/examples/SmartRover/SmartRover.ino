@@ -17,8 +17,8 @@ SmartRover smartRover = SmartRover::getReference();
 #define BIG_TURN_LENGTH 17.0
 
 #define TURN_THROTTLE 5
-#define STRAIGHT_THROTTLE 20
-#define TO_PIN_THROTTLE 20
+#define STRAIGHT_THROTTLE 30
+#define TO_PIN_THROTTLE 10
 
 void setup() {
         serial.begin(115200);
@@ -38,13 +38,13 @@ void runRoutine() {
   while(true) {
     panel.waitForClick();
     switch (panel.getPosition()) {
-    case SpdtSwitch::UP:
+    case SpdtSwitch::DOWN:
       figure8();
       break;
-    case SpdtSwitch::DOWN:
+    case SpdtSwitch::MID:
       goStraight();
       break;
-    case SpdtSwitch::MID:
+    case SpdtSwitch::UP:
       break;
     }
   }
@@ -56,17 +56,27 @@ void loop() {
 void figure8() {
   smartRover.addWaypoint(3, 0, TURN_THROTTLE, 2.0);
   smartRover.addWaypoint(15,-100, TURN_THROTTLE);
-  smartRover.addWaypoint(10, -100, STRAIGHT_THROTTLE);
-  smartRover.addWaypoint(10, 0, TURN_THROTTLE, 2.0);
-  smartRover.addWaypoint(10, 120, STRAIGHT_THROTTLE);
-  smartRover.addWaypoint(15, 120, STRAIGHT_THROTTLE);
-  smartRover.addWaypoint(10, 0, STRAIGHT_THROTTLE, 3.0);
+  smartRover.addWaypoint(10, -100, STRAIGHT_THROTTLE, 3.0);
+  smartRover.addWaypoint(10, 0, TURN_THROTTLE, 3.0);
+  smartRover.addWaypoint(15, 120, TURN_THROTTLE, 3.0);
+  smartRover.addWaypoint(10, 110, STRAIGHT_THROTTLE, 3.0);
+  smartRover.addWaypoint(10, 0, TURN_THROTTLE, 3.0);
+
+//  smartRover.addWaypoint(3, 0, TURN_THROTTLE, 2.0);
+//  smartRover.addWaypoint(15,-100, TURN_THROTTLE);
+//  smartRover.addWaypoint(10, -100, STRAIGHT_THROTTLE, 2.0);
+//  smartRover.addWaypoint(10, -10, TURN_THROTTLE, 3.0);
+//  smartRover.addWaypoint(5, 90, TURN_THROTTLE, 2.0);
+//  smartRover.addWaypoint(15, 110, STRAIGHT_THROTTLE);
+//  smartRover.addWaypoint(5, 90, STRAIGHT_THROTTLE, 3.0);
+//  smartRover.addWaypoint(5, 0, STRAIGHT_THROTTLE, 3.0);
   smartRover.autoRun();
   smartRover.clearWaypoints();
 }
 
 void goStraight() {
-  smartRover.addWaypoint(40, 0, TO_PIN_THROTTLE);
+  smartRover.addWaypoint(80, 0, TO_PIN_THROTTLE);
+  smartRover.addWaypoint(4, 0, -10);
   smartRover.autoRun();
   smartRover.clearWaypoints();
 }
