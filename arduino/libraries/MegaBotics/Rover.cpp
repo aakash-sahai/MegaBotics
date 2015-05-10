@@ -120,8 +120,8 @@ void Rover::setupConfig() {
 	_steeringOut.attachServo(_config.steerPwmMax, _config.steerPwmMin);
 	_throttleOut.attachServo(_config.revPwmMax, _config.fwdPwmMax);
 
-	_controlIn->onBelowThreshold(_config.steerMin + 100, Rover::setManual);
-	_controlIn->onAboveThreshold(_config.steerPwmMax - 100, Rover::setManual);
+	_controlIn->onBelowThreshold(_config.steerPwmMid - 200, Rover::setManual);
+	_controlIn->onAboveThreshold(_config.steerPwmMid + 200, Rover::setManual);
 
 	setControlMode(AUTO);
 	delay(2000);
