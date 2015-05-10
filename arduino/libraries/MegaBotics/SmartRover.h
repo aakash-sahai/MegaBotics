@@ -44,7 +44,7 @@
 #include <MegaBotics.h>
 #include <WheelEncoder.h>
 
-#define DEF_STEER_KP				2.0
+#define DEF_STEER_KP				4.0
 #define DEF_STEER_KI				0.1
 #define DEF_STEER_KD				0.01
 #define DEF_STEER_SCALE				(RAD_TO_DEG * 10 / 36)
