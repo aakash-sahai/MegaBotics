@@ -43,8 +43,7 @@
 Rover Rover::_instance;
 
 Rover::Rover() {
-	_currentDirection = FORWARD;
-	_runMode = IDLE;
+	_direction = FORWARD;
 	_controlMode = MANUAL;
 	_currentUsec = 0;
 	_throttleIn = PwmIn::getInstance(DEF_THROTTLE_CHANNEL);
@@ -132,7 +131,7 @@ void Rover::setupConfig() {
 
 void Rover::steer(int8_t percent) {
 	int degrees;
-	percent = clipPercent(percent);
+	percent = Utils::clamp(percent, (int8_t)-100, (int8_t)100);
 	if (percent == 0) {
 		// to straight
 		degrees = _config.steerMid;
@@ -147,33 +146,32 @@ void Rover::steer(int8_t percent) {
 }
 
 void Rover::throttle(int8_t percent) {
-	int usec;
+	int usec = _config.idlePwm;
+	percent = Utils::clamp(percent, (int8_t)-100, (int8_t)100);
+	Direction direction = getDirection(percent);
 
-	percent = clipPercent(percent);
-	Direction requestedDirection = throtleToDirection(percent);
-
-	if ((_currentDirection == FORWARD && requestedDirection == REVERSE) || (_currentDirection == REVERSE && requestedDirection == FORWARD)) {
+	if ((_direction == FORWARD && direction == REVERSE)) {
 		stop();
 	}
 
-	if (percent == 0) {
-		usec = _config.idlePwm;
-	} else if (requestedDirection == FORWARD) {
-		// forward
-		usec = map(percent, 0, 100, _config.fwdPwmMin, _config.fwdPwmMax);
-	} else {
-		// reverse
+	switch(direction) {
+	case FORWARD:
+		usec = percent == 0 ? _config.idlePwm : map(percent, 0, 100, _config.fwdPwmMin, _config.fwdPwmMax);
+		break;
+	case REVERSE:
 		usec = map(percent, 0, -100, _config.revPwmMin, _config.revPwmMax);
-	}
+		break;
+	default:
+		break;
+	};
 
 	rampTo(usec);
-	_currentDirection = requestedDirection;
+	_direction = direction;
 }
 
-Rover::Direction Rover::throtleToDirection(int8_t percent) {
-	if (percent < 0)
-		return REVERSE;
-	return FORWARD;
+Rover::Direction Rover::getDirection(int8_t percent) {
+	if (percent >= 0) return FORWARD;
+	return REVERSE;
 }
 
 void Rover::rampTo(int usec) {
@@ -197,16 +195,21 @@ void Rover::rampTo(int usec) {
 }
 
 void Rover::stop() {
-	rampTo(_config.revPwmMax);
-	delay(500);
-	rampTo(_config.idlePwm);
-	delay(100);
+	if (_direction == FORWARD) {
+		stop(_config.revPwmMax, NO_OF_FWD_STOP_PULSES);
+	} else if (_direction == REVERSE) {
+		stop(_config.fwdPwmMax, NO_OF_REV_STOP_PULSES);
+	}
+
+	_direction = STOP;
 }
 
-int8_t Rover::clipPercent(int8_t percent) {
-	if (percent < -100)
-		return -100;
-	if (percent > 100)
-		return 100;
-	return percent;
+void Rover::stop(int stopUsec, uint16_t noOfStopPulses) {
+	for (uint16_t i = 0; i < noOfStopPulses; i++) {
+		rampTo(stopUsec);
+		delay(RAMP_STEP_DELAY);
+	}
+
+	rampTo(_config.idlePwm);
+	delay(100);
 }

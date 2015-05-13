@@ -49,18 +49,14 @@ class Rover {
 public:
 	enum Direction {
 		FORWARD = 0,
-		REVERSE = 1
+		REVERSE = 1,
+		STOP = 2
 	};
 
 	enum ControlMode {
 		MANUAL = 0,		// Manual control through RC remote
 		AUTO = 1,		// Autopilot mode under full program control
 		ASSIST = 2		// Manual control through RC remote but assisted through AHRS and WheelEncoder
-	};
-
-	enum RunMode {
-		IDLE = 0,
-		RUN = 1
 	};
 
 	struct Config {
@@ -98,6 +94,8 @@ public:
 	static const int DEF_STEER_MAX = 153;				// default trim to steer left
 	static const int RAMP_STEP = 50;					// increment step when ramping the throttle to the desired usec
 	static const int RAMP_STEP_DELAY = 1;				// delay in milliseconds when ramping the throttle to the desired usec
+	static const int NO_OF_FWD_STOP_PULSES = 500;		// number of stop pulses to send to stop the rover while moving forward
+	static const int NO_OF_REV_STOP_PULSES = 10;		// number of stop pulses to send to stop the rover while moving reverse
 
 	virtual ~Rover();
 
@@ -118,12 +116,9 @@ public:
 	void throttle(int8_t pct);
 	void throttleRaw(int val) { rampTo(val); } 					// Takes values from 0 - 180
 	void stop(void);
-	Direction getDirection() {  return _currentDirection; }
+	Direction getDirection() {  return _direction; }
 	ControlMode getControlMode() {  return _controlMode; }
-	RunMode getRunMode() {  return _runMode; }
-
 	void setControlMode(ControlMode mode);
-	void setRunMode(RunMode mode);
 
 private:
 	static Rover _instance;
@@ -135,20 +130,19 @@ private:
 	PwmIn *	_controlIn;
 	PwmMux * _autoManualMux;
 
-	Direction	_currentDirection;
+	Direction	_direction;
 	ControlMode _controlMode;
-	RunMode		_runMode;
 	int			_currentUsec;
 
-	int8_t clipPercent(int8_t pct);
 	int8_t percentToDegrees(int8_t percent);
-	Direction throtleToDirection(int8_t pct);
+	Direction getDirection(int8_t pct);
 	void rampTo(int usec);
 	static void setManual(unsigned int val);
 	static void setAuto(unsigned int val);
 	void setDefaultConfig();
 	void loadConfig();
 	void setupConfig();
+	void stop(int stopUsec, uint16_t noOfStopPulses);
 
 	Rover();
 	Rover(Rover const&);          	// Don't Implement to disallow copy by assignment
