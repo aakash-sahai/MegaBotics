@@ -102,6 +102,7 @@ public:
 	void addWaypoint(float distance, float hdg, int8_t maxThrottle);
 	void addWaypoint(float distance, float hdg, int8_t maxThrottle, float proximRadius);
 	void clearWaypoints(void) { _waypointQty = 0; _currentWaypoint = -1; }
+	void stop(void) { _rover->stop(); }
 
 	static SmartRover * getInstance() { return &_instance; }
 	static SmartRover & getReference() { return _instance; }
