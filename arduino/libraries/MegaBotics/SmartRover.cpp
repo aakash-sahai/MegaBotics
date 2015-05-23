@@ -42,6 +42,7 @@ void SmartRover::setup(SmartRover::Config& config) {
 	_estore->setup();
 	_encoder->setup();
 	_ahrs->setup();
+	_ahrs->resetIMU();
 
 	_rover->setup();
 	_rover->setControlMode(Rover::MANUAL);
@@ -68,7 +69,6 @@ void SmartRover::addWaypoint(float distance, float hdg, int8_t maxThrottle, floa
 void SmartRover::autoRun() {
 	_rover->setControlMode(Rover::AUTO);
 	_encoder->reset();
-	_ahrs->resetIMU();
 	_ahrs->resetYPR();
 
 	while(nextWaypoint()) {
