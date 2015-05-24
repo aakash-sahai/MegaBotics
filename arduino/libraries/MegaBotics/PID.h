@@ -10,7 +10,7 @@ class PID {
 public:
 	PID();
 
-    PID(float kp, float ki, float kd, int16_t iClamp);
+    PID(float kp, float ki, float kd, float iClamp);
 
     virtual ~PID();
 

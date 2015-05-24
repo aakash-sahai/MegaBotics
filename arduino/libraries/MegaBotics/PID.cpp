@@ -13,7 +13,7 @@ PID::PID() {
     _lastTime = 0;
 }
 
-PID::PID(float kp, float ki, float kd, int16_t iClamp) {
+PID::PID(float kp, float ki, float kd, float iClamp) {
     _Kp = kp;
     _Ki = ki;
     _Kd = kd;
@@ -70,11 +70,14 @@ float PID::getPid(float error, float scaler)
 
     if ((fabs(_Ki) > 0) && (dt > 0)) {
         _integrator += (error * _Ki) * scaler * delta_time;
-        if (_integrator < -_integratorClamp) {
-            _integrator = -_integratorClamp;
-        } else if (_integrator > _integratorClamp) {
-            _integrator = _integratorClamp;
+
+        float scaledIntegratorClamp = _integratorClamp * scaler;
+        if (_integrator < -scaledIntegratorClamp) {
+            _integrator = -scaledIntegratorClamp;
+        } else if (_integrator > scaledIntegratorClamp) {
+            _integrator = scaledIntegratorClamp;
         }
+
         output += _integrator;
     }
 
