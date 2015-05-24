@@ -163,6 +163,7 @@ private:
 	CircularBuffer<char> _buffer;		// The circular buffer used to store the logs
 	void writeLevelType(Level level, const __FlashStringHelper *type);
 	void writeNameValue(const __FlashStringHelper *name, char *value);
+	void writeTime(Level level);
 	bool doLog(Level level) { return (_destMask != 0 && level <= _logLevel); }
 
 	Logger();
