@@ -48,26 +48,30 @@
 
 #define DISPLAY_DEFAULT_SPORT		3
 
-class Display {
+class Display : public Adafruit_ILI9341 {
 public:
-	Display();
-	Display(int port);
+	struct Config {
+		uint8_t textSize;
+		uint8_t rotation;
+
+		Config() {
+			textSize = 3;
+			rotation = 0;
+		}
+	};
+
+	Display(SPort sport);
 	virtual ~Display();
 	void setup(void);
+	void setup(Config& config);
+	void reset();
 
-	void setTextSize(uint8_t size) {_tft.setTextSize(size);}
-
-	size_t print(const String &s) {return _tft.print(s);}
-	size_t print(const __FlashStringHelper *ifsh) {return _tft.print(ifsh);}
-	size_t print(float f) {return _tft.print(f);}
-
-	size_t println(const String &s) {return _tft.println(s);}
-	size_t println(const __FlashStringHelper *ifsh) {return _tft.println(ifsh);}
-	size_t println(float f) {return _tft.println(f);}
+	static Display * getInstance() { return &_instance; }
+	static Display & getReference() { return _instance; }
 
 private:
-	SPort _sport;
-	Adafruit_ILI9341 _tft;
+	static Display _instance;
+	Config _config;
 };
 
 #endif /* MEGABOTICS_DISPLAY_H_ */

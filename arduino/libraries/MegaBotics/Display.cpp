@@ -7,18 +7,26 @@
 
 #include <Display.h>
 
-Display::Display() : _sport(DISPLAY_DEFAULT_SPORT), _tft(_sport.getSlaveSelectPin(), _sport.getDigitalPin(1), _sport.getAnalogPin()) {
-}
+Display Display::_instance(SPort(DISPLAY_DEFAULT_SPORT));
 
-Display::Display(int port) : _sport(port), _tft(_sport.getSlaveSelectPin(), _sport.getDigitalPin(1), _sport.getAnalogPin()) {
+Display::Display(SPort sport) : Adafruit_ILI9341(sport.getSlaveSelectPin(), sport.getDigitalPin(1), sport.getAnalogPin()) {
 }
 
 Display::~Display() {
 }
 
 void Display::setup(void) {
-	_tft.begin();
-	_tft.setTextColor(ILI9341_BLACK);
-	_tft.setRotation(3);
-	_tft.setTextSize(2);
+	setup(_config);
+}
+
+void Display::setup(Config& config) {
+	begin();
+	reset();
+	setTextColor(ILI9341_WHITE, ILI9341_BLACK); // White on black
+	setRotation(config.rotation);
+	setTextSize(config.textSize);
+}
+
+void Display::reset() {
+	setCursor(0, 0);
 }
