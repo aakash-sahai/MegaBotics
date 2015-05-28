@@ -65,6 +65,7 @@ public:
 	void setup(void);
 	void setup(Config& config);
 	void reset();
+	void clearScr() {fillScreen(ILI9341_BLACK);}
 
 	static Display * getInstance() { return &_instance; }
 	static Display & getReference() { return _instance; }

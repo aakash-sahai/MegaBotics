@@ -22,6 +22,7 @@ void Display::setup(void) {
 void Display::setup(Config& config) {
 	begin();
 	reset();
+	clearScr();
 	setTextColor(ILI9341_WHITE, ILI9341_BLACK); // White on black
 	setRotation(config.rotation);
 	setTextSize(config.textSize);
