@@ -85,6 +85,19 @@ bool Logger::finish(const char *message) {
 	return log(LEVEL_CRITICAL, F("CLOSE"), message);
 }
 
+void Logger::writeTime(Level level) {
+	if (!doLog(level)) return;
+
+	char buf[34];
+	char ch;
+	char *value = ltoa(millis(), buf, 10);
+	_buffer.enqueue('[');
+	while ((ch = *value++)) {
+		_buffer.enqueue(ch);
+	}
+	_buffer.enqueue(']');
+}
+
 void Logger::writeLevelType(Level level, const __FlashStringHelper *type) {
 	if (!doLog(level)) return;
 	char ch;
@@ -122,7 +135,7 @@ bool Logger::log(Level level, const __FlashStringHelper *type, const char *messa
 	if (!doLog(level)) return false;
 	int typeLen = strlen_P((const char *)type);
 	int msgLen = strlen(message);
-	if (_buffer.capacity() < (4 + typeLen + msgLen)) { // Make sure the whole log will fit
+	if (_buffer.capacity() < (38 + typeLen + msgLen)) { // 4 + 34 (for millis) + typeLen + msgLen, Make sure the whole log will fit
 		if (_autoFlush) {
 			flush();
 		} else {
@@ -130,10 +143,12 @@ bool Logger::log(Level level, const __FlashStringHelper *type, const char *messa
 		}
 	}
 	char ch;
+	writeTime(level);
 	writeLevelType(level, type);
 	while ((ch = *message++)) {
 		_buffer.enqueue(ch);
 	}
+	_buffer.enqueue('\r');
 	_buffer.enqueue('\n');
 	return true;
 }
@@ -142,13 +157,14 @@ Logger & Logger::begin(Level level, const __FlashStringHelper *type) {
 	_nvLevel = level;
 	if (!doLog(level)) return *this;
 	int typeLen = strlen_P((const char *)type);
-	if (_buffer.capacity() < (3 + typeLen)) {	// Make sure the whole begin clause will fit
+	if (_buffer.capacity() < (37 + typeLen)) {	// 3 + 34 (for millis) + typeLen, Make sure the whole begin clause will fit
 		if (_autoFlush) {
 			flush();
 		} else {
 			return *this;
 		}
 	}
+	writeTime(level);
 	writeLevelType(level, type);
 	_firstValue = true;
 	return *this;

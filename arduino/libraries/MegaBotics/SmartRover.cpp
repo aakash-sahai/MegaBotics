@@ -42,6 +42,7 @@ void SmartRover::setup(SmartRover::Config& config) {
 	_estore->setup();
 	_encoder->setup();
 	_ahrs->setup();
+	_ahrs->resetIMU();
 
 	_rover->setup();
 	_rover->setControlMode(Rover::MANUAL);

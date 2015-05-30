@@ -77,3 +77,4 @@
 #include "PID.h"
 #include "InputPanel.h"
 #include "Utils.h"
+#include "GPS.h"

@@ -30,49 +30,54 @@
  *		may be used to endorse or promote products derived from this software
  *		without specific prior written permission.
  */
+
 /*
- * Module		Display.h - TFT display
- * Uses:		Adafruit_ILI9341 (https://github.com/adafruit/Adafruit_ILI9341)
- * 				Adafruit_GFX libraries (https://github.com/adafruit/Adafruit-GFX-Library)
- *
- * Created on:	Apr 22, 2015
+ * Module:		GPS.h
+ * Created on:	May 25, 2015
  * Author:		Srinivas Raj
  */
 
-#ifndef MEGABOTICS_DISPLAY_H_
-#define MEGABOTICS_DISPLAY_H_
+#ifndef MEGABOTICS_GPS_H_
+#define MEGABOTICS_GPS_H_
 
-#include <SPort.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_ILI9341.h>
+#include <MegaBotics.h>
+#include <TinyGPS++.h>
 
-#define DISPLAY_DEFAULT_SPORT		3
+#define GPS_DEFAULT_UPORT		4
+#define GPS_DEFAULT_BAUD		9600L
 
-class Display : public Adafruit_ILI9341 {
+class GPS {
 public:
 	struct Config {
-		uint8_t textSize;
-		uint8_t rotation;
+		long baud;
 
 		Config() {
-			textSize = 3;
-			rotation = 0;
+			baud = GPS_DEFAULT_BAUD;
 		}
 	};
 
-	Display(SPort sport);
-	virtual ~Display();
-	void setup(void);
-	void setup(Config& config);
-	void reset();
-	void clearScr() {fillScreen(ILI9341_BLACK);}
+	GPS();
+	GPS(int port);
+	virtual ~GPS();
 
-	static Display * getInstance() { return &_instance; }
-	static Display & getReference() { return _instance; }
+	void setup(void);
+	void setup(Config &config);
+	void collect();
+
+	double getLatitude();
+	double getLongitude();
+	float getSpeed();
+	float getHeading();
+
+	static GPS * getInstance() { return &_instance; }
+	static GPS & getReference() { return _instance; }
 
 private:
-	static Display _instance;
+	static GPS _instance;
+
+	UPort _uport;
 	Config _config;
+	TinyGPSPlus _gps;
 };
 
-#endif /* MEGABOTICS_DISPLAY_H_ */
+#endif /* MEGABOTICS_GPS_H_ */
