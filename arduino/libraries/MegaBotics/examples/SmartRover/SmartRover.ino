@@ -5,6 +5,10 @@
 #include <Servo.h>
 #include <MegaBotics.h>
 
+#define SMART_ROVER 1
+
+#if SMART_ROVER
+
 UPort uPort(1);
 HardwareSerial & serial = uPort.serial();
 Logger & logger = Logger::getReference();
@@ -16,19 +20,19 @@ SmartRover smartRover = SmartRover::getReference();
 #define LITTLE_TURN_LENGTH 5.5
 #define BIG_TURN_LENGTH 17.0
 
-#define TURN_THROTTLE 5
-#define STRAIGHT_THROTTLE 30
+
 #define TO_PIN_THROTTLE 10
+#define FAST_THROTTLE 20
 
 void setup() {
         serial.begin(115200);
         SmartRover::Config config;
-        config.wpProximRadius = 2.0;
+        config.wpProximRadius = 3.0;
         smartRover.setup(config);
         logger.setup();
         logger.autoFlush(true);
-        logger.enable(Logger::LOG_SERIAL);
-        logger.setLevel(Logger::LOG_SERIAL, Logger::LEVEL_DEBUG);
+        //logger.enable(Logger::LOG_SERIAL);
+        //logger.setLevel(Logger::LOG_SERIAL, Logger::LEVEL_DEBUG);
 
         logger.start("Starting Rover log");
         runRoutine();
@@ -42,9 +46,10 @@ void runRoutine() {
       figure8();
       break;
     case SpdtSwitch::MID:
-      goStraight();
+    	figure8();
       break;
     case SpdtSwitch::UP:
+    	figure8();
       break;
     }
   }
@@ -53,30 +58,48 @@ void runRoutine() {
 void loop() {
 }
 
-void figure8() {
-  smartRover.addWaypoint(3, 0, TURN_THROTTLE, 2.0);
-  smartRover.addWaypoint(15,-100, TURN_THROTTLE);
-  smartRover.addWaypoint(10, -100, STRAIGHT_THROTTLE, 3.0);
-  smartRover.addWaypoint(10, 0, TURN_THROTTLE, 3.0);
-  smartRover.addWaypoint(15, 120, TURN_THROTTLE, 3.0);
-  smartRover.addWaypoint(10, 110, STRAIGHT_THROTTLE, 3.0);
-  smartRover.addWaypoint(10, 0, TURN_THROTTLE, 3.0);
+#define FUI 1
 
-//  smartRover.addWaypoint(3, 0, TURN_THROTTLE, 2.0);
-//  smartRover.addWaypoint(15,-100, TURN_THROTTLE);
-//  smartRover.addWaypoint(10, -100, STRAIGHT_THROTTLE, 2.0);
-//  smartRover.addWaypoint(10, -10, TURN_THROTTLE, 3.0);
-//  smartRover.addWaypoint(5, 90, TURN_THROTTLE, 2.0);
-//  smartRover.addWaypoint(15, 110, STRAIGHT_THROTTLE);
-//  smartRover.addWaypoint(5, 90, STRAIGHT_THROTTLE, 3.0);
-//  smartRover.addWaypoint(5, 0, STRAIGHT_THROTTLE, 3.0);
+#define MID_THROTTLE 		5
+#define JUMP_THROTTLE 		10
+#define STRAIGHT_THROTTLE	10
+
+void figure8() {
+#if FUI
+  smartRover.addWaypoint(63, 0, STRAIGHT_THROTTLE);
+  smartRover.addWaypoint(130, 90, STRAIGHT_THROTTLE);
+  smartRover.addWaypoint(50, 100, MID_THROTTLE);
+  smartRover.addWaypoint(35, 75, MID_THROTTLE);
+  smartRover.addWaypoint(34, 100, MID_THROTTLE);
+  smartRover.addWaypoint(35, 75, MID_THROTTLE);
+  smartRover.addWaypoint(17, 90, MID_THROTTLE);
+  smartRover.addWaypoint(75, 180, STRAIGHT_THROTTLE);
+  smartRover.addWaypoint(45, 180, STRAIGHT_THROTTLE);
+  smartRover.addWaypoint(75, -90, STRAIGHT_THROTTLE);
+  smartRover.addWaypoint(80, -90, JUMP_THROTTLE);
+  smartRover.addWaypoint(130, -90, STRAIGHT_THROTTLE);
+  smartRover.addWaypoint(85,0, STRAIGHT_THROTTLE);
+
+#else
+  smartRover.addWaypoint(63, 0, STRAIGHT_THROTTLE);
+  smartRover.addWaypoint(130, 90, STRAIGHT_THROTTLE);
+  smartRover.addWaypoint(154, 90, STRAIGHT_THROTTLE);
+  smartRover.addWaypoint(75, 180, MID_THROTTLE);
+  smartRover.addWaypoint(45, 180, STRAIGHT_THROTTLE);
+  smartRover.addWaypoint(74, -90, STRAIGHT_THROTTLE);
+  smartRover.addWaypoint(80, -90, JUMP_THROTTLE);
+  smartRover.addWaypoint(130, -90, STRAIGHT_THROTTLE);
+  smartRover.addWaypoint(85,0, STRAIGHT_THROTTLE);
+#endif
   smartRover.autoRun();
   smartRover.clearWaypoints();
 }
 
 void goStraight() {
-  smartRover.addWaypoint(80, 0, TO_PIN_THROTTLE);
+  smartRover.addWaypoint(71, 0, TO_PIN_THROTTLE);
   smartRover.addWaypoint(4, 0, -10);
   smartRover.autoRun();
   smartRover.clearWaypoints();
 }
+
+#endif

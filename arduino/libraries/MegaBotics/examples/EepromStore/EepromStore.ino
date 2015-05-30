@@ -38,7 +38,7 @@
 #include <Servo.h>
 #include <MegaBotics.h>
 
-#define EEPROM_STORE_TEST	1
+#define EEPROM_STORE_TEST	0
 
 #if EEPROM_STORE_TEST
 
