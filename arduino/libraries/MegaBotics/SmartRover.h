@@ -55,7 +55,7 @@
 #define DEF_WP_PROXIM_RADUS			1.0		// 1.0 ft.
 #define DEF_NAV_LOOP_DELAY			5		// 5 ms.
 
-#define MAX_WAYPOINTS				10
+#define MAX_WAYPOINTS				20
 
 class SmartRover {
 public:
