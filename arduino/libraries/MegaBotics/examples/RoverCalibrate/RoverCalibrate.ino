@@ -59,6 +59,7 @@ EepromStore & estore = EepromStore::getReference();
 
 Rover::Config config;
 
+
 void printConfig() {
 	logger.begin(Logger::LEVEL_DEBUG, F("CONFIG")).
 			nv(F("steerChannel"), config.steerChannel).
@@ -67,6 +68,9 @@ void printConfig() {
 			nv(F("steerMin"), config.steerMin).
 			nv(F("steerMid"), config.steerMid).
 			nv(F("steerMax"), config.steerMax).
+			nv(F("steerPwmMin"), config.steerPwmMin).
+			nv(F("steerPwmMin"), config.steerPwmMid).
+			nv(F("steerPwmMax"), config.steerPwmMax).
 			nv(F("idlePwm"), config.idlePwm).
 			nv(F("fwdPwmMin"), config.fwdPwmMin).
 			nv(F("fwdPwmMax"), config.fwdPwmMax).
