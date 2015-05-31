@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2015, Aakash Sahai and other contributors, a list of which is
  * maintained in the associated repository. All rights reserved.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,7 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *    + Redistributions of source code must retain the above copyright
  *      notice, this list of conditions and the following disclaimer.
  *    + Redistributions in binary form must reproduce the above copyright
@@ -31,51 +31,47 @@
  *	without specific prior written permission.
  */
 
-#include <stddef.h>
-#include <inttypes.h>
-#include <math.h>
-#include <Arduino.h>
-#include <Servo.h>
+/*
+ * JoyStick.h
+ *
+ *  Created on: May 29, 2015
+ *      Author: Srinivas Raj
+ */
 
-#define	RAD2DEG(_r)	(_r * RAD_TO_DEG)
-#define	DEG2RAD(_d)	(_d * DEG_TO_RAD)
+#ifndef MEGABOTICS_JOYSTICK_H_
+#define MEGABOTICS_JOYSTICK_H_
 
-#ifndef DEBUG
-#define DEBUG 0
-#endif
+#define JOY_STICK_DEFAULT_UPORT				3
 
-#if DEBUG
-#define DBG_PRINT(x)	Serial.print(x)
-#define DBG_PRINTLN(x)	Serial.println(x)
-#else
-#define DBG_PRINT(x)
-#define DBG_PRINTLN(x)
-#endif
+#define DEFAULT_JOY_STICK_MIN_THRES			100
+#define DEFAULT_JOY_STICK_MAX_THRES			900
 
-#include "PushButton.h"
-#include "SpdtSwitch.h"
-#include "Port.h"
-#include "UPort.h"
-#include "SPort.h"
-#include "IPort.h"
-#include "LED.h"
-#include "Coord.h"
-#include "Sonar.h"
-#include "SmartRover.h"
-#include "Rover.h"
-#include "WiFi.h"
-#include "PwmIn.h"
-#include "PwmOut.h"
-#include "PwmMux.h"
-#include "Logger.h"
-#include "AHRS.h"
-#include "EepromStore.h"
-#include "WheelEncoder.h"
-#include "ConfigParser.h"
-#include "Display.h"
-#include "SDCard.h"
-#include "PID.h"
-#include "InputPanel.h"
-#include "Utils.h"
-#include "GPS.h"
-#include "JoyStick.h"
+#include <MegaBotics.h>
+
+class JoyStick : public UPort, public PushButton {
+public:
+	enum Input {
+		NONE = 0,
+		LEFT = 1,
+		RIGHT = 2,
+		UP = 3,
+		DOWN = 4,
+		CENTER = 5
+	};
+
+	JoyStick();
+	JoyStick(int port);
+
+	virtual ~JoyStick();
+	Input waitForInput(long duration);
+
+	static JoyStick * getInstance() { return & _instance; }
+	static JoyStick & getReference() { return _instance; }
+
+private:
+	static JoyStick _instance;
+	byte _horPin;
+	byte _verPin;
+};
+
+#endif /* MEGABOTICS_JOYSTICK_H_ */
