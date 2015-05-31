@@ -68,6 +68,8 @@ public:
 	double getLongitude();
 	float getSpeed();
 	float getHeading();
+	TinyGPSPlus getRawGps() {return _gps;}
+	UPort & getUPort(void) { return _uport; }
 
 	static GPS * getInstance() { return &_instance; }
 	static GPS & getReference() { return _instance; }
