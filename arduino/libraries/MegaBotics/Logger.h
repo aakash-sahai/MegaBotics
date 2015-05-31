@@ -67,7 +67,7 @@ char * dtostrf(double value, int x, int y, char * buf);
  * periodically by calling the private _flush routine.
  */
 
-#define LOGGER_DEFAULT_BUFSIZE	128
+#define LOGGER_DEFAULT_BUFSIZE	256
 #define LOGGER_MAX_DESTINATIONS	3
 
 #define MAX_IPADDR_LEN	15
@@ -110,6 +110,8 @@ public:
 	virtual ~Logger();
 	void setup(void);
 	void setup(Config &config);
+	void close();
+	void open();
 
 	void enable(Destination dest) { _destMask |= ( 1 << dest); }		// Enable logging to a destination
 	void disable(Destination dest) { _destMask &= ~( 1 << dest); }		// Disable logging to a destination
