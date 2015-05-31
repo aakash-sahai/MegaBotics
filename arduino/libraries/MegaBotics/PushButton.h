@@ -61,7 +61,7 @@ public:
 
 	virtual ~PushButton();
 
-	void waitForPush();
+	bool waitForPush(int duration = -1);
 	void waitForClick() { clear(); while (!clicked()) { delay(1); } }
 	void check(void);
 	int timesClicked() { check(); return _clickQty; }

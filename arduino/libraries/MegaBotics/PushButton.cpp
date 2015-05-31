@@ -74,19 +74,24 @@ void PushButton::check(void) {
 	}
 }
 
-void PushButton::waitForPush() {
-	int prevState = HIGH;
-	while (true) {
-		int currentState = digitalRead(_pin);
+bool PushButton::waitForPush(int duration) {
+	long start = millis();
 
-		if (prevState == LOW && currentState == HIGH) {
-			delay(200); // delay so that we don't read too fast
-			break;
+	while (true) {
+		if (digitalRead(_pin) == LOW) {
+			return true;
 		}
 
-		prevState = currentState;
-		delay(10);
+		if (duration != -1) {
+			if ((int)(millis() - start) >= duration) {
+				break;
+			}
+		}
+
+		delay(1);
 	}
+
+	return false;
 }
 
 bool PushButton::clicked(void) {
@@ -97,4 +102,3 @@ bool PushButton::clicked(void) {
 	}
 	return false;
 }
-
