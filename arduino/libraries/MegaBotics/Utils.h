@@ -16,6 +16,12 @@ public:
 		return value;
 	}
 
+	static int8_t clamp(uint8_t value, uint8_t min, uint8_t max) {
+		if (value < min) return min;
+		if (value > max) return max;
+		return value;
+	}
+
 	static int16_t clamp(int16_t value, int16_t min, int16_t max) {
 		if (value < min) return min;
 		if (value > max) return max;
@@ -26,6 +32,12 @@ public:
 		if (value < min) return min;
 		if (value > max) return max;
 		return value;
+	}
+
+	static void waitForEver() {
+		while(true) {
+			delay(1000);
+		}
 	}
 
 private:

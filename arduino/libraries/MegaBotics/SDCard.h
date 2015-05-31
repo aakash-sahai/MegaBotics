@@ -58,6 +58,7 @@ public:
 
 	virtual ~SDCard();
 	File open(const char *filepath, uint8_t mode) {return SD.open(filepath, mode);}
+	bool remove(const char *filepath) {return SD.remove((char *)filepath);}
 	Status getStatus() {return _status;}
 	void setup();
 

@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2015, Aakash Sahai and other contributors, a list of which is
  * maintained in the associated repository. All rights reserved.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,7 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *    + Redistributions of source code must retain the above copyright
  *      notice, this list of conditions and the following disclaimer.
  *    + Redistributions in binary form must reproduce the above copyright
@@ -32,43 +32,46 @@
  */
 
 /*
- * PushButton.h
+ * JoyStick.h
  *
- *  Created on: 14-Mar-2015
- *      Author: eashan
+ *  Created on: May 29, 2015
+ *      Author: Srinivas Raj
  */
 
-#include <Arduino.h>
+#ifndef MEGABOTICS_JOYSTICK_H_
+#define MEGABOTICS_JOYSTICK_H_
 
-#ifndef PUSHBUTTON_H_
-#define PUSHBUTTON_H_
+#define JOY_STICK_DEFAULT_UPORT				3
 
-#define DEFAULT_PUSHBUTTON_PIN	2
+#define DEFAULT_JOY_STICK_MIN_THRES			100
+#define DEFAULT_JOY_STICK_MAX_THRES			900
 
-class PushButton {
-private:
-	bool _isPressed;
-	bool _wasClicked;
-	int _clickQty;
-	byte	_pin;
+#include <MegaBotics.h>
 
-	void init(void);
-
+class JoyStick : public UPort, public PushButton {
 public:
+	enum Input {
+		NONE = 0,
+		LEFT = 1,
+		RIGHT = 2,
+		UP = 3,
+		DOWN = 4,
+		CENTER = 5
+	};
 
-	PushButton();
-	PushButton(byte);
+	JoyStick();
+	JoyStick(int port);
 
-	virtual ~PushButton();
+	virtual ~JoyStick();
+	Input waitForInput(long duration);
 
-	bool waitForPush(int duration = -1);
-	void waitForClick() { clear(); while (!clicked()) { delay(1); } }
-	void check(void);
-	int timesClicked() { check(); return _clickQty; }
-	void clear() { this->_clickQty = 0; }
-	bool pressed(void) { check(); return _isPressed; }
-	bool clicked(void);
-	byte getPin() { return _pin; }
+	static JoyStick * getInstance() { return & _instance; }
+	static JoyStick & getReference() { return _instance; }
+
+private:
+	static JoyStick _instance;
+	byte _horPin;
+	byte _verPin;
 };
 
-#endif /* PUSHBUTTON_H_ */
+#endif /* MEGABOTICS_JOYSTICK_H_ */

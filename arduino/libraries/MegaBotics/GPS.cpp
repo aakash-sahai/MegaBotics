@@ -5,7 +5,7 @@
  *      Author: sraj
  */
 
-#include <MegaBotics.h>
+#include <GPS.h>
 
 GPS GPS::_instance;
 
@@ -20,11 +20,6 @@ GPS::GPS(int port) {
 GPS::~GPS() {
 }
 
-// Interrupt is called once a millisecond, looks for any new GPS data, and stores it
-SIGNAL(TIMER0_COMPA_vect) {
-	GPS::getInstance()->collect();
-}
-
 void GPS::setup() {
 	setup(_config);
 }
@@ -34,10 +29,12 @@ void GPS::setup(Config &config) {
 
 	_uport.serial().begin(_config.baud);
 
-	// Timer0 is already used for millis() - we'll just interrupt somewhere
-	// in the middle and call the "Compare A" function above
-	OCR0A = 0xAF;
-	TIMSK0 |= _BV(OCIE0A);
+	// Disable all the sentences except the RMC
+	_uport.serial().println("$PUBX,40,GLL,0,0,0,0*5C");
+	_uport.serial().println("$PUBX,40,GGA,0,0,0,0*5A");
+	_uport.serial().println("$PUBX,40,GSA,0,0,0,0*4E");
+	_uport.serial().println("$PUBX,40,GSV,0,0,0,0*59");
+	_uport.serial().println("$PUBX,40,VTG,0,0,0,0*5E");
 }
 
 void GPS::collect() {

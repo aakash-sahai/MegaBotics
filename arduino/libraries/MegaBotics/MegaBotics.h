@@ -78,3 +78,4 @@
 #include "InputPanel.h"
 #include "Utils.h"
 #include "GPS.h"
+#include "JoyStick.h"

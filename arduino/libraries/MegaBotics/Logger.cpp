@@ -71,9 +71,22 @@ void Logger::setup(Config &aConfig) {
 		_wifi->connect(UDP, aConfig.ip, aConfig.port, _wifiConnectionId);
 	}
 	_buffer.setup(_config.bufsize);
-	if (aConfig.fileName != NULL) {
+	_config.fileName = aConfig.fileName;
+
+	open();
+}
+
+void Logger::close() {
+	if (_file) {
+		_file.close();
+		_file == NULL;
+	};
+}
+
+void Logger::open() {
+	if (_config.fileName != NULL && _file == NULL) {
 		SDCard::getReference().setup();
-		_file = SDCard::getReference().open(aConfig.fileName, FILE_WRITE);
+		_file = SDCard::getReference().open(_config.fileName, FILE_WRITE);
 	}
 }
 
