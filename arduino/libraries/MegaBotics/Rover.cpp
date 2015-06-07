@@ -43,7 +43,7 @@
 Rover Rover::_instance;
 
 Rover::Rover() {
-	_direction = FORWARD;
+	_direction = IDLE;
 	_controlMode = MANUAL;
 	_currentUsec = 0;
 	_throttleIn = PwmIn::getInstance(DEF_THROTTLE_CHANNEL);
@@ -150,12 +150,13 @@ void Rover::throttle(int8_t percent) {
 	percent = Utils::clamp(percent, (int8_t)-100, (int8_t)100);
 	Direction direction = getDirection(percent);
 
-	if ((_direction == FORWARD && direction == REVERSE)) {
+	if ((_direction == FORWARD || _direction == IDLE) && direction == REVERSE) {
 		stop();
 	}
 
 	switch(direction) {
 	case FORWARD:
+	case IDLE:
 		usec = percent == 0 ? _config.idlePwm : map(percent, 0, 100, _config.fwdPwmMin, _config.fwdPwmMax);
 		break;
 	case REVERSE:
@@ -170,7 +171,8 @@ void Rover::throttle(int8_t percent) {
 }
 
 Rover::Direction Rover::getDirection(int8_t percent) {
-	if (percent >= 0) return FORWARD;
+	if (percent == 0) return IDLE;
+	if (percent > 0) return FORWARD;
 	return REVERSE;
 }
 
@@ -195,13 +197,34 @@ void Rover::rampTo(int usec) {
 }
 
 void Rover::stop() {
-	if (_direction == FORWARD) {
+	if (_direction == FORWARD || _direction == IDLE) {
+		stop(_config.revPwmMax, NO_OF_FWD_STOP_PULSES);
+	} else if (_direction == IDLE && _config.allowIdleToStop) {
 		stop(_config.revPwmMax, NO_OF_FWD_STOP_PULSES);
 	} else if (_direction == REVERSE) {
 		stop(_config.fwdPwmMax, NO_OF_REV_STOP_PULSES);
 	}
 
 	_direction = STOP;
+
+	rampTo(_config.idlePwm);
+	delay(100);
+}
+
+void Rover::_break(uint8_t pct) {
+	pct = Utils::clamp(pct, (uint8_t)0 , (uint8_t)100);
+
+	int noPulses = 0;
+	if (_direction == FORWARD) {
+		noPulses = NO_OF_FWD_STOP_PULSES * pct / 100;
+		stop(_config.revPwmMax, noPulses);
+	} else if (_direction == IDLE && _config.allowIdleToStop) {
+		noPulses = NO_OF_FWD_STOP_PULSES * pct / 100;
+		stop(_config.revPwmMax, noPulses);
+	} else if (_direction == REVERSE) {
+		noPulses = NO_OF_REV_STOP_PULSES * pct / 100;
+		stop(_config.fwdPwmMax, noPulses);
+	}
 }
 
 void Rover::stop(int stopUsec, uint16_t noOfStopPulses) {
@@ -209,7 +232,4 @@ void Rover::stop(int stopUsec, uint16_t noOfStopPulses) {
 		rampTo(stopUsec);
 		delay(RAMP_STEP_DELAY);
 	}
-
-	rampTo(_config.idlePwm);
-	delay(100);
 }
