@@ -197,7 +197,7 @@ void Rover::rampTo(int usec) {
 }
 
 void Rover::stop() {
-	if (_direction == FORWARD || _direction == IDLE) {
+	if (_direction == FORWARD) {
 		stop(_config.revPwmMax, NO_OF_FWD_STOP_PULSES);
 	} else if (_direction == IDLE && _config.allowIdleToStop) {
 		stop(_config.revPwmMax, NO_OF_FWD_STOP_PULSES);
