@@ -38,7 +38,7 @@
  
 #include <MegaBotics.h>
 
-#define ROVER_CALIBRATE 0
+#define ROVER_CALIBRATE 1
 
 #if ROVER_CALIBRATE
 
@@ -53,12 +53,28 @@ PwmIn & throttleIn = PwmIn::getReference(THROTTLE_CHANNEL);
 WheelEncoder & encoder = WheelEncoder::getReference();
 PwmMux & pwmMux = PwmMux::getReference();
 Logger & logger = Logger::getReference();
+Display & display = Display::getReference();
 InputPanel inputPanel;
 UPort uPort(1);
 EepromStore & estore = EepromStore::getReference();
 
 Rover::Config config;
 
+void clearAndPrint(const __FlashStringHelper *msg) {
+	uPort.serial().print(msg);
+	display.clearScr();
+	display.print(msg);
+}
+
+void print(String msg) {
+	uPort.serial().print(msg);
+	display.print(msg);
+}
+
+void println(String msg) {
+	uPort.serial().println(msg);
+	display.println(msg);
+}
 
 void printConfig() {
 	logger.begin(Logger::LEVEL_DEBUG, F("CONFIG")).
@@ -82,59 +98,68 @@ void printConfig() {
 void storeConfig() {
 	EepromStore::Status status = estore.storeSection(ROVER_CONFIG_NAME, &config, sizeof(config));
 	if (status != EepromStore::SUCCESS) {
-		uPort.serial().println(F("Could not store Rover Config; Status = "));
+		clearAndPrint(F("Could not store Rover Config; Status = "));
 		uPort.serial().println((int)status);
 	} else {
-		uPort.serial().println(F("Configuration stored to Eeprom Store"));
+		clearAndPrint(F("Configuration stored to Eeprom Store"));
 	}
 }
 
 void captureConfigValues() {
-	uPort.serial().println("Turn OFF the remote and press the button");
-	inputPanel.waitForPush();
+	const __FlashStringHelper *msg;
+
+	msg = F("Turn OFF the remote and press the button\r\n");
+	println(msg);
+
+	inputPanel.waitForClick();
 	config.idlePwm = throttleIn.getPulseWidth();
-	uPort.serial().print("idlePwm = "); uPort.serial().println(config.idlePwm);
+	print("idlePwm = "); println(String(config.idlePwm));
 
-	uPort.serial().println("Turn ON the remote and press the button");
+	msg = F("Turn ON the remote and press the button");
+	clearAndPrint(msg);
 	steerIn.reset();
-	inputPanel.waitForPush();
+	inputPanel.waitForClick();
 	config.steerPwmMid = steerIn.getPulseWidth();
-	uPort.serial().print("steerPwmMid = "); uPort.serial().println(config.steerPwmMid);
+	print("steerPwmMid = "); println(String(config.steerPwmMid));
 
-	uPort.serial().println("Steer left and right, press the button when done");
+	msg = F("Steer left and right, press the button when done\r\n");
+	clearAndPrint(msg);
 	steerIn.reset();
-	inputPanel.waitForPush();
+	inputPanel.waitForClick();
 	config.steerPwmMin = steerIn.getMinPulseWidth();
 	config.steerPwmMax = steerIn.getMaxPulseWidth();
-	uPort.serial().print("steerPwmMin = "); uPort.serial().println(config.steerPwmMin);
-	uPort.serial().print("steerPwmMax = "); uPort.serial().println(config.steerPwmMax);
+	print("steerPwmMin = "); println(String(config.steerPwmMin));
+	print("steerPwmMax = "); println(String(config.steerPwmMax));
 
 	config.steerMid = map(steerIn.getPulseWidth(), config.steerPwmMin, config.steerPwmMax, 0, 180);
 	config.steerMin = 0;
 	config.steerMax = 180;
-	uPort.serial().print("steerMid = "); uPort.serial().println(config.steerMid);
+	print("steerMid = "); println(String(config.steerMid));
 
-	uPort.serial().println("Press the throttle to go at max speed, 1st forward and then reverse, press the button when done");
+	msg = F("Press the throttle to go at max speed, 1st forward and then reverse, press the button when done\r\n");
+	clearAndPrint(msg);
 	throttleIn.reset();
-	inputPanel.waitForPush();
+	inputPanel.waitForClick();
 
 	config.fwdPwmMax = throttleIn.getMaxPulseWidth();
 	config.revPwmMax = throttleIn.getMinPulseWidth();
-	uPort.serial().print("fwdPwmMax = "); uPort.serial().println(config.fwdPwmMax);
-	uPort.serial().print("revPwmMax = "); uPort.serial().println(config.revPwmMax);
+	print("fwdPwmMax = "); println(String(config.fwdPwmMax));
+	print("revPwmMax = "); println(String(config.revPwmMax));
 
 	// configure the min values
-	uPort.serial().println("Go forward at min speed using the remote, press the button while still keeping the throttle at min. speed");
+	msg = F("Go forward at min speed using the remote, press the button while still keeping the throttle at min. speed\r\n");
+	clearAndPrint(msg);
 	throttleIn.reset();
-	inputPanel.waitForPush();
+	inputPanel.waitForClick();
 	config.fwdPwmMin = throttleIn.getPulseWidth();
-	uPort.serial().print("fwdPwmMin = "); uPort.serial().println(config.fwdPwmMin);
+	print("fwdPwmMin = "); println(String(config.fwdPwmMin));
 
-	uPort.serial().println("Go reverse at min speed using the remote, press the button while still keeping the throttle at min. speed");
+	msg = F("Go reverse at min speed using the remote, press the button while still keeping the throttle at min. speed\r\n");
+	clearAndPrint(msg);
 	throttleIn.reset();
-	inputPanel.waitForPush();
+	inputPanel.waitForClick();
 	config.revPwmMin = min(throttleIn.getPulseWidth(), config.idlePwm - 100);
-	uPort.serial().print("revPwmMin = "); uPort.serial().println(config.revPwmMin);
+	print("revPwmMin = "); println(String(config.revPwmMin));
 }
 
 void loggerSetup(void) {
@@ -161,13 +186,22 @@ void setup() {
 	config.throttleChannel = THROTTLE_CHANNEL;
 	config.controlChannel = CONTROL_CHANNEL;
 
+	Display::Config dispConfig;
+	dispConfig.rotation = 2;
+	dispConfig.textSize= 2;
+	display.setup(dispConfig);
+
+	display.reset();
+
 	captureConfigValues();
 	printConfig();
 
-	uPort.serial().println("Press the button to store the config");
-	inputPanel.waitForPush();
+	const __FlashStringHelper *msg = F("Press the button to store the config\r\n");
+	clearAndPrint(msg);
+	inputPanel.waitForClick();
 	storeConfig();
 }
+
 
 void loop() {
 }
