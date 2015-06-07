@@ -97,7 +97,7 @@ public:
 			steerMin = DEF_STEER_MIN;
 			steerMid = DEF_STEER_MID;
 			steerMax = DEF_STEER_MAX;
-			allowIdleToStop = false;
+			allowIdleToStop = true;
 		}
 	};
 
