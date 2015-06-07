@@ -50,7 +50,8 @@ public:
 	enum Direction {
 		FORWARD = 0,
 		REVERSE = 1,
-		STOP = 2
+		STOP = 2,
+		IDLE = 3,
 	};
 
 	enum ControlMode {
@@ -76,6 +77,28 @@ public:
 		int			steerMin;
 		int			steerMid;
 		int			steerMax;
+
+		bool		allowIdleToStop;
+
+		Config() {
+			throttleChannel = DEF_THROTTLE_CHANNEL;
+			steerChannel = DEF_STEER_CHANNEL;
+			controlChannel = DEF_CONTROL_CHANNEL;
+
+			idlePwm = DEF_IDLE_PWM;
+			fwdPwmMin = DEF_FWD_PWM_MIN;
+			fwdPwmMax = DEF_FWD_PWM_MAX;
+			revPwmMin = DEF_REV_PWM_MIN;
+			revPwmMax = DEF_REV_PWM_MAX;
+			steerPwmMin = DEF_STEER_PWM_MIN;
+			steerPwmMax = DEF_STEER_PWM_MAX;
+			steerPwmMid = DEF_STEER_PWM_MID;
+
+			steerMin = DEF_STEER_MIN;
+			steerMid = DEF_STEER_MID;
+			steerMax = DEF_STEER_MAX;
+			allowIdleToStop = true;
+		}
 	};
 
 	static const byte  DEF_THROTTLE_CHANNEL = 2;		// default PwmIn and PwmOut channels controlling the ESC throttle
@@ -88,13 +111,14 @@ public:
 	static const uint16_t DEF_REV_PWM_MAX = 770;		// default PWM value to move reverse at full speed
 	static const uint16_t DEF_STEER_PWM_MIN = 1000;		// default PWM value to steer 100% right
 	static const uint16_t DEF_STEER_PWM_MAX = 2000;		// default PWM value to steer 100% left
+	static const uint16_t DEF_STEER_PWM_MID = 1500;		// default PWM value to steer straight
 
 	static const int DEF_STEER_MIN = 53;				// default trim to steer right
 	static const int DEF_STEER_MID = 90;				// default trim to steer straight
 	static const int DEF_STEER_MAX = 153;				// default trim to steer left
 	static const int RAMP_STEP = 50;					// increment step when ramping the throttle to the desired usec
 	static const int RAMP_STEP_DELAY = 1;				// delay in milliseconds when ramping the throttle to the desired usec
-	static const int NO_OF_FWD_STOP_PULSES = 500;		// number of stop pulses to send to stop the rover while moving forward
+	static const int NO_OF_FWD_STOP_PULSES = 1000;		// number of stop pulses to send to stop the rover while moving forward
 	static const int NO_OF_REV_STOP_PULSES = 10;		// number of stop pulses to send to stop the rover while moving reverse
 
 	virtual ~Rover();
@@ -116,6 +140,7 @@ public:
 	void throttle(int8_t pct);
 	void throttleRaw(int val) { rampTo(val); } 					// Takes values from 0 - 180
 	void stop(void);
+	void _break(uint8_t pct);
 	Direction getDirection() {  return _direction; }
 	ControlMode getControlMode() {  return _controlMode; }
 	void setControlMode(ControlMode mode);
