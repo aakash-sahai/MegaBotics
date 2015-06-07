@@ -5,7 +5,7 @@
 #include <Servo.h>
 #include <MegaBotics.h>
 
-#define SMART_ROVER 1
+#define SMART_ROVER 0
 
 #if SMART_ROVER
 

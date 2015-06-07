@@ -115,6 +115,7 @@ private:
 	double _longitude;
 	const static  CoordType _type = GEO;
 	const static double R_EARTH_METER = 6371000.0;	// Radius of Earth in Meters
+	const static double METER_TO_FEET = 3.28084;
 };
 
 #endif /* _COORD_H_ */

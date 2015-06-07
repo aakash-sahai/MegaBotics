@@ -79,6 +79,8 @@ Geo2D::Geo2D(double latitude, double longitude) {
 Geo2D::~Geo2D() {
 }
 
+// R is in Feet and Theta is angle measured in CW direction (consistent with how
+// the AHRS reports Yaw
 void Geo2D::getRTheta(Geo2D &to, Polar2D &result) {
 	/*
 	 * Since we are dealing with small distances, we will use Equi-rectangular
@@ -92,6 +94,6 @@ void Geo2D::getRTheta(Geo2D &to, Polar2D &result) {
 
 	double deltaX = (toLon - fromLon) * cos((fromLat + toLat) / 2.0);
 	double deltaY = toLat - fromLat;
-	result._r = sqrt(deltaX*deltaX + deltaY*deltaY) * R_EARTH_METER;
-	result._theta = atan2(deltaY, deltaX);
+	result._r = sqrt(deltaX*deltaX + deltaY*deltaY) * R_EARTH_METER * METER_TO_FEET;
+	result._theta = -1.0 * atan2(deltaY, deltaX);
 }
