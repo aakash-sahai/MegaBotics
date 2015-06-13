@@ -6,6 +6,7 @@
  */
 
 #include <GPS.h>
+#include <HardwareSerial.h>
 
 GPS GPS::_instance;
 
@@ -51,8 +52,12 @@ void GPS::setup(Config &config) {
 }
 
 void GPS::collect() {
+	serialEventRun();
 	while (_uport.serial().available()) {
-	  _gps.encode(_uport.serial().read());
+		int ch = _uport.serial().read();
+		Serial.write(ch);
+		_gps.encode(ch);
+		serialEventRun();
 	}
 }
 
@@ -65,9 +70,20 @@ double GPS::getLongitude() {
 }
 
 float GPS::getSpeed() {
-	return _gps.speed.mph();
+	return _gps.speed.mps();
 }
 
 float GPS::getHeading() {
 	return _gps.course.deg();
+}
+
+void GPS::display() {
+	Display & display = Display::getReference();
+
+	display.print("LAT: ");display.println(getLatitude(), 8);
+	display.print("LONG: ");display.println(getLongitude(), 8);
+	display.print("SPEED: ");display.println(getSpeed());
+	display.print("HDG: ");display.println(getHeading());
+	display.print("SATS: ");display.println(getRawGps().satellites.value());
+	display.print("AGE: ");display.println(getRawGps().location.age());
 }

@@ -38,7 +38,7 @@
  
 #include <MegaBotics.h>
 
-#define ROVER_CALIBRATE 1
+#define ROVER_CALIBRATE 0
 
 #if ROVER_CALIBRATE
 
@@ -99,9 +99,9 @@ void storeConfig() {
 	EepromStore::Status status = estore.storeSection(ROVER_CONFIG_NAME, &config, sizeof(config));
 	if (status != EepromStore::SUCCESS) {
 		clearAndPrint(F("Could not store Rover Config; Status = "));
-		uPort.serial().println((int)status);
+		println(String((int)status));
 	} else {
-		clearAndPrint(F("Configuration stored to Eeprom Store"));
+		clearAndPrint(F("Configuration stored to Eeprom Store\r\n"));
 	}
 }
 
@@ -109,18 +109,17 @@ void captureConfigValues() {
 	const __FlashStringHelper *msg;
 
 	msg = F("Turn OFF the remote and press the button\r\n");
-	println(msg);
-
+	clearAndPrint(msg);
 	inputPanel.waitForClick();
 	config.idlePwm = throttleIn.getPulseWidth();
-	print("idlePwm = "); println(String(config.idlePwm));
 
-	msg = F("Turn ON the remote and press the button");
+
+	msg = F("Turn ON the remote and press the button\r\n");
 	clearAndPrint(msg);
 	steerIn.reset();
 	inputPanel.waitForClick();
 	config.steerPwmMid = steerIn.getPulseWidth();
-	print("steerPwmMid = "); println(String(config.steerPwmMid));
+
 
 	msg = F("Steer left and right, press the button when done\r\n");
 	clearAndPrint(msg);
@@ -128,23 +127,18 @@ void captureConfigValues() {
 	inputPanel.waitForClick();
 	config.steerPwmMin = steerIn.getMinPulseWidth();
 	config.steerPwmMax = steerIn.getMaxPulseWidth();
-	print("steerPwmMin = "); println(String(config.steerPwmMin));
-	print("steerPwmMax = "); println(String(config.steerPwmMax));
-
 	config.steerMid = map(steerIn.getPulseWidth(), config.steerPwmMin, config.steerPwmMax, 0, 180);
 	config.steerMin = 0;
 	config.steerMax = 180;
-	print("steerMid = "); println(String(config.steerMid));
+
 
 	msg = F("Press the throttle to go at max speed, 1st forward and then reverse, press the button when done\r\n");
 	clearAndPrint(msg);
 	throttleIn.reset();
 	inputPanel.waitForClick();
-
 	config.fwdPwmMax = throttleIn.getMaxPulseWidth();
 	config.revPwmMax = throttleIn.getMinPulseWidth();
-	print("fwdPwmMax = "); println(String(config.fwdPwmMax));
-	print("revPwmMax = "); println(String(config.revPwmMax));
+
 
 	// configure the min values
 	msg = F("Go forward at min speed using the remote, press the button while still keeping the throttle at min. speed\r\n");
@@ -152,14 +146,28 @@ void captureConfigValues() {
 	throttleIn.reset();
 	inputPanel.waitForClick();
 	config.fwdPwmMin = throttleIn.getPulseWidth();
-	print("fwdPwmMin = "); println(String(config.fwdPwmMin));
+
 
 	msg = F("Go reverse at min speed using the remote, press the button while still keeping the throttle at min. speed\r\n");
 	clearAndPrint(msg);
 	throttleIn.reset();
 	inputPanel.waitForClick();
 	config.revPwmMin = min(throttleIn.getPulseWidth(), config.idlePwm - 100);
+
+}
+
+void displayConfig() {
+	clearAndPrint(F("The final configuration is\r\n"));
+
+	print("steerPwmMin = "); println(String(config.steerPwmMin));
+	print("steerPwmMid = "); println(String(config.steerPwmMid));
+	print("steerPwmMax = "); println(String(config.steerPwmMax));
+	print("steerMid = "); println(String(config.steerMid));
+	print("idlePwm = "); println(String(config.idlePwm));
 	print("revPwmMin = "); println(String(config.revPwmMin));
+	print("revPwmMax = "); println(String(config.revPwmMax));
+	print("fwdPwmMin = "); println(String(config.fwdPwmMin));
+	print("fwdPwmMax = "); println(String(config.fwdPwmMax));
 }
 
 void loggerSetup(void) {
@@ -200,6 +208,7 @@ void setup() {
 	clearAndPrint(msg);
 	inputPanel.waitForClick();
 	storeConfig();
+	displayConfig();
 }
 
 

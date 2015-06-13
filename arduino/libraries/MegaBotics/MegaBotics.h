@@ -60,6 +60,7 @@
 #include "IPort.h"
 #include "LED.h"
 #include "Coord.h"
+#include "Waypoint.h"
 #include "Sonar.h"
 #include "SmartRover.h"
 #include "Rover.h"
@@ -79,5 +80,5 @@
 #include "Utils.h"
 #include "GPS.h"
 #include "JoyStick.h"
-#include "Waypoints.h"
+#include "Route.h"
 

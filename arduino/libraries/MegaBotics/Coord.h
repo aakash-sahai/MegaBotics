@@ -68,7 +68,7 @@ public:
 	double getR() { return _r; }
 	double getTheta() { return _theta; }
 
-private:
+protected:
 	double _r;
 	double _theta;
 	const static  CoordType _type = POLAR;
@@ -89,14 +89,14 @@ public:
 	float getX() { return _x; }
 	float getY() { return _y; }
 
-private:
+protected:
 	float _x;
 	float _y;
 	const static CoordType _type = CARTESIAN;
 };
 
 class Geo2D : public Coord2D {
-	friend class WaypointHelper;
+	friend class Waypoint;
 public:
 	Geo2D();
 	Geo2D(double latitude, double longitude);
@@ -110,7 +110,7 @@ public:
 	void setLatitude(double val) {  _latitude = val; }
 	void setLongitude(double val) { _longitude = val; }
 
-private:
+protected:
 	double _latitude;
 	double _longitude;
 	const static  CoordType _type = GEO;

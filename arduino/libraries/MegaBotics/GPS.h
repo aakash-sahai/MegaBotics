@@ -43,8 +43,8 @@
 #include <MegaBotics.h>
 #include <TinyGPS++.h>
 
-#define GPS_DEFAULT_UPORT		4
-#define GPS_DEFAULT_BAUD		9600L
+#define GPS_DEFAULT_UPORT		3
+#define GPS_DEFAULT_BAUD		4800L
 
 class GPS {
 public:
@@ -63,6 +63,7 @@ public:
 	void setup(void);
 	void setup(Config &config);
 	void collect();
+	void display();
 
 	double getLatitude();
 	double getLongitude();

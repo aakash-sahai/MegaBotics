@@ -32,45 +32,89 @@
  */
 
 /*
- * Waypoints.h
+ * Route.h
  *
  *  Created on: May 29, 2015
  *      Author: Srinivas Raj
  */
 
-#ifndef MEGABOTICS_WAYPOINTS_H_
-#define MEGABOTICS_WAYPOINTS_H_
+#ifndef MEGABOTICS_ROUTE_H_
+#define MEGABOTICS_ROUTE_H_
 
-#include <MegaBotics.h>
+#include "MegaBotics.h"
+
+#define MAX_WAYPOINTS	20
 
 class GPS;
 class Logger;
 class JoyStick;
 class Dispaly;
 
-#define DEFAULT_WAYPOINT_FILE	"wp.txt"
+#define DEFAULT_WAYPOINT_FILE	"WP.TXT"
 
-class Waypoints {
+class Route {
 public:
-	Waypoints();
-	virtual ~Waypoints();
+	struct Location {
+		double lat;		// Current Latitude
+		double lon;		// Current Longitude
+		float distance;	// Distance to next waypoint
+		float hdg;			// Heading to next waypoint
+		float refHdg;		// Reference Heading
+		unsigned int age;	// Age of GPS reading
+		float speed;		// Speed reported by GPS
+
+
+		Location() {
+			hdg = 0.0f;
+			distance = 0.0f;
+			refHdg = 0.0f;
+			lat = 0.0;
+			lon = 0.0;
+			speed = 0.0;
+			age = 0;
+		};
+	};
+
+	Route();
+	virtual ~Route();
+
+	void setup();
 
 	int configWaypoints();
-	bool nextWaypoint(Geo2D& waypoint);
-	void open();
-	void close();
+	void loadWaypoints();
+	void addWaypoint(Waypoint &wp);
+	int nextWaypoint();
+	bool reachedNextWaypoint() {
+		float pr = _waypoints[_currentWaypoint].getProximRadius();
+		return (_currentLocation.distance < pr);
+	}
+	Location & updateLocation();
+	void waitForGpsFix();
+	void display();
 
-	static Waypoints * getInstance() { return &_instance; }
-	static Waypoints & getReference() { return _instance; }
+	Location & getCurrentLocation() { return _currentLocation; }
+	void clearWaypoints(void) { _waypointQty = 0; _currentWaypoint = -1; }
+
+	static Route * getInstance() { return &_instance; }
+	static Route & getReference() { return _instance; }
 
 private:
-	static Waypoints _instance;
+	static Route _instance;
+
+	Waypoint _waypoints[MAX_WAYPOINTS];
+	byte _waypointQty;
+
+	byte _currentWaypoint;
+	Location _currentLocation;
 
 	GPS* _gps;
 	Display* _display;
 	Logger* _logger;
 	JoyStick* _joyStick;
 	File _file;
+
+	void open();
+	void close();
 };
 
-#endif /* MEGABOTICS_WAYPOINTS_H_ */
+#endif /* MEGABOTICS_ROUTE_H_ */

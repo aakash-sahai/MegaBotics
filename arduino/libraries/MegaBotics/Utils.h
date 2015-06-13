@@ -40,6 +40,15 @@ public:
 		}
 	}
 
+	static float normalizeAngle(float angle) {
+		if (angle < -180) {
+			angle += 360;
+		} else if (angle > 180) {
+			angle -= 360;
+		}
+		return angle;
+	}
+
 private:
 	Utils() {;}
 	virtual ~Utils() {;}

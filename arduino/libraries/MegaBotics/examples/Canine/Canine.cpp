@@ -5,6 +5,7 @@
  *      Author: sraj
  */
 
+#if 0
 #include "Canine.h"
 
 Canine Canine::_instance;
@@ -322,3 +323,5 @@ void Canine::loadWaypoints() {
 	}
 	_wpHelper->close();
 }
+
+#endif
