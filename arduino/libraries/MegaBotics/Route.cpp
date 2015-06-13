@@ -36,6 +36,7 @@ Route::~Route() {
 
 void Route::setup(void) {
 	ConfigManager & cm = ConfigManager::getReference();
+
 	_gps->setup(cm.gpsConfig);
 	waitForGpsFix();
 	configWaypoints();
@@ -71,6 +72,10 @@ void Route::waitForGpsFix() {
 }
 
 Route::Location & Route::updateLocation() {
+	return updateLocation(_currentWaypoint);
+}
+
+Route::Location & Route::updateLocation(byte waypoint) {
 	_gps->collect();
 	_currentLocation.lat = _gps->getLatitude();
 	_currentLocation.lon = _gps->getLongitude();
@@ -78,7 +83,7 @@ Route::Location & Route::updateLocation() {
 	_currentLocation.speed = _gps->getSpeed();
 
 	if (_currentWaypoint > -1) {
-		Waypoint currentWp = _waypoints[_currentWaypoint];
+		Waypoint currentWp = _waypoints[waypoint];
 		_currentLocation.distance = TinyGPSPlus::distanceBetween(_currentLocation.lat, _currentLocation.lon, currentWp.getLatitude(), currentWp.getLongitude());
 		_currentLocation.hdg = TinyGPSPlus::courseTo(_currentLocation.lat, _currentLocation.lon, currentWp.getLatitude(), currentWp.getLongitude());
 		_currentLocation.hdg = Utils::normalizeAngle(_currentLocation.hdg);
@@ -92,6 +97,8 @@ Route::Location & Route::updateLocation() {
 void Route::display() {
 	_display->print("DIST from WP: ");_display->println(_currentLocation.distance);
 	_display->print("HDG from WP: ");_display->println(_currentLocation.hdg);
+	_display->print("No of WP: ");_display->println(_waypointQty);
+
 	_gps->display();
 }
 
