@@ -8,30 +8,47 @@
 
 class PID {
 public:
+	struct Config {
+		float Kp;
+		float Ki;
+		float Kd;
+		float clamp;		// Integrator clamp
+		float scale;
+		int idleTime;
+
+		// The defaults are for a Steering PID controller
+		Config() {
+			Kp = 4.0;
+			Ki = 0.01;
+			Kd = 0.0001;
+			clamp = 10.0;
+			scale = 10.0 / 36.0;
+			idleTime = IDLE_TIME;
+		}
+	};
+
 	PID();
-
     PID(float kp, float ki, float kd, float iClamp);
-
     virtual ~PID();
 
     float  getPid(float error, float scaler = 1.0);
-
+    float  getPid(float error);
     void   resetIntegrator();
 
     float  getKp() const {
-        return _Kp;
+        return _config.Kp;
     }
 
     float  getKi() const {
-        return _Ki;
+        return _config.Ki;
     }
 
     float   getKd() const {
-        return _Kd;
+        return _config.Kd;
     }
 
     float  getIntegratorClamp() const {
-        return _integratorClamp;
+        return _config.clamp;
     }
 
     float        getDerivative() const {
@@ -43,21 +60,18 @@ public:
     }
 
     void  setIntegratorClamp(float clamp) {
-        _integratorClamp = clamp;
+        _config.clamp = clamp;
     }
 
     void setParam(float kp, float ki, float kd, float clamp) {
-    	_Kp = kp;
-    	_Ki = ki;
-    	_Kd = kd;
-    	_integratorClamp = clamp;
+    	_config.Kp = kp;
+    	_config.Ki = ki;
+    	_config.Kd = kd;
+    	_config.clamp = clamp;
     }
 
 private:
-    float        _Kp;
-    float        _Ki;
-    float        _Kd;
-    float        _integratorClamp;
+    Config		_config;
 
     float        _integrator;
     float        _lastError;

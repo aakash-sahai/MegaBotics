@@ -48,10 +48,11 @@ Logger::Logger() {
 	_firstValue = false;
 	_config.bufsize = LOGGER_DEFAULT_BUFSIZE;
 	strcpy(_config.ip, "");
+#ifdef LOG_WIFI
 	_config.port = 0;
 	_wifiConnectionId = -1;
 	_wifi = WiFi::getInstance();
-	_autoFlush = false;
+#endif
 }
 
 
@@ -60,16 +61,24 @@ Logger::~Logger() {
 
 void Logger::setup(void) {
 	_buffer.setup(_config.bufsize);
+	if (_config.logSerial)
+		enable(Logger::LOG_SERIAL);
+	if (_config.logSD)
+		enable(Logger::LOG_SD);
+	if (_config.logUDP)
+		enable(Logger::LOG_UDP);
 }
 
 void Logger::setup(Config &aConfig) {
 	_config.bufsize = aConfig.bufsize;
+#ifdef LOG_WIFI
 	strncpy(_config.ip, aConfig.ip, MAX_IPADDR_LEN);
 	_config.ip[MAX_IPADDR_LEN] = 0;
 	_config.port = aConfig.port;
 	if (aConfig.port != 0) {
 		_wifi->connect(UDP, aConfig.ip, aConfig.port, _wifiConnectionId);
 	}
+#endif
 	_buffer.setup(_config.bufsize);
 	_config.fileName = aConfig.fileName;
 
@@ -149,7 +158,7 @@ bool Logger::log(Level level, const __FlashStringHelper *type, const char *messa
 	int typeLen = strlen_P((const char *)type);
 	int msgLen = strlen(message);
 	if (_buffer.capacity() < (38 + typeLen + msgLen)) { // 4 + 34 (for millis) + typeLen + msgLen, Make sure the whole log will fit
-		if (_autoFlush) {
+		if (_config.autoFlush) {
 			flush();
 		} else {
 			return false;
@@ -171,7 +180,7 @@ Logger & Logger::begin(Level level, const __FlashStringHelper *type) {
 	if (!doLog(level)) return *this;
 	int typeLen = strlen_P((const char *)type);
 	if (_buffer.capacity() < (37 + typeLen)) {	// 3 + 34 (for millis) + typeLen, Make sure the whole begin clause will fit
-		if (_autoFlush) {
+		if (_config.autoFlush) {
 			flush();
 		} else {
 			return *this;
@@ -188,7 +197,7 @@ Logger & Logger::nv(const __FlashStringHelper *name, char *value) {
 	int nameLen = strlen_P((const char *)name);
 	int valueLen = strlen(value);
 	if (_buffer.capacity() < (3 + nameLen + valueLen)) {	// Make sure the whole NameValue will fit
-		if (_autoFlush) {
+		if (_config.autoFlush) {
 			flush();
 		} else {
 			return *this;
@@ -258,9 +267,11 @@ void   Logger::flush(void) {
 			cout << ch;
 #endif
 		}
+#ifdef LOG_WIFI
 		if (_wifiConnectionId != -1 && (_destMask & (1 << LOG_UDP)) && level <= _level[LOG_UDP])	{
 			_wifi->write(_wifiConnectionId, ch);
 		}
+#endif
 		if (_file && (_destMask & (1 << LOG_SD)) && level <= _level[LOG_SD])	{
 			_file.write(ch);
 		}

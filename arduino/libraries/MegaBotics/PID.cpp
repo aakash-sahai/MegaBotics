@@ -2,10 +2,6 @@
 #include <Arduino.h>
 
 PID::PID() {
-    _Kp = 1.0;
-    _Ki = 1.0;
-    _Kd = 1.0;
-    _integratorClamp = 0;
 	_lastDerivative = NAN;
     _integrator = 0.0;
     _lastError = 0.0;
@@ -13,11 +9,11 @@ PID::PID() {
     _lastTime = 0;
 }
 
-PID::PID(float kp, float ki, float kd, float iClamp) {
-    _Kp = kp;
-    _Ki = ki;
-    _Kd = kd;
-    _integratorClamp = iClamp;
+PID::PID(float kp, float ki, float kd, float clamp) {
+    _config.Kp = kp;
+    _config.Ki = ki;
+    _config.Kd = kd;
+    _config.clamp = clamp;
 	_lastDerivative = NAN;
     _integrator = 0.0;
     _lastError = 0.0;
@@ -26,6 +22,11 @@ PID::PID(float kp, float ki, float kd, float iClamp) {
 }
 
 PID::~PID() {
+}
+
+float PID::getPid(float error)
+{
+	return getPid(error, _config.scale);
 }
 
 float PID::getPid(float error, float scaler)
@@ -43,9 +44,9 @@ float PID::getPid(float error, float scaler)
 
     delta_time = (float)dt / 1000.0f;
 
-    output = error * _Kp;
+    output = error * _config.Kp;
 
-    if ((fabs(_Kd) > 0) && (dt > 0)) {
+    if ((fabs(_config.Kd) > 0) && (dt > 0)) {
         float derivative;
 
 		if (isnan(_lastDerivative)) {
@@ -63,15 +64,15 @@ float PID::getPid(float error, float scaler)
         _lastError = error;
         _lastDerivative = derivative;
 
-        output += _Kd * derivative;
+        output += _config.Kd * derivative;
     }
 
     output *= scaler;
 
-    if ((fabs(_Ki) > 0) && (dt > 0)) {
-        _integrator += (error * _Ki) * scaler * delta_time;
+    if ((fabs(_config.Ki) > 0) && (dt > 0)) {
+        _integrator += (error * _config.Ki) * scaler * delta_time;
 
-        float scaledIntegratorClamp = _integratorClamp * scaler;
+        float scaledIntegratorClamp = _config.clamp * scaler;
         if (_integrator < -scaledIntegratorClamp) {
             _integrator = -scaledIntegratorClamp;
         } else if (_integrator > scaledIntegratorClamp) {

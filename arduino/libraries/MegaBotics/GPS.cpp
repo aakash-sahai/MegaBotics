@@ -11,11 +11,15 @@
 GPS GPS::_instance;
 
 GPS::GPS() {
-	_uport = UPort(GPS_DEFAULT_UPORT);
 }
 
-GPS::GPS(int port) {
-	_uport = UPort(port);
+GPS::GPS(byte port) {
+	_config.port = port;
+}
+
+GPS::GPS(byte port, long baud) {
+	_config.port = port;
+	_config.baud = baud;
 }
 
 GPS::~GPS() {
@@ -27,27 +31,15 @@ void GPS::setup() {
 
 void GPS::setup(Config &config) {
 	_config = config;
-
+	_uport = UPort(_config.port);
 	_uport.serial().begin(_config.baud);
 
-	// Disable all the sentences except the RMC
+	// uBlox commands to disable all the sentences except the RMC
 	_uport.serial().println("$PUBX,40,GLL,0,0,0,0*5C");
 	_uport.serial().println("$PUBX,40,GGA,0,0,0,0*5A");
 	_uport.serial().println("$PUBX,40,GSA,0,0,0,0*4E");
 	_uport.serial().println("$PUBX,40,GSV,0,0,0,0*59");
 	_uport.serial().println("$PUBX,40,VTG,0,0,0,0*5E");
-
-//	_uport.serial().println("$PSRF103,00,00,00,01*24\r\n");	// Turn off GGA msg
-//	_uport.serial().flush();
-//	_uport.serial().println("$PSRF103,01,00,00,01*25\r\n");	// Turn off GLL msg
-//	_uport.serial().flush();
-//	_uport.serial().println("$PSRF103,02,00,00,01*26\r\n");	// Turn off GSA msg
-//	_uport.serial().flush();
-//	_uport.serial().println("$PSRF103,03,00,00,01*27\r\n");	// Turn off GSV msg
-//	_uport.serial().flush();
-//	_uport.serial().println("$PSRF103,04,00,FF,01*20\r\n");	// Send RMC msg @ max rate
-//	_uport.serial().flush();
-//	_uport.serial().println("$PSRF103,05,00,00,01*21\r\n");	// Turn off VTG msg
 	_uport.serial().flush();
 }
 
@@ -55,8 +47,8 @@ void GPS::collect() {
 	serialEventRun();
 	while (_uport.serial().available()) {
 		int ch = _uport.serial().read();
-		Serial.write(ch);
-		_gps.encode(ch);
+		if (_gps.encode(ch))
+			break;
 		serialEventRun();
 	}
 }

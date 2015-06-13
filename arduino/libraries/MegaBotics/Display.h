@@ -55,8 +55,8 @@ public:
 		uint8_t rotation;
 
 		Config() {
-			textSize = 3;
-			rotation = 0;
+			textSize = 2;
+			rotation = 2;
 		}
 	};
 

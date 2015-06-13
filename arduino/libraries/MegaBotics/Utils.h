@@ -49,6 +49,12 @@ public:
 		return angle;
 	}
 
+	static void cross(UPort & port, UPort &terminalPort) {
+		port.cross(terminalPort);
+		terminalPort.interact();
+		port.uncross();
+	}
+
 private:
 	Utils() {;}
 	virtual ~Utils() {;}

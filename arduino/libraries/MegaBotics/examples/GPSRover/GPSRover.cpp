@@ -6,6 +6,7 @@
  */
 
 #include <examples/GPSRover/GPSRover.h>
+#include "ConfigManager.h"
 
 GPSRover GPSRover::_instance;
 
@@ -29,14 +30,14 @@ void GPSRover::setup() {
 }
 
 void GPSRover::setup(GPSRover::Config& config) {
+	ConfigManager & cm = ConfigManager::getReference();
+
 	_config = config;
 	_estore->setup();
 	_ahrs->setup();
 	_ahrs->resetIMU();
-	Display::Config dispConfig;
-	dispConfig.rotation = 2;
-	dispConfig.textSize= 2;
-	_display->setup(dispConfig);
+	_display->setup();
+	cm.setup();
 	_rover->setup();
 	_rover->setControlMode(Rover::MANUAL);
 	_steeringPid = new PID(_config.steerKp, _config.steerKi, _config.steerKd, _config.steerClamp);

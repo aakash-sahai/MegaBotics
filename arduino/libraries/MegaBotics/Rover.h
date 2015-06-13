@@ -60,6 +60,18 @@ public:
 		ASSIST = 2		// Manual control through RC remote but assisted through AHRS and WheelEncoder
 	};
 
+	struct ThrottleConfig {
+		int8_t		minimum;
+		int8_t		maximum;
+		int8_t		turn;
+
+		ThrottleConfig() {
+			minimum = 10;
+			maximum = 50;
+			turn = 20;
+		}
+	};
+
 	struct Config {
 		byte		throttleChannel;
 		byte		steerChannel;

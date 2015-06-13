@@ -43,21 +43,24 @@
 #include <MegaBotics.h>
 #include <TinyGPS++.h>
 
-#define GPS_DEFAULT_UPORT		3
-#define GPS_DEFAULT_BAUD		4800L
+#define GPS_DEFAULT_UPORT		4
+#define GPS_DEFAULT_BAUD		9600L
 
 class GPS {
 public:
 	struct Config {
 		long baud;
+		byte port;
 
 		Config() {
 			baud = GPS_DEFAULT_BAUD;
+			port = GPS_DEFAULT_UPORT;
 		}
 	};
 
 	GPS();
-	GPS(int port);
+	GPS(byte port);
+	GPS(byte port, long baud);
 	virtual ~GPS();
 
 	void setup(void);

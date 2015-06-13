@@ -96,11 +96,19 @@ public:
 		char ip[MAX_IPADDR_LEN+1];	// IP Address to send the log to
 		unsigned int port;			// UDP port to send the log to
 		const char * fileName;		// Name of the file to write the logs on the SD card
+		bool logSerial;
+		bool logSD;
+		bool logUDP;
+		bool autoFlush;
 
 		Config() {
 			bufsize = LOGGER_DEFAULT_BUFSIZE;
 			port = -1;
-			fileName = NULL;
+			fileName = "LOG.TXT";
+			logSerial = false;
+			logSD = false;
+			logUDP = false;
+			autoFlush = false;
 		}
 	};
 
@@ -115,7 +123,7 @@ public:
 
 	void enable(Destination dest) { _destMask |= ( 1 << dest); }		// Enable logging to a destination
 	void disable(Destination dest) { _destMask &= ~( 1 << dest); }		// Disable logging to a destination
-	void autoFlush(bool val) { _autoFlush = val; }
+	void autoFlush(bool val) { _config.autoFlush = val; }
 	void setLevel(Destination dest, Level level)  {
 		_level[dest] = level;
 		_logLevel = LEVEL_NONE;
@@ -152,10 +160,11 @@ public:
 
 private:
 	static Logger _instance;
+#ifdef LOG_WIFI
 	WiFi *_wifi;
-	File _file;
 	byte _wifiConnectionId;
-	bool _autoFlush;
+#endif
+	File _file;
 	char _destMask;		// Bit-field of destinations to send the log to
 	Level _level[LOGGER_MAX_DESTINATIONS];
 	Level _logLevel;

@@ -14,7 +14,7 @@ public:
 	GPSRover();
 	virtual ~GPSRover();
 
-	struct Config{
+	struct Config {
 		float steerKp;
 		float steerKi;
 		float steerKd;

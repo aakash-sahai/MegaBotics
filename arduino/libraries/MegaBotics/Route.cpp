@@ -9,6 +9,7 @@
 #include "SD.h"
 #include "Utils.h"
 #include "JoyStick.h"
+#include "ConfigManager.h"
 #include <Arduino.h>
 
 #define GPS_PRECISION_DIGITS 16
@@ -34,7 +35,8 @@ Route::~Route() {
 }
 
 void Route::setup(void) {
-	_gps->setup();
+	ConfigManager & cm = ConfigManager::getReference();
+	_gps->setup(cm.gpsConfig);
 	waitForGpsFix();
 	configWaypoints();
 	loadWaypoints();
