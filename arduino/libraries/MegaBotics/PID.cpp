@@ -2,6 +2,10 @@
 #include <Arduino.h>
 
 PID::PID() {
+	init();
+}
+
+void PID::init(void) {
 	_lastDerivative = NAN;
     _integrator = 0.0;
     _lastError = 0.0;
@@ -14,11 +18,12 @@ PID::PID(float kp, float ki, float kd, float clamp) {
     _config.Ki = ki;
     _config.Kd = kd;
     _config.clamp = clamp;
-	_lastDerivative = NAN;
-    _integrator = 0.0;
-    _lastError = 0.0;
-    _lastDerivative = 0.0;
-    _lastTime = 0;
+    init();
+}
+
+PID::PID(Config & config) {
+	_config = config;
+	init();
 }
 
 PID::~PID() {

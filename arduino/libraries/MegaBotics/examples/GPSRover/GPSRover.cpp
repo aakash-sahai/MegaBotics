@@ -40,7 +40,7 @@ void GPSRover::setup(GPSRover::Config& config) {
 	cm.setup();
 	_rover->setup();
 	_rover->setControlMode(Rover::MANUAL);
-	_steeringPid = new PID(_config.steerKp, _config.steerKi, _config.steerKd, _config.steerClamp);
+	_steeringPid = new PID(cm.steeringPidConfig);
 	_route->setup();
 }
 

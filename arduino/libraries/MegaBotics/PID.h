@@ -29,8 +29,10 @@ public:
 
 	PID();
     PID(float kp, float ki, float kd, float iClamp);
+    PID(Config &config);
     virtual ~PID();
 
+    void init(void);
     float  getPid(float error, float scaler = 1.0);
     float  getPid(float error);
     void   resetIntegrator();
@@ -73,10 +75,10 @@ public:
 private:
     Config		_config;
 
-    float        _integrator;
-    float        _lastError;
-    float        _lastDerivative;
-    uint32_t     _lastTime;
+    float		_integrator;
+    float		_lastError;
+    float		_lastDerivative;
+    uint32_t	_lastTime;
 
     static const uint8_t        _fCut = 20;
 };
