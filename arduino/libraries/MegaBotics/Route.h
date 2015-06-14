@@ -104,6 +104,7 @@ public:
 	void display();
 
 	Location & getCurrentLocation() { return _currentLocation; }
+	Waypoint & getCurrentWaypoint() { return _waypoints[_currentWaypoint];}
 	void clearWaypoints(void) { _waypointQty = 0; _currentWaypoint = -1; }
 
 	static Route * getInstance() { return &_instance; }
@@ -126,6 +127,7 @@ private:
 
 	void open();
 	void close();
+	void logWaypoints();
 };
 
 #endif /* MEGABOTICS_ROUTE_H_ */

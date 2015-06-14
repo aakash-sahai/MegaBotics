@@ -41,6 +41,18 @@ void Route::setup(void) {
 	waitForGpsFix();
 	configWaypoints();
 	loadWaypoints();
+	logWaypoints();
+}
+
+void Route::logWaypoints() {
+	for (int i = 0; i < _waypointQty; i++) {
+		_logger->begin(Logger::LEVEL_DEBUG, F("ROUTE-SETUP")) //
+				.nv(F(" lat"), _waypoints[i].getLatitude()) //
+				.nv(F(" lon"), _waypoints[i].getLongitude()) //
+				.nv(F(" proxim radius"), _waypoints[i].getProximRadius()) //
+				.nv(F(" max throttle"), _waypoints[i].getMaxThrottle()) //
+				.endln().flush();
+	}
 }
 
 void Route::addWaypoint(Waypoint &wp) {
