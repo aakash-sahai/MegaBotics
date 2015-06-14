@@ -8,6 +8,7 @@
 #ifndef FUI_H_
 #define FUI_H_
 #include <MegaBotics.h>
+#include "ConfigManager.h"
 
 class GPSRover {
 public:
@@ -34,8 +35,6 @@ public:
 			steerClamp = 10;		// Clamp Steering integral correction to 10 degrees
 			steerScale = 10.0/36.0;
 
-			curiseDistThres = 15.0f;
-			wpProximRadius = 5.0f;
 			navLoopDelay = 0;
 
 			enableLogger = true;
@@ -62,9 +61,15 @@ private:
 	EepromStore* _estore;
 	Route* _route;
 	PID* _steeringPid;
+	ConfigManager *_configMgr;
 
 	float _steer;
 	float _throttle;
+	int _throttleMin;
+	int _throttleMax;
+	int _throttleTurn;
+	int _cruiseDistance;
+	int _proximRadius;
 
 	void doNavigate();
 	float calcSteering(Route::Location & loc);

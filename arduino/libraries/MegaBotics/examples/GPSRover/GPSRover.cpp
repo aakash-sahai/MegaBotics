@@ -18,6 +18,7 @@ GPSRover::GPSRover() {
 	_estore = EepromStore::getInstance();
 	_joystick = JoyStick::getInstance();
 	_route = Route::getInstance();
+	_configMgr = ConfigManager::getInstance();
 
 	_steeringPid = NULL;
 
@@ -30,18 +31,21 @@ void GPSRover::setup() {
 }
 
 void GPSRover::setup(GPSRover::Config& config) {
-	ConfigManager & cm = ConfigManager::getReference();
-
 	_config = config;
 	_estore->setup();
 	_ahrs->setup();
 	_ahrs->resetIMU();
 	_display->setup();
-	cm.setup();
+	_configMgr->setup();
 	_rover->setup();
 	_rover->setControlMode(Rover::MANUAL);
-	_steeringPid = new PID(cm.steeringPidConfig);
+	_steeringPid = new PID(_configMgr->steeringPidConfig);
 	_route->setup();
+	_throttleMin = _configMgr->throttleConfig.minimum;
+	_throttleMax = _configMgr->throttleConfig.maximum;
+	_throttleTurn = _configMgr->throttleConfig.turn;
+	_cruiseDistance = _configMgr->throttleConfig.cruiseDistance;
+	_proximRadius = _configMgr->throttleConfig.proximRadius;
 }
 
 void GPSRover::autoRun() {
@@ -116,15 +120,16 @@ float GPSRover::calcSteering(Route::Location & loc) {
 }
 
 float GPSRover::calcThrottle(Route::Location & loc, float steer) {
-	int8_t maxThrottle = 10;
-	float throttle = loc.distance * maxThrottle / _config.curiseDistThres;
+	int throttle = (loc.distance * _throttleMax ) / _cruiseDistance;
 
-	if (throttle > maxThrottle) {
-		throttle = maxThrottle;
+	if (fabs(steer) > 45.0) {
+		throttle = _throttleTurn;
+	} else if (throttle > _throttleMax) {
+		throttle = _throttleMax;
 	}
 
-	if (throttle < 3) {
-		throttle = 3;
+	if (throttle < _throttleMin) {
+		throttle = _throttleMin;
 	}
 
 	if (_config.enableLogger) {

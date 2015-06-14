@@ -43,7 +43,7 @@
 
 #include "MegaBotics.h"
 
-#define MAX_WAYPOINTS	20
+#define MAX_WAYPOINTS	30
 
 class GPS;
 class Logger;

@@ -64,11 +64,15 @@ public:
 		int8_t		minimum;
 		int8_t		maximum;
 		int8_t		turn;
+		int			cruiseDistance;
+		int			proximRadius;
 
 		ThrottleConfig() {
-			minimum = 10;
-			maximum = 50;
-			turn = 20;
+			minimum = 3;
+			maximum = 20;
+			turn = 5;
+			cruiseDistance = 10;
+			proximRadius = 3;
 		}
 	};
 

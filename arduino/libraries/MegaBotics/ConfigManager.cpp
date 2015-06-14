@@ -40,6 +40,19 @@ void ConfigManager::setup(void) {
 	struct ConfigParser::Param gpsP2("baud", 'I', offsetof(struct GPS::Config, baud));
 	gpsSection.addParam(&gpsP2);
 
+	struct ConfigParser::Section throttleSection("THROTTLE", (char *)&throttleConfig);
+	configFile.addSection(&throttleSection);
+	struct ConfigParser::Param throttleP1("minimum", 'I', offsetof(struct Rover::ThrottleConfig, minimum));
+	throttleSection.addParam(&throttleP1);
+	struct ConfigParser::Param throttleP2("maximum", 'I', offsetof(struct Rover::ThrottleConfig, maximum));
+	throttleSection.addParam(&throttleP2);
+	struct ConfigParser::Param throttleP3("turn", 'I', offsetof(struct Rover::ThrottleConfig, turn));
+	throttleSection.addParam(&throttleP3);
+	struct ConfigParser::Param throttleP4("cruiseDistance", 'I', offsetof(struct Rover::ThrottleConfig, cruiseDistance));
+	throttleSection.addParam(&throttleP4);
+	struct ConfigParser::Param throttleP5("proximRadius", 'I', offsetof(struct Rover::ThrottleConfig, proximRadius));
+	throttleSection.addParam(&throttleP5);
+
 	load((char *)"CONFIG.TXT", configFile);
 }
 
