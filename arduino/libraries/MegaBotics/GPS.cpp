@@ -47,8 +47,7 @@ void GPS::collect() {
 	serialEventRun();
 	while (_uport.serial().available()) {
 		int ch = _uport.serial().read();
-		if (_gps.encode(ch))
-			break;
+		_gps.encode(ch);
 		serialEventRun();
 	}
 }
