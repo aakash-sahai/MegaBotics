@@ -19,8 +19,12 @@ GPSRover::GPSRover() {
 	_joystick = JoyStick::getInstance();
 	_route = Route::getInstance();
 	_configMgr = ConfigManager::getInstance();
-
 	_steeringPid = NULL;
+	_throttleMin = 5;
+	_throttleMax = 100;
+	_throttleTurn = 10;
+	_cruiseDistance = 10;
+	_proximRadius = 3;
 
 	_steer = 0.0f;
 	_throttle = 0.0f;
@@ -150,6 +154,8 @@ float GPSRover::calcThrottle(Route::Location & loc, float steer) {
 void GPSRover::waitForClick() {
 	_joystick->clear();
 	_display->clearScr();
+	_ahrs->resetIMU();
+	_ahrs->resetYPR();
 	while (!_joystick->waitForPush(10)) {
 		_route->updateLocation(0);
 		_display->reset();

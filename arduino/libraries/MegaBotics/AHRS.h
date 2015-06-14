@@ -104,6 +104,7 @@ public:
 	AMG & getCalibratedAMG(void);
 	UPort & getUPort(void) { return _uport; }
 
+	void sync(void);
 	void poll(void);
 	void resetYPR(void);
 	void resetIMU(void);

@@ -103,6 +103,11 @@ void AHRS::resetIMU(void) {
 	HardwareSerial & serial = _uport.serial();
 	serial.print("#r");
 	delay(1000);
+	sync();
+}
+
+void AHRS::sync(void) {
+	HardwareSerial & serial = _uport.serial();
 	serial.print("#s00");
 	serial.find("#SYNCH00\r\n");
 }
