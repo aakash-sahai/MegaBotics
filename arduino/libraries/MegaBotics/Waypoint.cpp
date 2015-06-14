@@ -13,8 +13,8 @@ Waypoint::Waypoint() {
 	_longitude = 0.0;
 	_distance = 0.0;
 	_hdg = 0.0;
-	_proximRadius = 0.0;
-	_maxThrottle = 0.0;
+	_proximRadius = defaultProximRadius;
+	_maxThrottle = defaultMaxThrottle;
 }
 
 Waypoint::Waypoint(Type type, double lat_or_dist, double lon_or_hdg) {
