@@ -36,6 +36,7 @@ Route::~Route() {
 
 void Route::setup(void) {
 	ConfigManager & cm = ConfigManager::getReference();
+
 	_gps->setup(cm.gpsConfig);
 	waitForGpsFix();
 	configWaypoints();
@@ -71,18 +72,18 @@ void Route::waitForGpsFix() {
 }
 
 Route::Location & Route::updateLocation() {
-	updateLocation(_currentWaypoint);
+	return updateLocation(_currentWaypoint);
 }
 
-Route::Location & Route::updateLocation(byte num) {
+Route::Location & Route::updateLocation(byte waypoint) {
 	_gps->collect();
 	_currentLocation.lat = _gps->getLatitude();
 	_currentLocation.lon = _gps->getLongitude();
 	_currentLocation.age = (unsigned int)_gps->getRawGps().location.age();
 	_currentLocation.speed = _gps->getSpeed();
 
-	if (num > -1) {
-		Waypoint currentWp = _waypoints[num];
+	if (_currentWaypoint > -1) {
+		Waypoint currentWp = _waypoints[waypoint];
 		_currentLocation.distance = TinyGPSPlus::distanceBetween(_currentLocation.lat, _currentLocation.lon, currentWp.getLatitude(), currentWp.getLongitude());
 		_currentLocation.hdg = TinyGPSPlus::courseTo(_currentLocation.lat, _currentLocation.lon, currentWp.getLatitude(), currentWp.getLongitude());
 		_currentLocation.hdg = Utils::normalizeAngle(_currentLocation.hdg);
@@ -96,6 +97,8 @@ Route::Location & Route::updateLocation(byte num) {
 void Route::display() {
 	_display->print("DIST from WP: ");_display->println(_currentLocation.distance);
 	_display->print("HDG from WP: ");_display->println(_currentLocation.hdg);
+	_display->print("No of WP: ");_display->println(_waypointQty);
+
 	_gps->display();
 }
 
@@ -135,12 +138,11 @@ int Route::configWaypoints() {
 		if (input == JoyStick::LEFT) {
 			break;
 		} else if (input == JoyStick::CENTER) {
-			updateLocation();
-			display();
 			file.print(_gps->getLatitude(), GPS_PRECISION_DIGITS);
 			file.print(" ");
 			file.println(_gps->getLongitude(), GPS_PRECISION_DIGITS);
 			file.flush();
+			updateLocation();
 			Waypoint wp(Waypoint::LAT_LON, _gps->getLatitude(), _gps->getLongitude());
 			addWaypoint(wp);
 			_currentWaypoint++;
@@ -157,6 +159,7 @@ int Route::configWaypoints() {
 	_display->print("Added ");_display->print(_waypointQty);_display->println(" waypoints");
 	_display->print("Reset to restart");
 	Utils::waitForEver();
+	return _waypointQty;
 }
 
 void Route::open() {
