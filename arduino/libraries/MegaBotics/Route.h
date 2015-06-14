@@ -99,6 +99,7 @@ public:
 		return (_currentLocation.distance < pr);
 	}
 	Location & updateLocation();
+	Location & updateLocation(byte num);
 	void waitForGpsFix();
 	void display();
 

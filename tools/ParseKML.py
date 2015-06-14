@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 #
 # Parses a KML file from Google Earth to generate a text file of Waypoints in the format
 # that is read by MeagBotics::Route class.

@@ -54,8 +54,8 @@ int Route::nextWaypoint() {
 		_currentLocation.hdg = 0;
 		return 0;					// Return value of 0 implies no more waypoints
 	} else {
+		updateLocation();
 		if (_currentWaypoint == 0) {
-			updateLocation();
 			_currentLocation.refHdg = _currentLocation.hdg;
 		}
 		return _currentWaypoint + 1;	// Returns a 1-based number
@@ -71,14 +71,18 @@ void Route::waitForGpsFix() {
 }
 
 Route::Location & Route::updateLocation() {
+	updateLocation(_currentWaypoint);
+}
+
+Route::Location & Route::updateLocation(byte num) {
 	_gps->collect();
 	_currentLocation.lat = _gps->getLatitude();
 	_currentLocation.lon = _gps->getLongitude();
 	_currentLocation.age = (unsigned int)_gps->getRawGps().location.age();
 	_currentLocation.speed = _gps->getSpeed();
 
-	if (_currentWaypoint > -1) {
-		Waypoint currentWp = _waypoints[_currentWaypoint];
+	if (num > -1) {
+		Waypoint currentWp = _waypoints[num];
 		_currentLocation.distance = TinyGPSPlus::distanceBetween(_currentLocation.lat, _currentLocation.lon, currentWp.getLatitude(), currentWp.getLongitude());
 		_currentLocation.hdg = TinyGPSPlus::courseTo(_currentLocation.lat, _currentLocation.lon, currentWp.getLatitude(), currentWp.getLongitude());
 		_currentLocation.hdg = Utils::normalizeAngle(_currentLocation.hdg);
@@ -188,13 +192,13 @@ void Route::loadWaypoints() {
 				curr = fcurr;
 				_waypoints[_waypointQty].setLongitude(strtod(curr, &fcurr));
 				curr = fcurr;
-				if (*curr != 0 && *curr != '\n') {
-					_waypoints[_waypointQty].setMaxThrottle((int8_t)strtol(curr, &fcurr, 10));
-					curr = fcurr;
-					if (*curr != 0 && *curr != '\n') {
-						_waypoints[_waypointQty].setProximRadius(strtod(curr, &fcurr));
-					}
-				}
+//				if (*curr != 0 && *curr != '\n') {
+//					_waypoints[_waypointQty].setMaxThrottle((int8_t)strtol(curr, &fcurr, 10));
+//					curr = fcurr;
+//					if (*curr != 0 && *curr != '\n') {
+//						_waypoints[_waypointQty].setProximRadius(strtod(curr, &fcurr));
+//					}
+//				}
 				_waypointQty++;
 			} else {
 				break;

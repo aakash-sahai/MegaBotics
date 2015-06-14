@@ -146,13 +146,13 @@ void GPSRover::waitForClick() {
 	_joystick->clear();
 	_display->clearScr();
 	while (!_joystick->waitForPush(10)) {
-		_route->updateLocation();
+		_route->updateLocation(0);
 		_display->reset();
 		_display->print("YAW: ");_display->println(_ahrs->getOrientation());
-		_route->updateLocation();
+		_route->updateLocation(0);
 		_route->display();
 		_display->println(F("Press the button to start"));
-		_route->updateLocation();
+		_route->updateLocation(0);
 	}
 	_display->clearScr();
 }
