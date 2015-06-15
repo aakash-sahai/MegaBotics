@@ -69,7 +69,12 @@ int Route::nextWaypoint() {
 	} else {
 		updateLocation();
 		if (_currentWaypoint == 0) {
-			_currentLocation.refHdg = _currentLocation.hdg;
+			ConfigManager & cm = ConfigManager::getReference();
+			if (cm.routeConfig.refHeading == DEFAULT_INVALID_REF_HED) {
+				_currentLocation.refHdg = _currentLocation.hdg;
+			} else {
+				_currentLocation.refHdg = cm.routeConfig.refHeading;
+			}
 		}
 		return _currentWaypoint + 1;	// Returns a 1-based number
 	}

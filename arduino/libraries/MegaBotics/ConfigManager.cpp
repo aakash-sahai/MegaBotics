@@ -53,6 +53,15 @@ void ConfigManager::setup(void) {
 	struct ConfigParser::Param throttleP5("proximRadius", 'I', offsetof(struct Rover::ThrottleConfig, proximRadius));
 	throttleSection.addParam(&throttleP5);
 
+	struct ConfigParser::Section routeSection("ROUTE", (char *)&routeConfig);
+	configFile.addSection(&routeSection);
+	struct ConfigParser::Param routeP1("gpsStaleThres", 'I', offsetof(struct Route::Config, gpsStaleThres));
+	routeSection.addParam(&routeP1);
+	struct ConfigParser::Param routeP2("distTooFarThres", 'I', offsetof(struct Route::Config, distTooFarThres));
+	routeSection.addParam(&routeP2);
+	struct ConfigParser::Param routeP3("refHeading", 'F', offsetof(struct Route::Config, refHeading));
+	routeSection.addParam(&routeP3);
+
 	load((char *)"CONFIG.TXT", configFile);
 }
 

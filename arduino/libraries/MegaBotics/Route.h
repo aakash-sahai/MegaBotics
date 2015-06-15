@@ -51,16 +51,19 @@ class JoyStick;
 class Dispaly;
 
 #define DEFAULT_WAYPOINT_FILE	"WP.TXT"
+#define DEFAULT_INVALID_REF_HED	-999
 
 class Route {
 public:
 	struct Config {
 		float gpsStaleThres;	// Time in msec when GPS reading is considered too stale
 		float distTooFarThres;	// Distance in meter from next WP that is considered too far
+		float refHeading;		// reference heading
 
 		Config() {
 			gpsStaleThres = 2000;
 			distTooFarThres = 100;
+			refHeading = DEFAULT_INVALID_REF_HED;	// invalid value to indicate if the ref. heading is set in the config
 		}
 	};
 
