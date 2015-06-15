@@ -51,9 +51,20 @@ class JoyStick;
 class Dispaly;
 
 #define DEFAULT_WAYPOINT_FILE	"WP.TXT"
+#define DEFAULT_INVALID_REF_HED	-999
 
 class Route {
 public:
+	struct Config {
+		int		proximRadius;			// Radius (in meter) around WP that defines the proximity
+		float	refHeading;				// Reference heading
+
+		Config() {
+	    	proximRadius = 3;
+			refHeading = DEFAULT_INVALID_REF_HED;	// invalid value to indicate if the ref. heading is set in the config
+		}
+	};
+
 	struct Location {
 		double lat;		// Current Latitude
 		double lon;		// Current Longitude
@@ -79,6 +90,7 @@ public:
 	virtual ~Route();
 
 	void setup();
+	void setup(Config & config);
 
 	int configWaypoints();
 	void loadWaypoints();
@@ -102,6 +114,7 @@ public:
 
 private:
 	static Route _instance;
+	Config _config;
 
 	Waypoint _waypoints[MAX_WAYPOINTS];
 	byte _waypointQty;
@@ -117,7 +130,7 @@ private:
 
 	void open();
 	void close();
-	void logWaypoints();
+	void logConfig();
 };
 
 #endif /* MEGABOTICS_ROUTE_H_ */

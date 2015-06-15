@@ -76,28 +76,17 @@ void AutonomousRover::setup(AutonomousRover::Config& config) {
 	_throttleConfig = cfgMgr->throttleConfig;
 	if (_config.logging) {
 		setupLogging();
+		logConfig();
 	}
 	_rover->setup();
 	_ahrs->setup();
 	_rover->setControlMode(Rover::MANUAL);
 	_steeringPid = new PID(cfgMgr->steeringPidConfig);
-	_route->setup();
+	_route->setup(cfgMgr->routeConfig);
 }
 
 AutonomousRover::~AutonomousRover() {
 	// Nothing to do
-}
-
-void AutonomousRover::setupLogging() {
-	Logger::Config config;
-	config.fileName = "LOG.TXT";
-	_logger->setup(config);
-
-	_logger->autoFlush(false);
-	_logger->enable(Logger::LOG_SERIAL);
-	_logger->enable(Logger::LOG_SD);
-	_logger->setLevel(Logger::LOG_SERIAL, Logger::LEVEL_DEBUG);
-	_logger->setLevel(Logger::LOG_SD, Logger::LEVEL_DEBUG);
 }
 
 void AutonomousRover::waitToStart() {
@@ -114,4 +103,44 @@ void AutonomousRover::waitToStart() {
 		_display->println(F("Press the button to start"));
 	}
 	_display->clearScr();
+}
+
+void AutonomousRover::logConfig()
+{
+	ConfigManager * cfgMgr = ConfigManager::getInstance();
+	Logger & logger = Logger::getReference();
+
+	logger.begin(Logger::LEVEL_DEBUG, F("STEERING-PID-CONFIG")) //
+			.nv(F(" Kp"), cfgMgr->steeringPidConfig.Kp) //
+			.nv(F(" Ki"), cfgMgr->steeringPidConfig.Ki) //
+			.nv(F(" Kd"), cfgMgr->steeringPidConfig.Kd) //
+			.nv(F(" Clamp"), cfgMgr->steeringPidConfig.clamp) //
+			.nv(F(" Scale"), cfgMgr->steeringPidConfig.scale) //
+			.nv(F(" IdleTime"), cfgMgr->steeringPidConfig.idleTime) //
+			.endln().flush();
+
+	logger.begin(Logger::LEVEL_DEBUG, F("THROTTLE-CONFIG")) //
+			.nv(F(" Maximum"), _throttleConfig.maximum) //
+			.nv(F(" Minimum"), _throttleConfig.minimum) //
+			.nv(F(" Turn"), _throttleConfig.turn) //
+			.endln().flush();
+
+	logger.begin(Logger::LEVEL_DEBUG, F("AUTO_ROVER-CONFIG")) //
+			.nv(F(" cruiseDistance"), _config.cruiseDistance) //
+			.nv(F(" navLoopDelay"), _config.navLoopDelay) //
+			.nv(F(" gpsStaleThres"), _config.gpsStaleThres) //
+			.nv(F(" waypointTooFarThres"), _config.waypointTooFarThres) //
+			.endln().flush();
+}
+
+void AutonomousRover::setupLogging() {
+	Logger::Config config;
+	config.fileName = "LOG.TXT";
+	_logger->setup(config);
+
+	_logger->autoFlush(false);
+	_logger->enable(Logger::LOG_SERIAL);
+	_logger->enable(Logger::LOG_SD);
+	_logger->setLevel(Logger::LOG_SERIAL, Logger::LEVEL_DEBUG);
+	_logger->setLevel(Logger::LOG_SD, Logger::LEVEL_DEBUG);
 }

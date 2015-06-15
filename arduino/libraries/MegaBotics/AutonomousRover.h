@@ -54,16 +54,14 @@ public:
 	struct Config {
 		int		logging;				// Enable/disable logging
 		int		cruiseDistance;			// Distance (in meter) from next WP above which the Rover cruises at max speed
-		int		proximRadius;			// Radius (in meter) around WP that defines the proximity
 		int		navLoopDelay;			// Artificial delay (in msec) to introduce in navigation loop
 		int		gpsStaleThres;			// Time (in msec) when GPS reading is considered too stale
 		int		waypointTooFarThres;	// Distance (in meter) from next WP that is considered too far
-		float	steerScale;
+		float	steerScale;				// Scale factor for Steering PID
 
 	    Config() {
 	    	logging = 1;
 	    	cruiseDistance = 10;
-	    	proximRadius = 3;
 			navLoopDelay = 0;
 			gpsStaleThres = 2000;
 			waypointTooFarThres = 100;
@@ -95,6 +93,7 @@ protected:
 	PID* _steeringPid;
 
 	void setupLogging();
+	void logConfig();
 };
 
 #endif /* MEGABOTICS_AUTONOMOUSROVER_H_ */

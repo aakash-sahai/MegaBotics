@@ -12,14 +12,6 @@ void PID::init(void) {
     _lastError = 0.0;
     _lastDerivative = 0.0;
     _lastTime = 0;
-
-    Logger::getInstance()->begin(Logger::LEVEL_DEBUG, F("PID-SETUP")) //
-			.nv(F(" Kp"), _config.Kp) //
-			.nv(F(" Ki"), _config.Ki) //
-			.nv(F(" Kd"), _config.Kd) //
-			.nv(F(" Clamp"), _config.clamp) //
-			.nv(F(" Scale"), _config.scale) //
-			.endln().flush();
 }
 
 PID::PID(float kp, float ki, float kd, float clamp) {

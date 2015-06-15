@@ -51,10 +51,12 @@ public:
 	struct Config {
 		long baud;
 		byte port;
+		byte interruptRead;
 
 		Config() {
 			baud = GPS_DEFAULT_BAUD;
 			port = GPS_DEFAULT_UPORT;
+			interruptRead = 0;
 		}
 	};
 

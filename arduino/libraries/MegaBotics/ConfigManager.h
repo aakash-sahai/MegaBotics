@@ -20,6 +20,7 @@ public:
 	GPS::Config gpsConfig;
 	PID::Config steeringPidConfig;
 	Rover::ThrottleConfig throttleConfig;
+	Route::Config routeConfig;
 	AutonomousRover::Config autoRoverConfig;
 
 	static ConfigManager * getInstance() { return &_instance; }
@@ -29,6 +30,7 @@ private:
 	static ConfigManager _instance;
 
 	void load(char *fileName, ConfigParser::Config & configFile);
+	void setupLogging();
 };
 
 #endif /* MEGABOTICS_CONFIGMANAGER_H_ */

@@ -41,12 +41,22 @@ void Route::setup(void) {
 	waitForGpsFix();
 	// configWaypoints();	// Uncomment to manually configure waypoints
 	loadWaypoints();
-	logWaypoints();
+	logConfig();
 }
 
-void Route::logWaypoints() {
+void Route::setup(Route::Config & config) {
+	_config = config;
+	setup();
+}
+
+void Route::logConfig() {
+	_logger->begin(Logger::LEVEL_DEBUG, F("ROUTE-CONFIG")) //
+			.nv(F(" ProximRadius"), _config.proximRadius) //
+			.nv(F(" RefHeading"), _config.refHeading) //
+			.endln().flush();
+
 	for (int i = 0; i < _waypointQty; i++) {
-		_logger->begin(Logger::LEVEL_DEBUG, F("ROUTE-SETUP")) //
+		_logger->begin(Logger::LEVEL_DEBUG, F("WAYPOINT")) //
 				.nv(F(" lat"), _waypoints[i].getLatitude()) //
 				.nv(F(" lon"), _waypoints[i].getLongitude()) //
 				.nv(F(" proxim radius"), _waypoints[i].getProximRadius()) //
@@ -69,7 +79,11 @@ int Route::nextWaypoint() {
 	} else {
 		updateLocation();
 		if (_currentWaypoint == 0) {
-			_currentLocation.refHdg = _currentLocation.hdg;
+			if (_config.refHeading == DEFAULT_INVALID_REF_HED) {
+				_currentLocation.refHdg = _currentLocation.hdg;
+			} else {
+				_currentLocation.refHdg = _config.refHeading;
+			}
 		}
 		return _currentWaypoint + 1;	// Returns a 1-based number
 	}
@@ -88,7 +102,12 @@ Route::Location & Route::updateLocation() {
 }
 
 Route::Location & Route::updateLocation(byte waypoint) {
-	_gps->collect();
+	ConfigManager & cm = ConfigManager::getReference();
+
+	if (cm.gpsConfig.interruptRead == 0) {
+		_gps->collect();
+	}
+
 	_currentLocation.lat = _gps->getLatitude();
 	_currentLocation.lon = _gps->getLongitude();
 	_currentLocation.age = (unsigned int)_gps->getRawGps().location.age();
@@ -108,8 +127,11 @@ Route::Location & Route::updateLocation(byte waypoint) {
 
 void Route::display() {
 	_display->print("DIST from WP: ");_display->println(_currentLocation.distance);
+	updateLocation(0);
 	_display->print("HDG from WP: ");_display->println(_currentLocation.hdg);
+	updateLocation(0);
 	_display->print("No of WP: ");_display->println(_waypointQty);
+	updateLocation(0);
 
 	_gps->display();
 }
@@ -194,30 +216,42 @@ void Route::close() {
 }
 
 void Route::loadWaypoints() {
+	ConfigManager & cm = ConfigManager::getReference();
+
 	open();
 	while (_file.position() < _file.size()) {
-			char *fcurr;
-			const char *curr;
+		char *fcurr;
+		const char *curr;
 
-			String line = _file.readStringUntil('\n');
-			curr = line.c_str();
+		String line = _file.readStringUntil('\n');
+		curr = line.c_str();
 
-			if (line.length() > 0) {
-				_waypoints[_waypointQty].setLatitude(strtod(curr, &fcurr));
-				curr = fcurr;
-				_waypoints[_waypointQty].setLongitude(strtod(curr, &fcurr));
-				curr = fcurr;
-//				if (*curr != 0 && *curr != '\n') {
-//					_waypoints[_waypointQty].setMaxThrottle((int8_t)strtol(curr, &fcurr, 10));
-//					curr = fcurr;
-//					if (*curr != 0 && *curr != '\n') {
-//						_waypoints[_waypointQty].setProximRadius(strtod(curr, &fcurr));
-//					}
-//				}
-				_waypointQty++;
+		if (line.length() > 0) {
+			_waypoints[_waypointQty].setLatitude(strtod(curr, &fcurr));
+			curr = fcurr;
+			_waypoints[_waypointQty].setLongitude(strtod(curr, &fcurr));
+			curr = fcurr;
+
+			double proximRadius = strtod(curr, &fcurr);
+			curr = fcurr;
+			if (proximRadius != 0) {
+				_waypoints[_waypointQty].setProximRadius(proximRadius);
 			} else {
-				break;
+				_waypoints[_waypointQty].setProximRadius(_config.proximRadius);
 			}
+
+			int8_t maxThrottle = (int8_t)strtol(curr, &fcurr, 10);
+			curr = fcurr;
+			if (maxThrottle != 0) {
+				_waypoints[_waypointQty].setMaxThrottle(maxThrottle);
+			} else {
+				_waypoints[_waypointQty].setMaxThrottle(cm.throttleConfig.maximum);
+			}
+
+			_waypointQty++;
+		} else {
+			break;
 		}
+	}
 	close();
 }
