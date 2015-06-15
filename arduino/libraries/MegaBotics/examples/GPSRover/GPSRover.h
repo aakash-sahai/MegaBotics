@@ -10,66 +10,22 @@
 #include <MegaBotics.h>
 #include "ConfigManager.h"
 
-class GPSRover {
+class GPSRover : public AutonomousRover {
 public:
 	GPSRover();
 	virtual ~GPSRover();
 
-	struct Config {
-		float steerKp;
-		float steerKi;
-		float steerKd;
-		float steerClamp;
-		float steerScale;
-
-		float curiseDistThres;
-		float wpProximRadius;
-		uint8_t navLoopDelay;
-
-		bool enableLogger;
-
-	    Config() {
-			steerKp = 4.0f;
-			steerKi = 0.0f;
-			steerKd = 0.0f;
-			steerClamp = 10;		// Clamp Steering integral correction to 10 degrees
-			steerScale = 10.0/36.0;
-
-			navLoopDelay = 0;
-
-			enableLogger = true;
-		}
-	};
-
-	void setup();
-	void setup(Config& config);
 	void autoRun();
-
-	void waitForClick();
 
 	static GPSRover * getInstance() { return &_instance; }
 	static GPSRover & getReference() { return _instance; }
 private:
 	static GPSRover _instance;
-	Config _config;
 
-	AHRS* _ahrs;
-	Display* _display;
-	Rover* _rover;
-	JoyStick* _joystick;
-	Logger* _logger;
-	EepromStore* _estore;
-	Route* _route;
-	PID* _steeringPid;
 	ConfigManager *_configMgr;
 
 	float _steer;
 	float _throttle;
-	int _throttleMin;
-	int _throttleMax;
-	int _throttleTurn;
-	int _cruiseDistance;
-	int _proximRadius;
 
 	void doNavigate();
 	float calcSteering(Route::Location & loc);

@@ -32,92 +32,69 @@
  */
 
 /*
- * Route.h
+ * AutonomousRover.h
  *
- *  Created on: May 29, 2015
- *      Author: Srinivas Raj
+ * This is the abstract base class for an Autonomous rover. Other classes can be derived from
+ * it that may  different navigation strategies. This class derives from the Rover class and
+ * assumes that the following advanced hardware functionality will be present on the Rover:
+ *
+ * 	GPS, AHRS (aka IMU), LCD Display, Joystick and SD Card
+ *
+ *  Created on: Jun 14, 2015
+ *      Author: Aakash Sahai
  */
 
-#ifndef MEGABOTICS_ROUTE_H_
-#define MEGABOTICS_ROUTE_H_
+#ifndef MEGABOTICS_AUTONOMOUSROVER_H_
+#define MEGABOTICS_AUTONOMOUSROVER_H_
 
 #include "MegaBotics.h"
 
-#define MAX_WAYPOINTS	30
-
-class GPS;
-class Logger;
-class JoyStick;
-class Dispaly;
-
-#define DEFAULT_WAYPOINT_FILE	"WP.TXT"
-
-class Route {
+class AutonomousRover {
 public:
-	struct Location {
-		double lat;		// Current Latitude
-		double lon;		// Current Longitude
-		float distance;	// Distance to next waypoint
-		float hdg;			// Heading to next waypoint
-		float refHdg;		// Reference Heading
-		unsigned int age;	// Age of GPS reading
-		float speed;		// Speed reported by GPS
+	struct Config {
+		int		logging;				// Enable/disable logging
+		int		cruiseDistance;			// Distance (in meter) from next WP above which the Rover cruises at max speed
+		int		proximRadius;			// Radius (in meter) around WP that defines the proximity
+		int		navLoopDelay;			// Artificial delay (in msec) to introduce in navigation loop
+		int		gpsStaleThres;			// Time (in msec) when GPS reading is considered too stale
+		int		waypointTooFarThres;	// Distance (in meter) from next WP that is considered too far
+		float	steerScale;
 
-
-		Location() {
-			hdg = 0.0f;
-			distance = 0.0f;
-			refHdg = 0.0f;
-			lat = 0.0;
-			lon = 0.0;
-			speed = 0.0;
-			age = 0;
-		};
+	    Config() {
+	    	logging = 1;
+	    	cruiseDistance = 10;
+	    	proximRadius = 3;
+			navLoopDelay = 0;
+			gpsStaleThres = 2000;
+			waypointTooFarThres = 100;
+			steerScale = 10.0/36.0;
+		}
 	};
 
-	Route();
-	virtual ~Route();
+	AutonomousRover();
+	virtual ~AutonomousRover();
 
-	void setup();
+	void setup(void);
+	void setup(Config& config);
+	void calibrate(void);
+	void waitToStart(void);
 
-	int configWaypoints();
-	void loadWaypoints();
-	void addWaypoint(Waypoint &wp);
-	int nextWaypoint();
-	bool reachedNextWaypoint() {
-		float pr = _waypoints[_currentWaypoint].getProximRadius();
-		return (_currentLocation.distance < pr);
-	}
-	Location & updateLocation();
-	Location & updateLocation(byte waypoint);
-	void waitForGpsFix();
-	void display();
+	virtual void autoRun(void) = 0;
 
-	Location & getCurrentLocation() { return _currentLocation; }
-	Waypoint & getCurrentWaypoint() { return _waypoints[_currentWaypoint];}
-	void clearWaypoints(void) { _waypointQty = 0; _currentWaypoint = -1; }
+protected:
+	Config _config;
+	Rover::ThrottleConfig _throttleConfig;
 
-	static Route * getInstance() { return &_instance; }
-	static Route & getReference() { return _instance; }
-
-private:
-	static Route _instance;
-
-	Waypoint _waypoints[MAX_WAYPOINTS];
-	byte _waypointQty;
-
-	byte _currentWaypoint;
-	Location _currentLocation;
-
-	GPS* _gps;
+	AHRS* _ahrs;
 	Display* _display;
+	Rover* _rover;
+	JoyStick* _joystick;
 	Logger* _logger;
-	JoyStick* _joyStick;
-	File _file;
+	EepromStore* _estore;
+	Route* _route;
+	PID* _steeringPid;
 
-	void open();
-	void close();
-	void logWaypoints();
+	void setupLogging();
 };
 
-#endif /* MEGABOTICS_ROUTE_H_ */
+#endif /* MEGABOTICS_AUTONOMOUSROVER_H_ */

@@ -158,11 +158,12 @@ void captureConfigValues() {
 
 void displayConfig() {
 	clearAndPrint(F("The final configuration is\r\n"));
-
 	print("steerPwmMin = "); println(String(config.steerPwmMin));
 	print("steerPwmMid = "); println(String(config.steerPwmMid));
 	print("steerPwmMax = "); println(String(config.steerPwmMax));
+	print("steerMin = "); println(String(config.steerMin));
 	print("steerMid = "); println(String(config.steerMid));
+	print("steerMax = "); println(String(config.steerMax));
 	print("idlePwm = "); println(String(config.idlePwm));
 	print("revPwmMin = "); println(String(config.revPwmMin));
 	print("revPwmMax = "); println(String(config.revPwmMax));

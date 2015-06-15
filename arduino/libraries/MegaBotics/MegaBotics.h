@@ -41,7 +41,7 @@
 #define	DEG2RAD(_d)	(_d * DEG_TO_RAD)
 
 #ifndef DEBUG
-#define DEBUG 0
+#define DEBUG 1
 #endif
 
 #if DEBUG

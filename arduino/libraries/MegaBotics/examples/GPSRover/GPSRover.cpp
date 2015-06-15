@@ -10,46 +10,10 @@
 
 GPSRover GPSRover::_instance;
 
-GPSRover::GPSRover() {
-	_rover = Rover::getInstance();
-	_logger = Logger::getInstance();
-	_ahrs = new AHRS();
-	_display = Display::getInstance();
-	_estore = EepromStore::getInstance();
-	_joystick = JoyStick::getInstance();
-	_route = Route::getInstance();
+GPSRover::GPSRover() : AutonomousRover() {
 	_configMgr = ConfigManager::getInstance();
-	_steeringPid = NULL;
-	_throttleMin = 5;
-	_throttleMax = 100;
-	_throttleTurn = 10;
-	_cruiseDistance = 10;
-	_proximRadius = 3;
-
 	_steer = 0.0f;
 	_throttle = 0.0f;
-}
-
-void GPSRover::setup() {
-	setup(_config);
-}
-
-void GPSRover::setup(GPSRover::Config& config) {
-	_config = config;
-	_estore->setup();
-	_ahrs->setup();
-	_ahrs->resetIMU();
-	_display->setup();
-	_configMgr->setup();
-	_rover->setup();
-	_rover->setControlMode(Rover::MANUAL);
-	_steeringPid = new PID(_configMgr->steeringPidConfig);
-	_route->setup();
-	_throttleMin = _configMgr->throttleConfig.minimum;
-	_throttleMax = _configMgr->throttleConfig.maximum;
-	_throttleTurn = _configMgr->throttleConfig.turn;
-	_cruiseDistance = _configMgr->throttleConfig.cruiseDistance;
-	_proximRadius = _configMgr->throttleConfig.proximRadius;
 }
 
 void GPSRover::autoRun() {
@@ -72,7 +36,7 @@ void GPSRover::autoRun() {
 
 		_steeringPid->resetIntegrator();
 
-		if (_config.enableLogger) {
+		if (_config.logging) {
 			_logger->begin(Logger::LEVEL_DEBUG, F("RUN")) //
 					.nv(F("  Reached Waypoint #"), wpNumber) //
 					.endln().flush();
@@ -110,7 +74,7 @@ float GPSRover::calcSteering(Route::Location & loc) {
 	float error = Utils::normalizeAngle(loc.hdg - currentHdg);
 	float steer = Utils::clamp(_steeringPid->getPid(error, _config.steerScale), -100.0, 100.0);
 
-	if (_config.enableLogger) {
+	if (_config.logging) {
 		_logger->begin(Logger::LEVEL_DEBUG, F("RUN-STEER")) //
 				.nv(F("  ORIENT"), orientation) //
 				.nv(F("  DESIRED HDG"), loc.hdg) //
@@ -124,19 +88,19 @@ float GPSRover::calcSteering(Route::Location & loc) {
 }
 
 float GPSRover::calcThrottle(Route::Location & loc, float steer) {
-	int throttle = (loc.distance * _throttleMax ) / _cruiseDistance;
+	int throttle = (loc.distance * _throttleConfig.maximum ) / _config.cruiseDistance;
 
 	if (fabs(steer) > 45.0) {
-		throttle = _throttleTurn;
-	} else if (throttle > _throttleMax) {
-		throttle = _throttleMax;
+		throttle = _throttleConfig.turn;
+	} else if (throttle > _throttleConfig.maximum) {
+		throttle = _throttleConfig.maximum;
 	}
 
-	if (throttle < _throttleMin) {
-		throttle = _throttleMin;
+	if (throttle < _throttleConfig.minimum) {
+		throttle = _throttleConfig.minimum;
 	}
 
-	if (_config.enableLogger) {
+	if (_config.logging) {
 		_logger->begin(Logger::LEVEL_DEBUG, F("RUN-THROTTLE")) //
 				.nv(F("  LAT"), loc.lat) //
 				.nv(F("  LONG"), loc.lon) //
@@ -148,24 +112,6 @@ float GPSRover::calcThrottle(Route::Location & loc, float steer) {
 	}
 
 	return throttle;
-}
-
-
-void GPSRover::waitForClick() {
-	_joystick->clear();
-	_display->clearScr();
-	_ahrs->resetIMU();
-	_ahrs->resetYPR();
-	while (!_joystick->waitForPush(10)) {
-		_route->updateLocation(0);
-		_display->reset();
-		_display->print("YAW: ");_display->println(_ahrs->getOrientation());
-		_route->updateLocation(0);
-		_route->display();
-		_display->println(F("Press the button to start"));
-		_route->updateLocation(0);
-	}
-	_display->clearScr();
 }
 
 GPSRover::~GPSRover() {

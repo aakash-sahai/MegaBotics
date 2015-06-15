@@ -39,7 +39,7 @@ void Route::setup(void) {
 
 	_gps->setup(cm.gpsConfig);
 	waitForGpsFix();
-	configWaypoints();
+	// configWaypoints();	// Uncomment to manually configure waypoints
 	loadWaypoints();
 	logWaypoints();
 }

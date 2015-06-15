@@ -9,6 +9,7 @@
 #define MEGABOTICS_CONFIGMANAGER_H_
 
 #include "MegaBotics.h"
+#include "AutonomousRover.h"
 
 class ConfigManager {
 public:
@@ -19,9 +20,7 @@ public:
 	GPS::Config gpsConfig;
 	PID::Config steeringPidConfig;
 	Rover::ThrottleConfig throttleConfig;
-	Route::Config routeConfig;
-	Logger::Config config;
-	Display::Config displayConfig;
+	AutonomousRover::Config autoRoverConfig;
 
 	static ConfigManager * getInstance() { return &_instance; }
 	static ConfigManager & getReference() { return _instance; }

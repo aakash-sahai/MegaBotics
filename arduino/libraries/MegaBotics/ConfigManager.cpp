@@ -48,10 +48,21 @@ void ConfigManager::setup(void) {
 	throttleSection.addParam(&throttleP2);
 	struct ConfigParser::Param throttleP3("turn", 'I', offsetof(struct Rover::ThrottleConfig, turn));
 	throttleSection.addParam(&throttleP3);
-	struct ConfigParser::Param throttleP4("cruiseDistance", 'I', offsetof(struct Rover::ThrottleConfig, cruiseDistance));
-	throttleSection.addParam(&throttleP4);
-	struct ConfigParser::Param throttleP5("proximRadius", 'I', offsetof(struct Rover::ThrottleConfig, proximRadius));
-	throttleSection.addParam(&throttleP5);
+
+	struct ConfigParser::Section autoRoverSection("AUTO_ROVER", (char *)&autoRoverConfig);
+	configFile.addSection(&autoRoverSection);
+	struct ConfigParser::Param autoRoverP1("logging", 'I', offsetof(struct AutonomousRover::Config, logging));
+	autoRoverSection.addParam(&autoRoverP1);
+	struct ConfigParser::Param autoRoverP2("cruiseDistance", 'I', offsetof(struct AutonomousRover::Config, cruiseDistance));
+	autoRoverSection.addParam(&autoRoverP2);
+	struct ConfigParser::Param autoRoverP3("proximRadius", 'I', offsetof(struct AutonomousRover::Config, proximRadius));
+	autoRoverSection.addParam(&autoRoverP3);
+	struct ConfigParser::Param autoRoverP4("navLoopDelay", 'I', offsetof(struct AutonomousRover::Config, navLoopDelay));
+	autoRoverSection.addParam(&autoRoverP4);
+	struct ConfigParser::Param autoRoverP5("gpsStaleThres", 'I', offsetof(struct AutonomousRover::Config, gpsStaleThres));
+	autoRoverSection.addParam(&autoRoverP5);
+	struct ConfigParser::Param autoRoverP6("waypointTooFarThres", 'I', offsetof(struct AutonomousRover::Config, waypointTooFarThres));
+	autoRoverSection.addParam(&autoRoverP6);
 
 	load((char *)"CONFIG.TXT", configFile);
 }
@@ -62,6 +73,7 @@ void ConfigManager::load(char *fileName, ConfigParser::Config & configFile) {
 	char *err;
 	int	len;
 	Display & display = Display::getReference();
+	SDCard::getReference().setup();
 
 	display.clearScr();
 	display.print(F("Reading Configuration file: "));
