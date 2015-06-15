@@ -130,7 +130,7 @@ private:
 
 	void open();
 	void close();
-	void logWaypoints();
+	void logConfig();
 };
 
 #endif /* MEGABOTICS_ROUTE_H_ */

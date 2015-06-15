@@ -10,6 +10,11 @@
 
 GPS GPS::_instance;
 
+// Interrupt is called once a millisecond, looks for any new GPS data, and stores it
+SIGNAL(TIMER0_COMPA_vect) {
+	GPS::getInstance()->collect();
+}
+
 GPS::GPS() {
 }
 
@@ -30,6 +35,12 @@ void GPS::setup() {
 }
 
 void GPS::setup(Config &config) {
+	Logger::getInstance()->begin(Logger::LEVEL_DEBUG, F("GPS-SETUP")) //
+			.nv(F(" baud"), (int)config.baud) //
+			.nv(F(" port"), config.port) //
+			.nv(F(" interrupt read"), config.interruptRead) //
+			.endln().flush();
+
 	_config = config;
 	_uport = UPort(_config.port);
 	_uport.serial().begin(_config.baud);
@@ -41,6 +52,13 @@ void GPS::setup(Config &config) {
 	_uport.serial().println("$PUBX,40,GSV,0,0,0,0*59");
 	_uport.serial().println("$PUBX,40,VTG,0,0,0,0*5E");
 	_uport.serial().flush();
+
+	if (_config.interruptRead != 0) {
+		// Timer0 is already used for millis() - we'll just interrupt somewhere
+		// in the middle and call the "Compare A" function above
+		OCR0A = 0xAF;
+		TIMSK0 |= _BV(OCIE0A);
+	}
 }
 
 void GPS::collect() {
@@ -48,8 +66,6 @@ void GPS::collect() {
 	while (_uport.serial().available()) {
 		int ch = _uport.serial().read();
 		_gps.encode(ch);
-		//if (_gps.encode(ch))
-		//	break;
 		serialEventRun();
 	}
 }

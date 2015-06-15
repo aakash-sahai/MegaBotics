@@ -39,6 +39,8 @@ void ConfigManager::setup(void) {
 	gpsSection.addParam(&gpsP1);
 	struct ConfigParser::Param gpsP2("baud", 'I', offsetof(struct GPS::Config, baud));
 	gpsSection.addParam(&gpsP2);
+	struct ConfigParser::Param gpsP3("interruptRead", 'I', offsetof(struct GPS::Config, interruptRead));
+	gpsSection.addParam(&gpsP3);
 
 	struct ConfigParser::Section throttleSection("THROTTLE", (char *)&throttleConfig);
 	configFile.addSection(&throttleSection);

@@ -41,10 +41,19 @@ void Route::setup(void) {
 	waitForGpsFix();
 	configWaypoints();
 	loadWaypoints();
-	logWaypoints();
+	logConfig();
 }
 
-void Route::logWaypoints() {
+void Route::logConfig() {
+	ConfigManager & cm = ConfigManager::getReference();
+	_logger->begin(Logger::LEVEL_DEBUG, F("THROTTLE-SETUP")) //
+						.nv(F(" cruiseDistance"), cm.throttleConfig.cruiseDistance) //
+						.nv(F(" maximum"), cm.throttleConfig.maximum) //
+						.nv(F(" minimum"), cm.throttleConfig.minimum) //
+						.nv(F(" proximRadius"), cm.throttleConfig.proximRadius) //
+						.nv(F(" turn"), cm.throttleConfig.turn) //
+						.endln().flush();
+
 	for (int i = 0; i < _waypointQty; i++) {
 		_logger->begin(Logger::LEVEL_DEBUG, F("ROUTE-SETUP")) //
 				.nv(F(" lat"), _waypoints[i].getLatitude()) //
@@ -93,7 +102,12 @@ Route::Location & Route::updateLocation() {
 }
 
 Route::Location & Route::updateLocation(byte waypoint) {
-	_gps->collect();
+	ConfigManager & cm = ConfigManager::getReference();
+
+	if (cm.gpsConfig.interruptRead == 0) {
+		_gps->collect();
+	}
+
 	_currentLocation.lat = _gps->getLatitude();
 	_currentLocation.lon = _gps->getLongitude();
 	_currentLocation.age = (unsigned int)_gps->getRawGps().location.age();
@@ -113,8 +127,11 @@ Route::Location & Route::updateLocation(byte waypoint) {
 
 void Route::display() {
 	_display->print("DIST from WP: ");_display->println(_currentLocation.distance);
+	updateLocation(0);
 	_display->print("HDG from WP: ");_display->println(_currentLocation.hdg);
+	updateLocation(0);
 	_display->print("No of WP: ");_display->println(_waypointQty);
+	updateLocation(0);
 
 	_gps->display();
 }
