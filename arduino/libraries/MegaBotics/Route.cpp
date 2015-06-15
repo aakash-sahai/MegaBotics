@@ -36,7 +36,6 @@ Route::~Route() {
 
 void Route::setup(void) {
 	ConfigManager & cm = ConfigManager::getReference();
-
 	_gps->setup(cm.gpsConfig);
 	waitForGpsFix();
 	// configWaypoints();	// Uncomment to manually configure waypoints
@@ -102,12 +101,7 @@ Route::Location & Route::updateLocation() {
 }
 
 Route::Location & Route::updateLocation(byte waypoint) {
-	ConfigManager & cm = ConfigManager::getReference();
-
-	if (cm.gpsConfig.interruptRead == 0) {
-		_gps->collect();
-	}
-
+	_gps->collect();
 	_currentLocation.lat = _gps->getLatitude();
 	_currentLocation.lon = _gps->getLongitude();
 	_currentLocation.age = (unsigned int)_gps->getRawGps().location.age();

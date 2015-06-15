@@ -12,7 +12,7 @@ GPS GPS::_instance;
 
 // Interrupt is called once a millisecond, looks for any new GPS data, and stores it
 SIGNAL(TIMER0_COMPA_vect) {
-	GPS::getInstance()->collect();
+	GPS::getInstance()->doCollect();
 }
 
 GPS::GPS() {
@@ -62,6 +62,12 @@ void GPS::setup(Config &config) {
 }
 
 void GPS::collect() {
+	if (_config.interruptRead)
+		return;
+	doCollect();
+}
+
+void GPS::doCollect(void) {
 	serialEventRun();
 	while (_uport.serial().available()) {
 		int ch = _uport.serial().read();

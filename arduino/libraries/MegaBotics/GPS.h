@@ -68,6 +68,7 @@ public:
 	void setup(void);
 	void setup(Config &config);
 	void collect();
+	void doCollect(void);
 	void display();
 
 	double getLatitude();
