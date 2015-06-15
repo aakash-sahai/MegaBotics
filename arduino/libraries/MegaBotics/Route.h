@@ -56,8 +56,8 @@ class Dispaly;
 class Route {
 public:
 	struct Config {
-		float gpsStaleThres;	// Time in msec when GPS reading is considered too stale
-		float distTooFarThres;	// Distance in meter from next WP that is considered too far
+		int gpsStaleThres;	// Time in msec when GPS reading is considered too stale
+		int distTooFarThres;	// Distance in meter from next WP that is considered too far
 		float refHeading;		// reference heading
 
 		Config() {
