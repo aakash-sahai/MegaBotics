@@ -199,30 +199,42 @@ void Route::close() {
 }
 
 void Route::loadWaypoints() {
+	ConfigManager & cm = ConfigManager::getReference();
+
 	open();
 	while (_file.position() < _file.size()) {
-			char *fcurr;
-			const char *curr;
+		char *fcurr;
+		const char *curr;
 
-			String line = _file.readStringUntil('\n');
-			curr = line.c_str();
+		String line = _file.readStringUntil('\n');
+		curr = line.c_str();
 
-			if (line.length() > 0) {
-				_waypoints[_waypointQty].setLatitude(strtod(curr, &fcurr));
-				curr = fcurr;
-				_waypoints[_waypointQty].setLongitude(strtod(curr, &fcurr));
-				curr = fcurr;
-//				if (*curr != 0 && *curr != '\n') {
-//					_waypoints[_waypointQty].setMaxThrottle((int8_t)strtol(curr, &fcurr, 10));
-//					curr = fcurr;
-//					if (*curr != 0 && *curr != '\n') {
-//						_waypoints[_waypointQty].setProximRadius(strtod(curr, &fcurr));
-//					}
-//				}
-				_waypointQty++;
+		if (line.length() > 0) {
+			_waypoints[_waypointQty].setLatitude(strtod(curr, &fcurr));
+			curr = fcurr;
+			_waypoints[_waypointQty].setLongitude(strtod(curr, &fcurr));
+			curr = fcurr;
+
+			double proximRadius = strtod(curr, &fcurr);
+			curr = fcurr;
+			if (proximRadius != 0) {
+				_waypoints[_waypointQty].setProximRadius(proximRadius);
 			} else {
-				break;
+				_waypoints[_waypointQty].setProximRadius(cm.throttleConfig.proximRadius);
 			}
+
+			int8_t maxThrottle = (int8_t)strtol(curr, &fcurr, 10);
+			curr = fcurr;
+			if (maxThrottle != 0) {
+				_waypoints[_waypointQty].setMaxThrottle(maxThrottle);
+			} else {
+				_waypoints[_waypointQty].setMaxThrottle(cm.throttleConfig.maximum);
+			}
+
+			_waypointQty++;
+		} else {
+			break;
 		}
+	}
 	close();
 }
