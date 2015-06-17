@@ -90,11 +90,13 @@ AutonomousRover::~AutonomousRover() {
 }
 
 void AutonomousRover::waitToStart() {
+	JoyStick::Input pressEvent;
+
 	_joystick->clear();
 	_display->clearScr();
 	_ahrs->resetIMU();
 	_ahrs->resetYPR();
-	while (_joystick->waitForInput(10) == JoyStick::NONE) {
+	while ((pressEvent = _joystick->waitForInput(10)) == JoyStick::NONE) {
 		_route->updateLocation(0);
 		_display->reset();
 		_display->print("YAW: ");_display->println(_ahrs->getOrientation());
@@ -102,6 +104,7 @@ void AutonomousRover::waitToStart() {
 		_route->display();
 		_display->println(F("Press the button to start"));
 	}
+	_display->print("BUTTON PRESSED: ");_display->println(pressEvent);
 	_display->clearScr();
 }
 

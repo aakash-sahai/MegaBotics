@@ -90,7 +90,7 @@ float GPSRover::calcSteering(Route::Location & loc) {
 float GPSRover::calcThrottle(Route::Location & loc, float steer) {
 	int throttle = (loc.distance * _throttleConfig.maximum ) / _config.cruiseDistance;
 
-	if (fabs(steer) > 45.0) {
+	if (fabs(steer) > 10.0) {
 		throttle = _throttleConfig.turn;
 	} else if (throttle > _throttleConfig.maximum) {
 		throttle = _throttleConfig.maximum;
