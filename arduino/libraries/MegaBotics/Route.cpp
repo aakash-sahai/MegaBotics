@@ -106,6 +106,7 @@ Route::Location & Route::updateLocation(byte waypoint) {
 	_currentLocation.lon = _gps->getLongitude();
 	_currentLocation.age = (unsigned int)_gps->getRawGps().location.age();
 	_currentLocation.speed = _gps->getSpeed();
+	_currentLocation.curHdg = Utils::normalizeAngle(_gps->getHeading());
 
 	if (_currentWaypoint > -1) {
 		Waypoint currentWp = _waypoints[waypoint];

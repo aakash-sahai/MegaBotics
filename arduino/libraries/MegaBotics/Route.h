@@ -73,6 +73,7 @@ public:
 		float refHdg;		// Reference Heading
 		unsigned int age;	// Age of GPS reading
 		float speed;		// Speed reported by GPS
+		float curHdg;		// Heading reported by GPS
 
 
 		Location() {
@@ -82,6 +83,7 @@ public:
 			lat = 0.0;
 			lon = 0.0;
 			speed = 0.0;
+			curHdg = 0.0f;
 			age = 0;
 		};
 	};
